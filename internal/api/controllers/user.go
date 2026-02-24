@@ -4,20 +4,24 @@ import (
 	"context"
 	"errors"
 	"net/http"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
+	"github.com/spf13/viper"
 
 	"wishlist/internal/api/errors"
 	"wishlist/internal/api/middlewares"
+	"wishlist/internal/config"
 	"wishlist/internal/models"
 	"wishlist/internal/services/errors"
 )
 
 type AuthService interface {
 	GenerateTokens(userID uuid.UUID) (string, string, error)
-	ValidateAccessToken(token string) (uuid.UUID, error)
-	ValidateRefreshToken(token string) (uuid.UUID, error)
+	ValidateAccessToken(ctx context.Context, token string) (uuid.UUID, error)
+	ValidateRefreshToken(ctx context.Context, token string) (uuid.UUID, error)
+	RevokeAuthTokens(ctx context.Context, accessToken, refreshToken string) error
 }
 
 type UserService interface {
@@ -42,14 +46,15 @@ func NewUsersController(engine *gin.Engine, authService AuthService, userService
 }
 
 func (ctrl *UsersController) RegisterRoutes() {
-	authRoutes := ctrl.router.Group("/auth")
+	basePath := ctrl.router.Group(viper.GetString(config.ApiBasePath))
+	authRoutes := basePath.Group("/auth")
 	{
 		authRoutes.POST("/register", ctrl.Register)
 		authRoutes.POST("/login", ctrl.LogIn)
 		authRoutes.POST("/refresh", ctrl.RefreshTokens)
 		authRoutes.POST("/logout", ctrl.mw.AuthMiddleware(), ctrl.LogOut)
 	}
-	userRoutes := ctrl.router.Group("/users")
+	userRoutes := basePath.Group("/users")
 	{
 		authedUserRoutes := userRoutes.Use(ctrl.mw.AuthMiddleware())
 		{
@@ -126,7 +131,7 @@ func (ctrl *UsersController) RefreshTokens(ctx *gin.Context) {
 		return
 	}
 
-	userID, err := ctrl.authService.ValidateRefreshToken(req.RefreshToken)
+	userID, err := ctrl.authService.ValidateRefreshToken(ctx, req.RefreshToken)
 	if err != nil {
 		apiModels.Error(ctx, http.StatusUnauthorized, "invalid or expired refresh token")
 		return
@@ -145,7 +150,23 @@ func (ctrl *UsersController) RefreshTokens(ctx *gin.Context) {
 }
 
 func (ctrl *UsersController) LogOut(ctx *gin.Context) {
-	//TODO: Implement token blacklisting/invalidation (Redis)
+	var req models.RefreshTokenRequest
+	if err := ctx.ShouldBindJSON(&req); err != nil {
+		apiModels.Error(ctx, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	accessToken, found := strings.CutPrefix(ctx.GetHeader("Authorization"), "Bearer ")
+	if !found {
+		apiModels.Error(ctx, http.StatusUnauthorized, "invalid or expired access token")
+		return
+	}
+
+	if err := ctrl.authService.RevokeAuthTokens(ctx, accessToken, req.RefreshToken); err != nil {
+		apiModels.InternalError(ctx, err.Error())
+		return
+	}
+
 	ctx.JSON(200, apiModels.APIResponse{Message: "logged out"})
 }
 

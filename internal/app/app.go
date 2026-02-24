@@ -13,6 +13,7 @@ import (
 	"wishlist/internal/services"
 	"wishlist/internal/storage"
 	"wishlist/pkg/postgres"
+	"wishlist/pkg/redis"
 )
 
 type App struct {
@@ -25,14 +26,21 @@ func Load() *App {
 
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
-	db, err := postgres.NewInstance(ctx, config.DatabaseConfig())
+
+	db, err := postgres.NewInstance(ctx, config.PostgresConfig())
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	rc, err := redis.NewClient(ctx, config.RedisConfig())
 	if err != nil {
 		log.Fatal(err)
 	}
 
 	e := api.NewEngine()
 	st := storage.NewUserStorage(db)
-	as := services.NewAuthService()
+	ts := storage.NewTokenStorage(rc)
+	as := services.NewAuthService(ts)
 	us := services.NewUserService(st)
 	mw := middlewares.NewMiddlewares(as)
 	uc := controllers.NewUsersController(e, as, us, mw)
@@ -40,5 +48,7 @@ func Load() *App {
 }
 
 func (a *App) Run() {
+	a.API.RegisterMiddlewares()
+	a.API.RegisterRoutes()
 	a.API.Run()
 }

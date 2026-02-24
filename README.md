@@ -1,7 +1,7 @@
 # WIP
 
 ### TODO
-- [ ] Add Redis caching for JWT tokens
+- [x] Add Redis caching for JWT tokens
 - [ ] Add email sending service for password reset and account verification
 - [ ] Add S3 for user avatars and other media
 - [ ] Add Wish and Wishlist entities to API

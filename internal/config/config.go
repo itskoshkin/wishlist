@@ -8,6 +8,7 @@ import (
 	"github.com/spf13/viper"
 
 	"wishlist/pkg/postgres"
+	"wishlist/pkg/redis"
 )
 
 const (
@@ -23,12 +24,15 @@ const (
 	GinReleaseMode     = "app.api.gin_release_mode"
 	ApiShutdownTimeout = "app.api.shutdown_timeout"
 
-	WebAppDomain = "webapp.domain"
+	WebAppDomain = "app.webapp.domain"
 
-	AccessTokenSecret  = "app.auth.access_token_secret"
-	RefreshTokenSecret = "app.auth.refresh_token_secret"
-	AccessTokenTTL     = "app.auth.access_token_ttl"
-	RefreshTokenTTL    = "app.auth.refresh_token_ttl"
+	JwtIssuer          = "app.api.auth.jwt_issuer"
+	JwtAudience        = "app.api.auth.jwt_audience"
+	AccessTokenSecret  = "app.api.auth.access_token_secret"
+	RefreshTokenSecret = "app.api.auth.refresh_token_secret"
+	AccessTokenTTL     = "app.api.auth.access_token_ttl"
+	RefreshTokenTTL    = "app.api.auth.refresh_token_ttl"
+	PwdResetTokenTTL   = "app.api.auth.pwd_reset_token_ttl"
 
 	DatabaseHost     = "app.database.host"
 	DatabasePort     = "app.database.port"
@@ -36,6 +40,11 @@ const (
 	DatabasePassword = "app.database.password"
 	DatabaseName     = "app.database.database_name"
 	DatabaseSslMode  = "app.database.ssl_mode"
+
+	RedisHost     = "app.redis.host"
+	RedisPort     = "app.redis.port"
+	RedisPassword = "app.redis.password"
+	RedisDB       = "app.redis.database"
 )
 
 func LoadConfig() {
@@ -130,7 +139,7 @@ func ValidateConfigFields() error {
 	return nil
 }
 
-func DatabaseConfig() postgres.Config {
+func PostgresConfig() postgres.Config {
 	return postgres.Config{
 		Host:     viper.GetString(DatabaseHost),
 		Port:     viper.GetString(DatabasePort),
@@ -139,5 +148,14 @@ func DatabaseConfig() postgres.Config {
 		Database: viper.GetString(DatabaseName),
 		SSLMode:  viper.GetString(DatabaseSslMode),
 		LogLevel: viper.GetString(LogLevel),
+	}
+}
+
+func RedisConfig() redis.Config {
+	return redis.Config{
+		Addr:     viper.GetString(RedisHost),
+		Port:     viper.GetString(RedisPort),
+		Password: viper.GetString(RedisPassword),
+		Database: viper.GetInt(RedisDB),
 	}
 }

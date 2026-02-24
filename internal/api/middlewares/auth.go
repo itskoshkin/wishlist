@@ -1,6 +1,7 @@
 package middlewares
 
 import (
+	"context"
 	"strings"
 
 	"github.com/gin-gonic/gin"
@@ -10,15 +11,15 @@ import (
 )
 
 type AuthService interface {
-	ValidateAccessToken(token string) (uuid.UUID, error)
+	ValidateAccessToken(ctx context.Context, token string) (uuid.UUID, error)
 }
 
 type Middlewares struct {
-	service AuthService
+	authService AuthService
 }
 
-func NewMiddlewares(service AuthService) *Middlewares {
-	return &Middlewares{service: service}
+func NewMiddlewares(as AuthService) *Middlewares {
+	return &Middlewares{authService: as}
 }
 
 func (mw *Middlewares) AuthMiddleware() gin.HandlerFunc {
@@ -35,7 +36,7 @@ func (mw *Middlewares) AuthMiddleware() gin.HandlerFunc {
 			return
 		}
 
-		userID, err := mw.service.ValidateAccessToken(tokenString)
+		userID, err := mw.authService.ValidateAccessToken(ctx, tokenString)
 		if err != nil {
 			apiModels.Error(ctx, 401, "invalid or expired token")
 			return

@@ -11,7 +11,7 @@ type User struct {
 	//Avatar *string //TODO: Add support for user avatars (S3)
 	Name      string
 	Username  string
-	Email     string
+	Email     *string
 	Password  string
 	CreatedAt time.Time
 	UpdatedAt time.Time
@@ -22,7 +22,7 @@ func (u User) ToPrivateResponse() UserResponse {
 		ID:        u.ID,
 		Name:      &u.Name,
 		Username:  u.Username,
-		Email:     &u.Email,
+		Email:     u.Email,
 		CreatedAt: u.CreatedAt,
 		UpdatedAt: u.UpdatedAt,
 	}
@@ -37,10 +37,10 @@ func (u User) ToPublicResponse() UserResponse {
 }
 
 type RegisterUserRequest struct {
-	Name     string `json:"name" binding:"required"`
-	Username string `json:"username" binding:"required"`
-	Email    string `json:"email" binding:"omitempty,email"`
-	Password string `json:"password" binding:"required,min=8"`
+	Name     string  `json:"name" binding:"required"`
+	Username string  `json:"username" binding:"required"`
+	Email    *string `json:"email" binding:"omitempty,email"`
+	Password string  `json:"password" binding:"required,min=8"`
 }
 
 type LogInUserRequest struct {
