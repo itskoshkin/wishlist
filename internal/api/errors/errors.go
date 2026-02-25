@@ -2,9 +2,10 @@ package apiModels
 
 import (
 	"fmt"
-	"log"
 
 	"github.com/gin-gonic/gin"
+
+	"wishlist/internal/logger"
 )
 
 type APIResponse struct {
@@ -33,6 +34,6 @@ func ErrorWithDetails(ctx *gin.Context, code int, message, details string) {
 }
 
 func InternalError(ctx *gin.Context, details string) {
-	log.Printf("[%s] Internal error: %s", ctx.GetString("request_id"), details)
+	logger.ErrorWithID(ctx, details)
 	ErrorWithDetails(ctx, 500, "Internal server error", fmt.Sprintf("Your request ID is %s", ctx.GetString("request_id")))
 }

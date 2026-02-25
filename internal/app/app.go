@@ -2,7 +2,6 @@ package app
 
 import (
 	"context"
-	"log"
 	"time"
 
 	"wishlist/internal/api"
@@ -29,12 +28,12 @@ func Load() *App {
 
 	db, err := postgres.NewInstance(ctx, config.PostgresConfig())
 	if err != nil {
-		log.Fatal(err)
+		logger.Fatal(err)
 	}
 
 	rc, err := redis.NewClient(ctx, config.RedisConfig())
 	if err != nil {
-		log.Fatal(err)
+		logger.Fatal(err)
 	}
 
 	e := api.NewEngine()

@@ -4,8 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"io"
-	"log"
 	"net"
 	"net/http"
 	"os"
@@ -20,6 +18,8 @@ import (
 	"wishlist/internal/api/middlewares"
 	"wishlist/internal/config"
 	"wishlist/internal/logger"
+	"wishlist/internal/utils/colors"
+	"wishlist/internal/utils/gin"
 )
 
 type API struct {
@@ -41,9 +41,9 @@ func NewEngine() *gin.Engine {
 }
 
 func (api *API) RegisterMiddlewares() {
-	api.engine.Use(gin.RecoveryWithWriter(io.MultiWriter(os.Stdout, logger.GetLogFile())))
+	api.engine.Use(gin.RecoveryWithWriter(logger.GetWriters()))
 	api.engine.Use(middlewares.RequestID())
-	api.engine.Use(logger.CustomGinLogger(io.MultiWriter(os.Stdout, logger.GetLogFile())))
+	api.engine.Use(ginutils.CustomGinLogger(logger.GetWriters()))
 	api.engine.Use(middlewares.CORS())
 }
 
@@ -52,10 +52,12 @@ func (api *API) RegisterRoutes() {
 }
 
 func (api *API) Run() {
-	addr := fmt.Sprintf(":%s", viper.GetString(config.ApiPort))
+	fmt.Printf("Starting Gin engine...")
 
+	addr := fmt.Sprintf(":%s", viper.GetString(config.ApiPort))
 	if ln, err := net.Listen("tcp", addr); err != nil {
-		log.Fatalf("Port %s is already in use: %v", viper.GetString(config.ApiPort), err)
+		fmt.Println()
+		logger.Fatalf("Port %s is already in use: %v", viper.GetString(config.ApiPort), err)
 	} else {
 		_ = ln.Close()
 	}
@@ -65,25 +67,27 @@ func (api *API) Run() {
 		Handler: api.engine,
 	}
 
-	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
-	defer stop()
+	exit := make(chan os.Signal, 1)
+	signal.Notify(exit, syscall.SIGINT, syscall.SIGTERM)
+	defer signal.Stop(exit)
 
 	go func() {
-		log.Printf("API server listening on %s...", addr)
+		fmt.Println(colors.Green("    Done."))
+		logger.Info("Listening on %s...", addr)
 		if err := srv.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
-			log.Fatalf("Failed to start server: %v", err)
+			logger.Fatalf("Server stopped unexpectedly: %v", err)
 		}
 	}()
 
-	<-ctx.Done()
-	log.Println("Shutting down server...")
+	sig := <-exit
+	logger.Info("Received %s signal, shutting down...", sig)
 
 	shutdownCtx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
 	if err := srv.Shutdown(shutdownCtx); err != nil {
-		log.Fatalf("Server forced to shutdown: %v", err)
+		logger.Fatalf("Graceful shutdown failed: %v", err)
 	}
 
-	log.Println("Server stopped.")
+	logger.Info("Server stopped.")
 }

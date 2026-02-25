@@ -7,16 +7,19 @@ import (
 
 	"github.com/spf13/viper"
 
+	"wishlist/internal/utils/colors"
 	"wishlist/pkg/postgres"
 	"wishlist/pkg/redis"
 )
 
 const (
-	LogEnabled  = "app.log.enabled"
-	LogLevel    = "app.log.level"
-	LogToFile   = "app.log.log2file"
-	LogFilePath = "app.log.file_path"
-	LogFormat   = "app.log.log_format"
+	LogLevel       = "app.log.level"           // string ("DEBUG", "INFO", "WARN", "ERROR")
+	LogFormat      = "app.log.log_format"      // string ("text" or "json")
+	LogToConsole   = "app.log.log2console"     // bool
+	LogToFile      = "app.log.log2file"        // bool
+	LogFilePath    = "app.log.file_path"       // string (path)
+	LogFileMode    = "app.log.file_mode"       // string ("append", "overwrite", "rotate")
+	LogFilesFolder = "app.log.old_logs_folder" // string (path)
 
 	ApiHost            = "app.api.host"
 	ApiPort            = "app.api.port"
@@ -48,7 +51,7 @@ const (
 )
 
 func LoadConfig() {
-	fmt.Print("Loading configuration... ")
+	fmt.Print("Loading configuration...")
 
 	viper.SetConfigFile("./config.yaml")
 	if err := viper.ReadInConfig(); err != nil {
@@ -64,7 +67,7 @@ func LoadConfig() {
 		log.Fatalf("Fatal: failed to load configuration: %v", err)
 	}
 
-	fmt.Println(" Done.")
+	fmt.Println(colors.Green("  Done."))
 }
 
 func ValidateConfigFields() error {

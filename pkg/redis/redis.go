@@ -5,6 +5,9 @@ import (
 	"fmt"
 
 	"github.com/redis/go-redis/v9"
+	"github.com/redis/go-redis/v9/logging"
+
+	"wishlist/internal/utils/colors"
 )
 
 type Config struct {
@@ -15,6 +18,9 @@ type Config struct {
 }
 
 func NewClient(ctx context.Context, cfg Config) (*redis.Client, error) {
+	fmt.Printf("Connecting to Redis...")
+
+	redis.SetLogger(&logging.VoidLogger{})
 	rc := redis.NewClient(&redis.Options{
 		Addr:     cfg.Addr + ":" + cfg.Port,
 		Password: cfg.Password,
@@ -23,9 +29,11 @@ func NewClient(ctx context.Context, cfg Config) (*redis.Client, error) {
 
 	_, err := rc.Ping(ctx).Result()
 	if err != nil {
+		fmt.Println()
 		_ = rc.Close()
 		return nil, fmt.Errorf("failed to connect to Redis: %w", err)
 	}
 
+	fmt.Println(colors.Green("    Done."))
 	return rc, nil
 }
