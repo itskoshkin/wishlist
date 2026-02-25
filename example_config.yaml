@@ -1,0 +1,35 @@
+app:
+  log:
+    level: "INFO" # "DEBUG", "INFO", "WARN" or "ERROR"
+    log_format: "text" # "text" or "json"
+    log2console: true
+    log2file: true
+    file_path: "./application.log"
+    file_mode: "rotate" # "overwrite", "append" or "rotate"
+    old_logs_folder: "logs/"
+  api:
+    gin_release_mode: true
+    host: "0.0.0.0" # "127.0.0.1" or "0.0.0.0" (listen on all interfaces)
+    port: 8080
+    base_path: "/api/v1"
+    shutdown_timeout: "5s"
+    auth:
+      jwt_issuer: "your-app-name"
+      jwt_audience: "your-domain.com"
+      access_token_secret: "your-super-secret-access-key"
+      refresh_token_secret: "your-super-secret-refresh-key"
+      access_token_ttl: "24h"
+      refresh_token_ttl: "168h" # 7 days
+      pwd_reset_token_ttl: "1h"
+  database:
+    host: "localhost"
+    port: 5432
+    user: "postgres"
+    password: "4221"
+    database_name: "wishlist"
+    ssl_mode: "disable"
+  redis:
+    host: "localhost"
+    port: 6379
+    password: "4221"
+    database: 0

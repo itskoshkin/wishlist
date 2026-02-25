@@ -54,7 +54,7 @@ func (api *API) RegisterRoutes() {
 func (api *API) Run() {
 	fmt.Printf("Starting Gin engine...")
 
-	addr := fmt.Sprintf(":%s", viper.GetString(config.ApiPort))
+	addr := fmt.Sprintf("%s:%s", viper.GetString(config.ApiHost), viper.GetString(config.ApiPort))
 	if ln, err := net.Listen("tcp", addr); err != nil {
 		fmt.Println()
 		logger.Fatalf("Port %s is already in use: %v", viper.GetString(config.ApiPort), err)

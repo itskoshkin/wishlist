@@ -27,7 +27,7 @@ const (
 	GinReleaseMode     = "app.api.gin_release_mode"
 	ApiShutdownTimeout = "app.api.shutdown_timeout"
 
-	WebAppDomain = "app.webapp.domain"
+	//WebAppDomain = "app.webapp.domain"
 
 	JwtIssuer          = "app.api.auth.jwt_issuer"
 	JwtAudience        = "app.api.auth.jwt_audience"
@@ -73,18 +73,22 @@ func LoadConfig() {
 func ValidateConfigFields() error {
 	var required = []string{ // Must be present and non-empty
 		DatabaseHost, DatabasePort, DatabaseUser, DatabasePassword,
+		ApiPort, AccessTokenSecret, RefreshTokenSecret, JwtIssuer, JwtAudience,
 	}
 	var dependent = map[string]string{ // If A=true => must be non-empty B
 		LogToFile: LogFilePath,
 	}
-	var defaults = map[string]any{ // Will be set if not present
-		LogEnabled: true, LogLevel: "INFO", LogToFile: false, LogFilePath: "application.log",
-		ApiShutdownTimeout: "5s",
-		DatabaseName:       "wishlist", DatabaseSslMode: "disable",
-	}
 	var possibleValues = map[string][]string{ // If present, must be one of these values
-		LogLevel:  {"DEBUG", "INFO", "WARN", "ERROR"},
-		LogFormat: {"text", "json"},
+		LogLevel:    {"DEBUG", "INFO", "WARN", "ERROR"},
+		LogFormat:   {"text", "json"},
+		LogFileMode: {"append", "overwrite", "rotate"},
+	}
+	var defaults = map[string]any{ // Will be set if not present, overwrites above required/dependent
+		/* Log */ LogLevel: "INFO", LogFormat: "text", LogToConsole: true, LogToFile: true, LogFilePath: "application.log", LogFileMode: "append",
+		/* Postgres */ DatabaseHost: "localhost", DatabasePort: 5432, DatabaseUser: "postgres", DatabaseName: "wishlist", DatabaseSslMode: "disable",
+		/* Redis */ RedisHost: "localhost", RedisPort: 6379, RedisDB: 0,
+		/* API */ ApiBasePath: "/api/v1", ApiShutdownTimeout: "5s",
+		/* JWT */ AccessTokenTTL: "24h", RefreshTokenTTL: "168h" /* 7 days */, PwdResetTokenTTL: "1h", JwtIssuer: "wishlist", JwtAudience: "Wishlist API",
 	}
 
 	for k, v := range defaults {
@@ -99,11 +103,15 @@ func ValidateConfigFields() error {
 			missing = append(missing, key)
 		}
 	}
+	if viper.GetString(LogFileMode) == "rotate" {
+		if !viper.IsSet(LogFilesFolder) || strings.TrimSpace(viper.GetString(LogFilesFolder)) == "" {
+			missing = append(missing, fmt.Sprintf("%s (required when %s=rotate)", LogFilesFolder, LogFileMode))
+		}
+	}
 	if len(missing) > 0 {
 		return fmt.Errorf("missing required fields/values in config: %s", strings.Join(missing, ", "))
 	}
 
-	//var missingDep []string
 	for triggerKey, requiredKey := range dependent {
 		if viper.GetBool(triggerKey) {
 			if !viper.IsSet(requiredKey) || strings.TrimSpace(viper.GetString(requiredKey)) == "" {
@@ -115,6 +123,7 @@ func ValidateConfigFields() error {
 		return fmt.Errorf("missing required fields/values in config: %s", strings.Join(missing, ", "))
 	}
 
+	var invalid []string
 	for key, allowed := range possibleValues {
 		if !viper.IsSet(key) {
 			continue
@@ -123,20 +132,24 @@ func ValidateConfigFields() error {
 		if val == "" {
 			continue
 		}
-		ok := false
+		found := false
 		for _, a := range allowed {
 			if val == a {
-				ok = true
+				found = true
 				break
 			}
 		}
-		if !ok {
-			return fmt.Errorf("invalid value '%s' for key '%s': must be one of [%s]", key, val, strings.Join(allowed, ", "))
+		if !found {
+			invalid = append(invalid, fmt.Sprintf("'%s' for '%s' (must be one of [%s])", val, key, strings.Join(allowed, ", ")))
 		}
 	}
-
-	if viper.GetDuration(ApiShutdownTimeout) <= 0 {
-		return fmt.Errorf("invalid value '%s' for key '%s': must be >0", viper.GetString(ApiShutdownTimeout), ApiShutdownTimeout)
+	for _, key := range []string{ApiShutdownTimeout, AccessTokenTTL, RefreshTokenTTL, PwdResetTokenTTL} {
+		if viper.GetDuration(key) <= 0 {
+			invalid = append(invalid, fmt.Sprintf("%s (duration must be >0, got '%s')", key, viper.GetString(key)))
+		}
+	}
+	if len(invalid) > 0 {
+		return fmt.Errorf("invalid config values: %s", strings.Join(invalid, ", "))
 	}
 
 	return nil
