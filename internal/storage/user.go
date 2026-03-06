@@ -27,11 +27,24 @@ func (us *UserStorageImpl) CreateUser(ctx context.Context, user models.User) err
 	return nil
 }
 
+func (us *UserStorageImpl) SetUserEmailAsVerified(ctx context.Context, id uuid.UUID) error {
+	result, err := us.pool.Exec(ctx,
+		"UPDATE users SET email_verified = true, updated_at = now() WHERE id = $1", id)
+	if err != nil {
+		return fmt.Errorf("failed to verify email for user '%s': %w", id, err)
+	}
+	if result.RowsAffected() == 0 {
+		return fmt.Errorf("failed to verify email for user '%s': not found", id)
+	}
+
+	return nil
+}
+
 func (us *UserStorageImpl) GetUserByID(ctx context.Context, id uuid.UUID) (models.User, error) {
 	var user models.User
 
-	if err := us.pool.QueryRow(ctx, `SELECT id, name, username, email, password, created_at, updated_at FROM users WHERE id = $1`, id).Scan(
-		&user.ID, &user.Name, &user.Username, &user.Email, &user.Password, &user.CreatedAt, &user.UpdatedAt,
+	if err := us.pool.QueryRow(ctx, `SELECT id, name, username, email, email_verified, password, created_at, updated_at FROM users WHERE id = $1`, id).Scan(
+		&user.ID, &user.Name, &user.Username, &user.Email, &user.EmailVerified, &user.Password, &user.CreatedAt, &user.UpdatedAt,
 	); err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
 			return models.User{}, fmt.Errorf("failed to get user with ID '%s': not found", id)
@@ -45,8 +58,8 @@ func (us *UserStorageImpl) GetUserByID(ctx context.Context, id uuid.UUID) (model
 func (us *UserStorageImpl) GetUserByUsername(ctx context.Context, username string) (models.User, error) {
 	var user models.User
 
-	if err := us.pool.QueryRow(ctx, `SELECT id, name, username, email, password, created_at, updated_at FROM users WHERE username = $1`, username).Scan(
-		&user.ID, &user.Name, &user.Username, &user.Email, &user.Password, &user.CreatedAt, &user.UpdatedAt,
+	if err := us.pool.QueryRow(ctx, `SELECT id, name, username, email, email_verified, password, created_at, updated_at FROM users WHERE username = $1`, username).Scan(
+		&user.ID, &user.Name, &user.Username, &user.Email, &user.EmailVerified, &user.Password, &user.CreatedAt, &user.UpdatedAt,
 	); err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
 			return models.User{}, fmt.Errorf("failed to get user with username '%s': not found", username)
@@ -60,8 +73,8 @@ func (us *UserStorageImpl) GetUserByUsername(ctx context.Context, username strin
 func (us *UserStorageImpl) GetUserByEmail(ctx context.Context, email string) (models.User, error) {
 	var user models.User
 
-	if err := us.pool.QueryRow(ctx, `SELECT id, name, username, email, password, created_at, updated_at FROM users WHERE email = $1`, email).Scan(
-		&user.ID, &user.Name, &user.Username, &user.Email, &user.Password, &user.CreatedAt, &user.UpdatedAt,
+	if err := us.pool.QueryRow(ctx, `SELECT id, name, username, email, email_verified, password, created_at, updated_at FROM users WHERE email = $1`, email).Scan(
+		&user.ID, &user.Name, &user.Username, &user.Email, &user.EmailVerified, &user.Password, &user.CreatedAt, &user.UpdatedAt,
 	); err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
 			return models.User{}, fmt.Errorf("failed to get user with email '%s': not found", email)

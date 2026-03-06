@@ -185,3 +185,7 @@ func write(coloredLevel, plainLevel, text string) {
 }
 
 func ts() string { return time.Now().Format("2006/01/02 15:04:05") }
+
+type GlobalLogger struct{} // Wraps package-level functions for use as an injected Logger dependency in service
+
+func (GlobalLogger) Error(format string, v ...any) { Error(format, v...) }

@@ -9,22 +9,24 @@ import (
 type User struct {
 	ID uuid.UUID
 	//Avatar *string //TODO: Add support for user avatars (S3)
-	Name      string
-	Username  string
-	Email     *string
-	Password  string
-	CreatedAt time.Time
-	UpdatedAt time.Time
+	Name          string
+	Username      string
+	Email         *string
+	EmailVerified bool
+	Password      string
+	CreatedAt     time.Time
+	UpdatedAt     time.Time
 }
 
 func (u User) ToPrivateResponse() UserResponse {
 	return UserResponse{
-		ID:        u.ID,
-		Name:      &u.Name,
-		Username:  u.Username,
-		Email:     u.Email,
-		CreatedAt: u.CreatedAt,
-		UpdatedAt: u.UpdatedAt,
+		ID:            u.ID,
+		Name:          &u.Name,
+		Username:      u.Username,
+		Email:         u.Email,
+		EmailVerified: u.EmailVerified,
+		CreatedAt:     u.CreatedAt,
+		UpdatedAt:     u.UpdatedAt,
 	}
 }
 
@@ -41,6 +43,10 @@ type RegisterUserRequest struct {
 	Username string  `json:"username" binding:"required"`
 	Email    *string `json:"email" binding:"omitempty,email"`
 	Password string  `json:"password" binding:"required,min=8"`
+}
+
+type VerifyEmailRequest struct {
+	Token string `json:"token" binding:"required"`
 }
 
 type LogInUserRequest struct {
@@ -64,6 +70,15 @@ type ChangePasswordRequest struct {
 	NewPassword string `json:"new_password" binding:"required,min=8"`
 }
 
+type ForgotPasswordRequest struct {
+	Email string `json:"email" binding:"required,email"`
+}
+
+type SetNewPasswordRequest struct {
+	Token       string `json:"token" binding:"required"`
+	NewPassword string `json:"new_password" binding:"required,min=8"`
+}
+
 type DeleteAccountRequest struct {
 	CurrentPassword string `json:"password" binding:"required"`
 }
@@ -71,9 +86,10 @@ type DeleteAccountRequest struct {
 type UserResponse struct {
 	ID uuid.UUID `json:"id"`
 	//Avatar *string `json:"image"` //TODO: Add support for user avatars (S3)
-	Name      *string   `json:"name"`
-	Username  string    `json:"username"`
-	Email     *string   `json:"email"`
-	CreatedAt time.Time `json:"created_at"`
-	UpdatedAt time.Time `json:"updated_at"`
+	Name          *string   `json:"name"`
+	Username      string    `json:"username"`
+	Email         *string   `json:"email"`
+	EmailVerified bool      `json:"email_verified"`
+	CreatedAt     time.Time `json:"created_at"`
+	UpdatedAt     time.Time `json:"updated_at"`
 }

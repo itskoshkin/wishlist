@@ -12,22 +12,36 @@ import (
 )
 
 const (
-	projectPrefix       = "wishlist"
-	revokedTokensPrefix = projectPrefix + ":" + "revoked_token:"
-	passwordResetPrefix = projectPrefix + ":" + "password_reset_token:"
+	projectPrefix           = "wishlist"
+	emailVerificationPrefix = projectPrefix + ":" + "email_verification_token:"
+	revokedAuthTokensPrefix = projectPrefix + ":" + "revoked_auth_token:"
+	passwordResetPrefix     = projectPrefix + ":" + "password_reset_token:"
 )
 
 type TokenStorageImpl struct {
-	client *redis.Client
-	pwdTTL time.Duration // Password Reset Token TTL
+	client  *redis.Client
+	pwdTTL  time.Duration // Password Reset Token TTL
+	emVfTTL time.Duration // Email Verification Token TTL
 }
 
 func NewTokenStorage(client *redis.Client) *TokenStorageImpl {
-	return &TokenStorageImpl{client: client, pwdTTL: viper.GetDuration(config.PwdResetTokenTTL)}
+	return &TokenStorageImpl{client: client, pwdTTL: viper.GetDuration(config.PwdResetTokenTTL), emVfTTL: viper.GetDuration(config.EmailVerifyTokenTTL)}
+}
+
+func (ts *TokenStorageImpl) SaveEmailVerificationToken(ctx context.Context, tokenID, userID string) error {
+	return ts.client.Set(ctx, emailVerificationPrefix+tokenID, userID, ts.emVfTTL).Err()
+}
+
+func (ts *TokenStorageImpl) GetEmailVerificationToken(ctx context.Context, tokenID string) (string, error) {
+	return ts.client.Get(ctx, emailVerificationPrefix+tokenID).Result()
+}
+
+func (ts *TokenStorageImpl) DeleteEmailVerificationToken(ctx context.Context, tokenID string) error {
+	return ts.client.Del(ctx, emailVerificationPrefix+tokenID).Err()
 }
 
 func (ts *TokenStorageImpl) CheckIfAuthTokenRevoked(ctx context.Context, tokenID string) (bool, error) {
-	if err := ts.client.Get(ctx, revokedTokensPrefix+tokenID).Err(); err != nil {
+	if err := ts.client.Get(ctx, revokedAuthTokensPrefix+tokenID).Err(); err != nil {
 		if errors.Is(err, redis.Nil) {
 			return false, nil
 		}
@@ -37,7 +51,7 @@ func (ts *TokenStorageImpl) CheckIfAuthTokenRevoked(ctx context.Context, tokenID
 }
 
 func (ts *TokenStorageImpl) RevokeAuthTokens(ctx context.Context, tokenID string, remainingTTL time.Duration) error {
-	return ts.client.Set(ctx, revokedTokensPrefix+tokenID, "ACTIVE, REVOKED", remainingTTL).Err()
+	return ts.client.Set(ctx, revokedAuthTokensPrefix+tokenID, "ACTIVE, REVOKED", remainingTTL).Err()
 }
 
 func (ts *TokenStorageImpl) SavePasswordResetToken(ctx context.Context, tokenID string, userID string) error {

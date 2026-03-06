@@ -21,6 +21,9 @@ app:
       access_token_ttl: "24h"
       refresh_token_ttl: "168h" # 7 days
       pwd_reset_token_ttl: "1h"
+      email_verify_token_ttl: "24h"
+  webapp:
+    domain: "wishlist.itskoshkin.ru"
   database:
     host: "localhost"
     port: 5432
@@ -33,3 +36,9 @@ app:
     port: 6379
     password: "4221"
     database: 0
+  email:
+    host: "smtp.gmail.com"
+    port: "587"
+    user: "your@gmail.com" # Address with +tag (your+wishlist@gmail.com) can also be used, but first add it at https://mail.google.com/mail/u/0/#settings/accounts in section "Send mail as"
+    password: "4221" # Google app password from https://myaccount.google.com/apppasswords, see https://support.google.com/mail/answer/185833?hl=en for more info
+    from: "Wishlist <your@gmail.com>"

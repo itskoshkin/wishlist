@@ -27,15 +27,16 @@ const (
 	GinReleaseMode     = "app.api.gin_release_mode"
 	ApiShutdownTimeout = "app.api.shutdown_timeout"
 
-	//WebAppDomain = "app.webapp.domain"
+	WebAppDomain = "app.webapp.domain"
 
-	JwtIssuer          = "app.api.auth.jwt_issuer"
-	JwtAudience        = "app.api.auth.jwt_audience"
-	AccessTokenSecret  = "app.api.auth.access_token_secret"
-	RefreshTokenSecret = "app.api.auth.refresh_token_secret"
-	AccessTokenTTL     = "app.api.auth.access_token_ttl"
-	RefreshTokenTTL    = "app.api.auth.refresh_token_ttl"
-	PwdResetTokenTTL   = "app.api.auth.pwd_reset_token_ttl"
+	JwtIssuer           = "app.api.auth.jwt_issuer"
+	JwtAudience         = "app.api.auth.jwt_audience"
+	AccessTokenSecret   = "app.api.auth.access_token_secret"
+	RefreshTokenSecret  = "app.api.auth.refresh_token_secret"
+	AccessTokenTTL      = "app.api.auth.access_token_ttl"
+	RefreshTokenTTL     = "app.api.auth.refresh_token_ttl"
+	PwdResetTokenTTL    = "app.api.auth.pwd_reset_token_ttl"
+	EmailVerifyTokenTTL = "app.api.auth.email_verify_token_ttl"
 
 	DatabaseHost     = "app.database.host"
 	DatabasePort     = "app.database.port"
@@ -48,6 +49,12 @@ const (
 	RedisPort     = "app.redis.port"
 	RedisPassword = "app.redis.password"
 	RedisDB       = "app.redis.database"
+
+	EmailHost     = "app.email.host"
+	EmailPort     = "app.email.port"
+	EmailUser     = "app.email.user"
+	EmailPassword = "app.email.password"
+	EmailFrom     = "app.email.from"
 )
 
 func LoadConfig() {
@@ -75,8 +82,9 @@ func ValidateConfigFields() error {
 		DatabaseHost, DatabasePort, DatabaseUser, DatabasePassword,
 		ApiPort, AccessTokenSecret, RefreshTokenSecret, JwtIssuer, JwtAudience,
 	}
-	var dependent = map[string]string{ // If A=true => must be non-empty B
-		LogToFile: LogFilePath,
+	var dependent = map[string][]string{ // If A=true => must be non-empty B (, C...)
+		LogToFile: {LogFilePath},
+		EmailHost: {EmailUser, EmailPassword, EmailFrom},
 	}
 	var possibleValues = map[string][]string{ // If present, must be one of these values
 		LogLevel:    {"DEBUG", "INFO", "WARN", "ERROR"},
@@ -89,6 +97,7 @@ func ValidateConfigFields() error {
 		/* Redis */ RedisHost: "localhost", RedisPort: 6379, RedisDB: 0,
 		/* API */ ApiBasePath: "/api/v1", ApiShutdownTimeout: "5s",
 		/* JWT */ AccessTokenTTL: "24h", RefreshTokenTTL: "168h" /* 7 days */, PwdResetTokenTTL: "1h", JwtIssuer: "wishlist", JwtAudience: "Wishlist API",
+		/* Email */ EmailPort: "587" /* Default port */, EmailVerifyTokenTTL: "24h",
 	}
 
 	for k, v := range defaults {
@@ -112,10 +121,12 @@ func ValidateConfigFields() error {
 		return fmt.Errorf("missing required fields/values in config: %s", strings.Join(missing, ", "))
 	}
 
-	for triggerKey, requiredKey := range dependent {
-		if viper.GetBool(triggerKey) {
-			if !viper.IsSet(requiredKey) || strings.TrimSpace(viper.GetString(requiredKey)) == "" {
-				missing = append(missing, fmt.Sprintf("%s (%s=true)", requiredKey, triggerKey))
+	for triggerKey, requiredKeys := range dependent {
+		if viper.GetBool(triggerKey) || (viper.IsSet(triggerKey) && viper.GetString(triggerKey) != "") {
+			for _, key := range requiredKeys {
+				if strings.TrimSpace(viper.GetString(key)) == "" {
+					missing = append(missing, fmt.Sprintf("%s (%s is set)", key, triggerKey))
+				}
 			}
 		}
 	}
@@ -143,7 +154,7 @@ func ValidateConfigFields() error {
 			invalid = append(invalid, fmt.Sprintf("'%s' for '%s' (must be one of [%s])", val, key, strings.Join(allowed, ", ")))
 		}
 	}
-	for _, key := range []string{ApiShutdownTimeout, AccessTokenTTL, RefreshTokenTTL, PwdResetTokenTTL} {
+	for _, key := range []string{ApiShutdownTimeout, AccessTokenTTL, RefreshTokenTTL, PwdResetTokenTTL, EmailVerifyTokenTTL} {
 		if viper.GetDuration(key) <= 0 {
 			invalid = append(invalid, fmt.Sprintf("%s (duration must be >0, got '%s')", key, viper.GetString(key)))
 		}

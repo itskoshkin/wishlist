@@ -26,11 +26,14 @@ type AuthService interface {
 
 type UserService interface {
 	Register(ctx context.Context, req models.RegisterUserRequest) (models.User, error)
+	VerifyEmail(ctx context.Context, token string) error
 	LogIn(ctx context.Context, req models.LogInUserRequest) (models.User, error)
 	GetUserByID(ctx context.Context, id uuid.UUID) (models.User, error)
 	UpdateUserByID(ctx context.Context, id uuid.UUID, req models.UpdateUserRequest) error
 	VerifyPassword(ctx context.Context, id uuid.UUID, password string) error
 	ChangePassword(ctx context.Context, id uuid.UUID, req models.ChangePasswordRequest) error
+	RequestPasswordReset(ctx context.Context, email string) error
+	ResetPassword(ctx context.Context, token, newPassword string) error
 	Delete(ctx context.Context, id uuid.UUID) error
 }
 
@@ -41,8 +44,8 @@ type UsersController struct {
 	mw          *middlewares.Middlewares
 }
 
-func NewUsersController(engine *gin.Engine, authService AuthService, userService UserService, mw *middlewares.Middlewares) *UsersController {
-	return &UsersController{router: engine, authService: authService, userService: userService, mw: mw}
+func NewUsersController(e *gin.Engine, mw *middlewares.Middlewares, as AuthService, us UserService) *UsersController {
+	return &UsersController{router: e, mw: mw, authService: as, userService: us}
 }
 
 func (ctrl *UsersController) RegisterRoutes() {
@@ -50,9 +53,13 @@ func (ctrl *UsersController) RegisterRoutes() {
 	authRoutes := basePath.Group("/auth")
 	{
 		authRoutes.POST("/register", ctrl.Register)
+		authRoutes.POST("/verify-email", ctrl.VerifyEmail)
 		authRoutes.POST("/login", ctrl.LogIn)
 		authRoutes.POST("/refresh", ctrl.RefreshTokens)
 		authRoutes.POST("/logout", ctrl.mw.AuthMiddleware(), ctrl.LogOut)
+
+		authRoutes.POST("/forgot-password", ctrl.ForgotPassword)
+		authRoutes.POST("/set-new-password", ctrl.SetNewPassword)
 	}
 	userRoutes := basePath.Group("/users")
 	{
@@ -60,8 +67,8 @@ func (ctrl *UsersController) RegisterRoutes() {
 		{
 			authedUserRoutes.GET("/me", ctrl.GetCurrentUser)
 			authedUserRoutes.PATCH("/me", ctrl.UpdateCurrentUser)
-			authedUserRoutes.DELETE("/me", ctrl.DeleteCurrentUser)
 			authedUserRoutes.PATCH("/update-password", ctrl.UpdateCurrentPassword)
+			authedUserRoutes.DELETE("/me", ctrl.DeleteCurrentUser)
 
 			authedUserRoutes.GET("/:uuid", ctrl.GetUserByID)
 		}
@@ -94,6 +101,25 @@ func (ctrl *UsersController) Register(ctx *gin.Context) {
 		},
 		User: user.ToPrivateResponse(),
 	})
+}
+
+func (ctrl *UsersController) VerifyEmail(ctx *gin.Context) {
+	var req models.VerifyEmailRequest
+	if err := ctx.ShouldBindJSON(&req); err != nil {
+		apiModels.Error(ctx, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	if err := ctrl.userService.VerifyEmail(ctx, req.Token); err != nil {
+		if _, ok := errors.AsType[svcErr.ValidationError](err); ok {
+			apiModels.Error(ctx, http.StatusBadRequest, err.Error())
+			return
+		}
+		apiModels.InternalError(ctx, err.Error())
+		return
+	}
+
+	ctx.JSON(200, apiModels.APIResponse{Message: "email verified"})
 }
 
 func (ctrl *UsersController) LogIn(ctx *gin.Context) {
@@ -252,6 +278,36 @@ func (ctrl *UsersController) UpdateCurrentPassword(ctx *gin.Context) {
 	}
 
 	ctx.JSON(200, apiModels.APIResponse{Message: "password changed"})
+}
+
+func (ctrl *UsersController) ForgotPassword(ctx *gin.Context) {
+	var req models.ForgotPasswordRequest
+	if err := ctx.ShouldBindJSON(&req); err != nil {
+		apiModels.Error(ctx, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	if err := ctrl.userService.RequestPasswordReset(ctx, req.Email); err != nil {
+		apiModels.InternalError(ctx, err.Error())
+		return
+	}
+
+	ctx.JSON(200, apiModels.APIResponse{Message: "if account with this email exists, you will receive a password reset link shortly"})
+}
+
+func (ctrl *UsersController) SetNewPassword(ctx *gin.Context) {
+	var req models.SetNewPasswordRequest
+	if err := ctx.ShouldBindJSON(&req); err != nil {
+		apiModels.Error(ctx, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	if err := ctrl.userService.ResetPassword(ctx, req.Token, req.NewPassword); err != nil {
+		apiModels.InternalError(ctx, err.Error())
+		return
+	}
+
+	ctx.JSON(200, apiModels.APIResponse{Message: "password has been reset"})
 }
 
 func (ctrl *UsersController) DeleteCurrentUser(ctx *gin.Context) {

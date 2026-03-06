@@ -13,6 +13,9 @@ import (
 )
 
 type TokenStorage interface {
+	SaveEmailVerificationToken(ctx context.Context, tokenID, userID string) error
+	GetEmailVerificationToken(ctx context.Context, tokenID string) (string, error)
+	DeleteEmailVerificationToken(ctx context.Context, tokenID string) error
 	CheckIfAuthTokenRevoked(ctx context.Context, tokenID string) (bool, error)
 	RevokeAuthTokens(ctx context.Context, tokenID string, remainingTTL time.Duration) error
 	SavePasswordResetToken(ctx context.Context, tokenID string, userID string) error

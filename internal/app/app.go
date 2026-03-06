@@ -40,9 +40,11 @@ func Load() *App {
 	st := storage.NewUserStorage(db)
 	ts := storage.NewTokenStorage(rc)
 	as := services.NewAuthService(ts)
-	us := services.NewUserService(st)
+	es := services.NewEmailService()
+	us := services.NewUserService(es, st, ts, logger.GlobalLogger{})
 	mw := middlewares.NewMiddlewares(as)
-	uc := controllers.NewUsersController(e, as, us, mw)
+	uc := controllers.NewUsersController(e, mw, as, us)
+
 	return &App{API: api.NewAPI(e, uc)}
 }
 
