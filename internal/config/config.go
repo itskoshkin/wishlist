@@ -8,6 +8,7 @@ import (
 	"github.com/spf13/viper"
 
 	"wishlist/internal/utils/colors"
+	"wishlist/pkg/minio"
 	"wishlist/pkg/postgres"
 	"wishlist/pkg/redis"
 )
@@ -50,6 +51,13 @@ const (
 	RedisPassword = "app.redis.password"
 	RedisDB       = "app.redis.database"
 
+	MinioEndpoint        = "app.minio.endpoint"
+	MinioAccessKeyID     = "app.minio.access_key_id"
+	MinioAccessKeySecret = "app.minio.access_key_secret"
+	MinioUseSSL          = "app.minio.use_ssl"
+	MinioBucketName      = "app.minio.bucket_name"
+	MinioMaxFileSize     = "app.minio.max_upload_size_mb"
+
 	EmailHost     = "app.email.host"
 	EmailPort     = "app.email.port"
 	EmailUser     = "app.email.user"
@@ -81,6 +89,7 @@ func ValidateConfigFields() error {
 	var required = []string{ // Must be present and non-empty
 		DatabaseHost, DatabasePort, DatabaseUser, DatabasePassword,
 		ApiPort, AccessTokenSecret, RefreshTokenSecret, JwtIssuer, JwtAudience,
+		MinioEndpoint, MinioAccessKeyID, MinioAccessKeySecret,
 	}
 	var dependent = map[string][]string{ // If A=true => must be non-empty B (, C...)
 		LogToFile: {LogFilePath},
@@ -98,6 +107,7 @@ func ValidateConfigFields() error {
 		/* API */ ApiBasePath: "/api/v1", ApiShutdownTimeout: "5s",
 		/* JWT */ AccessTokenTTL: "24h", RefreshTokenTTL: "168h" /* 7 days */, PwdResetTokenTTL: "1h", JwtIssuer: "wishlist", JwtAudience: "Wishlist API",
 		/* Email */ EmailPort: "587" /* Default port */, EmailVerifyTokenTTL: "24h",
+		/* Minio */ MinioBucketName: "wishlist", MinioMaxFileSize: 5,
 	}
 
 	for k, v := range defaults {
@@ -184,5 +194,15 @@ func RedisConfig() redis.Config {
 		Port:     viper.GetString(RedisPort),
 		Password: viper.GetString(RedisPassword),
 		Database: viper.GetInt(RedisDB),
+	}
+}
+
+func MinioConfig() minio.Config {
+	return minio.Config{
+		Endpoint:        viper.GetString(MinioEndpoint),
+		AccessKeyID:     viper.GetString(MinioAccessKeyID),
+		SecretAccessKey: viper.GetString(MinioAccessKeySecret),
+		UseSSL:          viper.GetBool(MinioUseSSL),
+		BucketName:      viper.GetString(MinioBucketName),
 	}
 }

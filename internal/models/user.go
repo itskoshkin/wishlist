@@ -7,8 +7,8 @@ import (
 )
 
 type User struct {
-	ID uuid.UUID
-	//Avatar *string //TODO: Add support for user avatars (S3)
+	ID            uuid.UUID
+	Avatar        *string
 	Name          string
 	Username      string
 	Email         *string
@@ -21,6 +21,7 @@ type User struct {
 func (u User) ToPrivateResponse() UserResponse {
 	return UserResponse{
 		ID:            u.ID,
+		Avatar:        u.Avatar,
 		Name:          &u.Name,
 		Username:      u.Username,
 		Email:         u.Email,
@@ -33,6 +34,7 @@ func (u User) ToPrivateResponse() UserResponse {
 func (u User) ToPublicResponse() UserResponse {
 	return UserResponse{
 		ID:       u.ID,
+		Avatar:   u.Avatar,
 		Name:     &u.Name,
 		Username: u.Username,
 	}
@@ -60,6 +62,7 @@ type RefreshTokenRequest struct {
 
 type UpdateUserRequest struct {
 	Name     *string `json:"name"`
+	Avatar   *string `json:"-"`
 	Username *string `json:"username"`
 	Email    *string `json:"email" binding:"omitempty,email"`
 	Password *string `json:"-"`
@@ -84,8 +87,8 @@ type DeleteAccountRequest struct {
 }
 
 type UserResponse struct {
-	ID uuid.UUID `json:"id"`
-	//Avatar *string `json:"image"` //TODO: Add support for user avatars (S3)
+	ID            uuid.UUID `json:"id"`
+	Avatar        *string   `json:"avatar"`
 	Name          *string   `json:"name"`
 	Username      string    `json:"username"`
 	Email         *string   `json:"email"`

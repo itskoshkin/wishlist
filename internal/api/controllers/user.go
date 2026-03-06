@@ -3,6 +3,7 @@ package controllers
 import (
 	"context"
 	"errors"
+	"io"
 	"net/http"
 	"strings"
 
@@ -29,7 +30,10 @@ type UserService interface {
 	VerifyEmail(ctx context.Context, token string) error
 	LogIn(ctx context.Context, req models.LogInUserRequest) (models.User, error)
 	GetUserByID(ctx context.Context, id uuid.UUID) (models.User, error)
-	UpdateUserByID(ctx context.Context, id uuid.UUID, req models.UpdateUserRequest) error
+	UpdateUserByID(ctx context.Context, id uuid.UUID, req models.UpdateUserRequest) error //TODO: Rename to "Current"?
+	//UpdateAvatar(ctx context.Context, id uuid.UUID, filePath, contentType string) error
+	UpdateAvatar(ctx context.Context, id uuid.UUID, reader io.Reader, size int64, contentType string) error
+	DeleteAvatar(ctx context.Context, id uuid.UUID) error
 	VerifyPassword(ctx context.Context, id uuid.UUID, password string) error
 	ChangePassword(ctx context.Context, id uuid.UUID, req models.ChangePasswordRequest) error
 	RequestPasswordReset(ctx context.Context, email string) error
@@ -67,7 +71,9 @@ func (ctrl *UsersController) RegisterRoutes() {
 		{
 			authedUserRoutes.GET("/me", ctrl.GetCurrentUser)
 			authedUserRoutes.PATCH("/me", ctrl.UpdateCurrentUser)
-			authedUserRoutes.PATCH("/update-password", ctrl.UpdateCurrentPassword)
+			authedUserRoutes.PUT("/me/avatar", ctrl.UpdateAvatar)
+			authedUserRoutes.DELETE("/me/avatar", ctrl.DeleteAvatar)
+			authedUserRoutes.PATCH("/me/update-password", ctrl.UpdateCurrentPassword)
 			authedUserRoutes.DELETE("/me", ctrl.DeleteCurrentUser)
 
 			authedUserRoutes.GET("/:uuid", ctrl.GetUserByID)
@@ -253,6 +259,71 @@ func (ctrl *UsersController) UpdateCurrentUser(ctx *gin.Context) {
 	}
 
 	ctx.JSON(200, user.ToPrivateResponse())
+}
+
+func (ctrl *UsersController) UpdateAvatar(ctx *gin.Context) {
+	userID, ok := middlewares.GetUserID(ctx)
+	if !ok {
+		apiModels.Error(ctx, http.StatusUnauthorized, "user ID not found in context")
+		return
+	}
+
+	//file, header, err := ctx.Request.FormFile("avatar")
+	fileHeader, err := ctx.FormFile("avatar")
+	if err != nil {
+		apiModels.Error(ctx, http.StatusBadRequest, "avatar file is required")
+		return
+	}
+
+	maxSize := int64(viper.GetInt(config.MinioMaxFileSize)) << 20 // 5 << 20 = 5 * 1 048 576 = 5 242 880 bytes = 5 MB
+	if fileHeader.Size > maxSize {
+		apiModels.Error(ctx, http.StatusBadRequest, "avatar file too large (max 10 MB)")
+		return
+	}
+
+	contentType := fileHeader.Header.Get("Content-Type")
+	switch contentType {
+	case /*"image/heic", "image/heif",*/ "image/jpeg", "image/png", "image/webp", "image/gif": //TODO: HEIF isn't native for browsers except Safari, will need to use some lib to convert to JPG
+		// continue
+	default:
+		apiModels.Error(ctx, http.StatusBadRequest, "unsupported image format (PNG, JPG, WEBP or GIF only)") // HEIC/HEIF
+		return
+	}
+
+	file, err := fileHeader.Open()
+	if err != nil {
+		apiModels.InternalError(ctx, err.Error())
+		return
+	}
+	defer func() { _ = file.Close() }()
+
+	if err = ctrl.userService.UpdateAvatar(ctx, userID, file, fileHeader.Size, contentType); err != nil {
+		apiModels.InternalError(ctx, err.Error())
+		return
+	}
+
+	user, err := ctrl.userService.GetUserByID(ctx, userID)
+	if err != nil {
+		apiModels.InternalError(ctx, err.Error())
+		return
+	}
+
+	ctx.JSON(http.StatusOK, user.ToPrivateResponse())
+}
+
+func (ctrl *UsersController) DeleteAvatar(ctx *gin.Context) {
+	userID, ok := middlewares.GetUserID(ctx)
+	if !ok {
+		apiModels.Error(ctx, http.StatusUnauthorized, "user ID not found in context")
+		return
+	}
+
+	if err := ctrl.userService.DeleteAvatar(ctx, userID); err != nil {
+		apiModels.InternalError(ctx, err.Error())
+		return
+	}
+
+	ctx.JSON(http.StatusOK, apiModels.APIResponse{Message: "avatar deleted"})
 }
 
 func (ctrl *UsersController) UpdateCurrentPassword(ctx *gin.Context) {

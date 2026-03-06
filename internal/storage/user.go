@@ -43,8 +43,8 @@ func (us *UserStorageImpl) SetUserEmailAsVerified(ctx context.Context, id uuid.U
 func (us *UserStorageImpl) GetUserByID(ctx context.Context, id uuid.UUID) (models.User, error) {
 	var user models.User
 
-	if err := us.pool.QueryRow(ctx, `SELECT id, name, username, email, email_verified, password, created_at, updated_at FROM users WHERE id = $1`, id).Scan(
-		&user.ID, &user.Name, &user.Username, &user.Email, &user.EmailVerified, &user.Password, &user.CreatedAt, &user.UpdatedAt,
+	if err := us.pool.QueryRow(ctx, `SELECT id, avatar, name, username, email, email_verified, password, created_at, updated_at FROM users WHERE id = $1`, id).Scan(
+		&user.ID, &user.Avatar, &user.Name, &user.Username, &user.Email, &user.EmailVerified, &user.Password, &user.CreatedAt, &user.UpdatedAt,
 	); err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
 			return models.User{}, fmt.Errorf("failed to get user with ID '%s': not found", id)
@@ -58,8 +58,8 @@ func (us *UserStorageImpl) GetUserByID(ctx context.Context, id uuid.UUID) (model
 func (us *UserStorageImpl) GetUserByUsername(ctx context.Context, username string) (models.User, error) {
 	var user models.User
 
-	if err := us.pool.QueryRow(ctx, `SELECT id, name, username, email, email_verified, password, created_at, updated_at FROM users WHERE username = $1`, username).Scan(
-		&user.ID, &user.Name, &user.Username, &user.Email, &user.EmailVerified, &user.Password, &user.CreatedAt, &user.UpdatedAt,
+	if err := us.pool.QueryRow(ctx, `SELECT id, avatar, name, username, email, email_verified, password, created_at, updated_at FROM users WHERE username = $1`, username).Scan(
+		&user.ID, &user.Avatar, &user.Name, &user.Username, &user.Email, &user.EmailVerified, &user.Password, &user.CreatedAt, &user.UpdatedAt,
 	); err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
 			return models.User{}, fmt.Errorf("failed to get user with username '%s': not found", username)
@@ -73,8 +73,8 @@ func (us *UserStorageImpl) GetUserByUsername(ctx context.Context, username strin
 func (us *UserStorageImpl) GetUserByEmail(ctx context.Context, email string) (models.User, error) {
 	var user models.User
 
-	if err := us.pool.QueryRow(ctx, `SELECT id, name, username, email, email_verified, password, created_at, updated_at FROM users WHERE email = $1`, email).Scan(
-		&user.ID, &user.Name, &user.Username, &user.Email, &user.EmailVerified, &user.Password, &user.CreatedAt, &user.UpdatedAt,
+	if err := us.pool.QueryRow(ctx, `SELECT id, avatar, name, username, email, email_verified, password, created_at, updated_at FROM users WHERE email = $1`, email).Scan(
+		&user.ID, &user.Avatar, &user.Name, &user.Username, &user.Email, &user.EmailVerified, &user.Password, &user.CreatedAt, &user.UpdatedAt,
 	); err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
 			return models.User{}, fmt.Errorf("failed to get user with email '%s': not found", email)
@@ -90,6 +90,11 @@ func (us *UserStorageImpl) UpdateUserByID(ctx context.Context, id uuid.UUID, req
 	var args []any
 	var index = 1
 
+	if req.Avatar != nil {
+		clauses = append(clauses, fmt.Sprintf("avatar = $%d", index))
+		args = append(args, *req.Avatar)
+		index++
+	}
 	if req.Name != nil {
 		clauses = append(clauses, fmt.Sprintf("name = $%d", index))
 		args = append(args, *req.Name)
@@ -122,6 +127,16 @@ func (us *UserStorageImpl) UpdateUserByID(ctx context.Context, id uuid.UUID, req
 		return fmt.Errorf("failed to update user with ID '%s': %w", id, err) //                                                                                                                                                                                   ^
 	} else if result.RowsAffected() == 0 {
 		return fmt.Errorf("failed to update user with ID '%s': not found", id)
+	}
+
+	return nil
+}
+
+func (us *UserStorageImpl) RemoveUserAvatar(ctx context.Context, id uuid.UUID) error {
+	if result, err := us.pool.Exec(ctx, "UPDATE users SET avatar = NULL, updated_at = now() WHERE id = $1", id); err != nil {
+		return fmt.Errorf("failed to remove avatar for user with ID '%s': %w", id, err)
+	} else if result.RowsAffected() == 0 {
+		return fmt.Errorf("failed to remove avatar for user with ID '%s': not found", id)
 	}
 
 	return nil

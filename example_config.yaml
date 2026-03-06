@@ -36,6 +36,13 @@ app:
     port: 6379
     password: "4221"
     database: 0
+  minio:
+    endpoint: "localhost:9000"
+    access_key_id: "Q3AM..."
+    access_key_secret: "zf+t..."
+    use_ssl: false
+    bucket_name: "wishlist"
+    max_upload_size_mb: 10
   email:
     host: "smtp.gmail.com"
     port: "587"

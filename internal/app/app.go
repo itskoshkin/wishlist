@@ -11,6 +11,7 @@ import (
 	"wishlist/internal/logger"
 	"wishlist/internal/services"
 	"wishlist/internal/storage"
+	"wishlist/pkg/minio"
 	"wishlist/pkg/postgres"
 	"wishlist/pkg/redis"
 )
@@ -36,12 +37,18 @@ func Load() *App {
 		logger.Fatal(err)
 	}
 
+	s3, err := minio.NewClient(ctx, config.MinioConfig())
+	if err != nil {
+		logger.Fatal(err)
+	}
+
 	e := api.NewEngine()
 	st := storage.NewUserStorage(db)
 	ts := storage.NewTokenStorage(rc)
 	as := services.NewAuthService(ts)
 	es := services.NewEmailService()
-	us := services.NewUserService(es, st, ts, logger.GlobalLogger{})
+	ms := storage.NewMinioService(s3)
+	us := services.NewUserService(es, st, ts, ms, logger.GlobalLogger{})
 	mw := middlewares.NewMiddlewares(as)
 	uc := controllers.NewUsersController(e, mw, as, us)
 

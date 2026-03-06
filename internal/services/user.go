@@ -3,6 +3,8 @@ package services
 import (
 	"context"
 	"fmt"
+	"io"
+	"strings"
 	"time"
 
 	"github.com/google/uuid"
@@ -10,6 +12,7 @@ import (
 
 	"wishlist/internal/models"
 	"wishlist/internal/services/errors"
+	"wishlist/internal/storage"
 	"wishlist/internal/utils/str"
 )
 
@@ -25,7 +28,16 @@ type UserStorage interface {
 	GetUserByUsername(ctx context.Context, username string) (models.User, error)
 	GetUserByEmail(ctx context.Context, email string) (models.User, error)
 	UpdateUserByID(ctx context.Context, id uuid.UUID, req models.UpdateUserRequest) error
+	RemoveUserAvatar(ctx context.Context, id uuid.UUID) error
 	DeleteUserByID(ctx context.Context, id uuid.UUID) error
+}
+
+type AvatarStorage interface {
+	GetBaseURL() string
+	//UploadObject(ctx context.Context, objectName, filePath, contentType string) error
+	UploadObject(ctx context.Context, objectName string, reader io.Reader, size int64, contentType string) error
+	GetObjectURL(objectName string) string
+	DeleteObject(ctx context.Context, objectName string) error
 }
 
 type Logger interface {
@@ -36,11 +48,12 @@ type UserServiceImpl struct {
 	email   EmailService
 	tokens  TokenStorage
 	storage UserStorage
+	s3      AvatarStorage
 	log     Logger //MARK: Unsure if it is a good idea, but definitely better than putting logger from controller
 }
 
-func NewUserService(es EmailService, us UserStorage, ts TokenStorage, l Logger) *UserServiceImpl {
-	return &UserServiceImpl{email: es, tokens: ts, storage: us, log: l}
+func NewUserService(es EmailService, us UserStorage, ts TokenStorage, ms AvatarStorage, l Logger) *UserServiceImpl {
+	return &UserServiceImpl{email: es, tokens: ts, storage: us, s3: ms, log: l}
 }
 
 func (svc *UserServiceImpl) Register(ctx context.Context, req models.RegisterUserRequest) (models.User, error) {
@@ -131,6 +144,51 @@ func (svc *UserServiceImpl) GetUserByID(ctx context.Context, id uuid.UUID) (mode
 
 func (svc *UserServiceImpl) UpdateUserByID(ctx context.Context, id uuid.UUID, req models.UpdateUserRequest) error {
 	return svc.storage.UpdateUserByID(ctx, id, req)
+}
+
+func (svc *UserServiceImpl) UpdateAvatar(ctx context.Context, id uuid.UUID, reader io.Reader, size int64, contentType string) error {
+	objectName := fmt.Sprintf(storage.AvatarPrefix, id, uuid.NewString())
+
+	if err := svc.s3.UploadObject(ctx, objectName, reader, size, contentType); err != nil {
+		return fmt.Errorf("failed to upload avatar: %w", err)
+	}
+
+	user, err := svc.storage.GetUserByID(ctx, id)
+	if err != nil {
+		return err
+	}
+
+	avatarURL := svc.s3.GetObjectURL(objectName)
+	if err = svc.storage.UpdateUserByID(ctx, id, models.UpdateUserRequest{Avatar: &avatarURL}); err != nil {
+		return fmt.Errorf("failed to save avatar URL: %w", err)
+	}
+
+	if user.Avatar != nil {
+		objectName = strings.TrimPrefix(*user.Avatar, svc.s3.GetBaseURL()+"/")
+		if err = svc.s3.DeleteObject(ctx, objectName); err != nil {
+			svc.log.Error("failed to delete previous avatar for user with ID '%s': %v", user.ID.String(), err)
+		}
+	}
+
+	return nil
+}
+
+func (svc *UserServiceImpl) DeleteAvatar(ctx context.Context, id uuid.UUID) error {
+	user, err := svc.storage.GetUserByID(ctx, id)
+	if err != nil {
+		return err
+	}
+
+	if user.Avatar == nil {
+		return nil // Nothing to delete
+	}
+
+	objectName := strings.TrimPrefix(*user.Avatar, svc.s3.GetBaseURL()+"/")
+	if err = svc.s3.DeleteObject(ctx, objectName); err != nil {
+		svc.log.Error("failed to delete avatar for user with ID '%s': %v", id, err)
+	}
+
+	return svc.storage.RemoveUserAvatar(ctx, id)
 }
 
 func (svc *UserServiceImpl) VerifyPassword(ctx context.Context, id uuid.UUID, password string) error {
