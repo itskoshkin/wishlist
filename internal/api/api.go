@@ -25,10 +25,17 @@ import (
 type API struct {
 	engine   *gin.Engine
 	userCtrl *controllers.UsersController
+	listCtrl *controllers.ListsController
+	wishCtrl *controllers.WishesController
 }
 
-func NewAPI(engine *gin.Engine, uc *controllers.UsersController) *API {
-	return &API{engine: engine, userCtrl: uc}
+func NewAPI(e *gin.Engine, uc *controllers.UsersController, lc *controllers.ListsController, wc *controllers.WishesController) *API {
+	return &API{
+		engine:   e,
+		userCtrl: uc,
+		listCtrl: lc,
+		wishCtrl: wc,
+	}
 }
 
 func NewEngine() *gin.Engine {
@@ -49,6 +56,8 @@ func (api *API) RegisterMiddlewares() {
 
 func (api *API) RegisterRoutes() {
 	api.userCtrl.RegisterRoutes()
+	api.listCtrl.RegisterRoutes()
+	api.wishCtrl.RegisterRoutes()
 }
 
 func (api *API) Run() {

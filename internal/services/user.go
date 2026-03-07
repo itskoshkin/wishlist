@@ -83,7 +83,7 @@ func (svc *UserServiceImpl) Register(ctx context.Context, req models.RegisterUse
 
 	if req.Email != nil {
 		var token string
-		token, err = str.GenerateRandomString()
+		token, err = str.GenerateRandomString(32)
 		if err != nil {
 			return models.User{}, fmt.Errorf("failed to generate token: %w", err)
 		}
@@ -234,7 +234,7 @@ func (svc *UserServiceImpl) RequestPasswordReset(ctx context.Context, email stri
 		return nil // Also sealed lips
 	}
 
-	token, err := str.GenerateRandomString()
+	token, err := str.GenerateRandomString(32)
 	if err != nil {
 		return fmt.Errorf("failed to generate token: %w", err)
 	}

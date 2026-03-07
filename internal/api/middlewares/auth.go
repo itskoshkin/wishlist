@@ -47,6 +47,31 @@ func (mw *Middlewares) AuthMiddleware() gin.HandlerFunc {
 	}
 }
 
+func (mw *Middlewares) OptionalAuthMiddleware() gin.HandlerFunc {
+	return func(ctx *gin.Context) {
+		header := ctx.GetHeader("Authorization")
+		if header == "" {
+			ctx.Next()
+			return
+		}
+
+		tokenString, found := strings.CutPrefix(header, "Bearer ")
+		if !found {
+			ctx.Next()
+			return
+		}
+
+		userID, err := mw.authService.ValidateAccessToken(ctx, tokenString)
+		if err != nil {
+			ctx.Next()
+			return
+		}
+
+		ctx.Set("user_id", userID)
+		ctx.Next()
+	}
+}
+
 func GetUserID(ctx *gin.Context) (uuid.UUID, bool) {
 	value, exists := ctx.Get("user_id")
 	if !exists {
