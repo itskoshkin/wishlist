@@ -27,32 +27,44 @@ func Load() *App {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
+	// Databases/clients
 	db, err := postgres.NewInstance(ctx, config.PostgresConfig())
 	if err != nil {
 		logger.Fatal(err)
 	}
-
 	rc, err := redis.NewClient(ctx, config.RedisConfig())
 	if err != nil {
 		logger.Fatal(err)
 	}
-
 	s3, err := minio.NewClient(ctx, config.MinioConfig())
 	if err != nil {
 		logger.Fatal(err)
 	}
 
-	e := api.NewEngine()
-	st := storage.NewUserStorage(db)
-	ts := storage.NewTokenStorage(rc)
-	as := services.NewAuthService(ts)
-	es := services.NewEmailService()
-	ms := storage.NewMinioService(s3)
-	us := services.NewUserService(es, st, ts, ms, logger.GlobalLogger{})
-	mw := middlewares.NewMiddlewares(as)
-	uc := controllers.NewUsersController(e, mw, as, us)
+	// Storages
+	userStore := storage.NewUserStorage(db)
+	wishStore := storage.NewWishStorage(db)
+	listStore := storage.NewListStorage(db)
+	tokenStore := storage.NewTokenStorage(rc)
 
-	return &App{API: api.NewAPI(e, uc)}
+	// Services
+	authSvc := services.NewAuthService(tokenStore)
+	emailSvc := services.NewEmailService()
+	minioSvc := storage.NewMinioService(s3)
+	userSvc := services.NewUserService(emailSvc, userStore, tokenStore, minioSvc, logger.GlobalLogger{})
+	listSvc := services.NewListService(listStore, wishStore)
+	wishSvc := services.NewWishService(wishStore, listStore)
+
+	// API
+	e := api.NewEngine()
+	mw := middlewares.NewMiddlewares(authSvc)
+
+	// Controllers
+	userCtrl := controllers.NewUsersController(e, mw, authSvc, userSvc)
+	listCtrl := controllers.NewListsController(e, mw, listSvc)
+	wishCtrl := controllers.NewWishesController(e, mw, wishSvc)
+
+	return &App{API: api.NewAPI(e, userCtrl, listCtrl, wishCtrl)}
 }
 
 func (a *App) Run() {
