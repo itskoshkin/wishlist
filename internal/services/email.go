@@ -20,10 +20,11 @@ type EmailServiceImpl struct {
 	password string
 	from     string
 	domain   string
+	sender   func(to, subject, body string) error
 }
 
 func NewEmailService() *EmailServiceImpl {
-	return &EmailServiceImpl{
+	es := &EmailServiceImpl{
 		host:     viper.GetString(config.EmailHost),
 		port:     viper.GetString(config.EmailPort),
 		user:     viper.GetString(config.EmailUser),
@@ -31,13 +32,15 @@ func NewEmailService() *EmailServiceImpl {
 		from:     viper.GetString(config.EmailFrom),
 		domain:   "https://" + viper.GetString(config.WebAppDomain),
 	}
+	es.sender = es.send
+	return es
 }
 
 func (svc *EmailServiceImpl) SendEmailVerificationLetter(_ context.Context, to, token string) error {
 	body := fmt.Sprintf("Please verify your email address by clicking the link below:\n\n"+
 		"%s",
 		fmt.Sprintf("%s/verify-email?token=%s", svc.domain, token))
-	return svc.send(to, "Verify your email", body)
+	return svc.sendEmail(to, "Verify your email", body)
 }
 
 func (svc *EmailServiceImpl) SendPasswordResetLetter(_ context.Context, to, token string) error {
@@ -46,7 +49,7 @@ func (svc *EmailServiceImpl) SendPasswordResetLetter(_ context.Context, to, toke
 		"%s\n\n"+
 		"The link expires in 1 hour. If you didn't request this, ignore this email.",
 		fmt.Sprintf("%s/reset-password?token=%s", svc.domain, token))
-	return svc.send(to, "Reset your password", body)
+	return svc.sendEmail(to, "Reset your password", body)
 }
 
 func buildMessage(from, to, subject, body string) []byte {
@@ -59,6 +62,13 @@ func buildMessage(from, to, subject, body string) []byte {
 	sb.WriteString("\r\n")
 	sb.WriteString(body)
 	return []byte(sb.String())
+}
+
+func (svc *EmailServiceImpl) sendEmail(to, subject, body string) error {
+	if svc.sender != nil {
+		return svc.sender(to, subject, body)
+	}
+	return svc.send(to, subject, body)
 }
 
 func (svc *EmailServiceImpl) send(to, subject, body string) error {

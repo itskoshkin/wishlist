@@ -43,7 +43,7 @@ func (ctrl *ListsController) RegisterRoutes() {
 	basePath := ctrl.router.Group(viper.GetString(config.ApiBasePath))
 	listRoutes := basePath.Group("/lists")
 	{
-		authedListRoutes := listRoutes.Use(ctrl.mw.AuthMiddleware())
+		authedListRoutes := listRoutes.Group("").Use(ctrl.mw.AuthMiddleware())
 		{
 			authedListRoutes.POST("", ctrl.CreateList)
 			authedListRoutes.GET("", ctrl.GetCurrentUserLists)
