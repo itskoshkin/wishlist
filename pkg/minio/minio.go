@@ -30,9 +30,15 @@ func NewClient(ctx context.Context, cfg Config) (*minio.Client, error) {
 		return nil, fmt.Errorf("MinIO: failed to initialize client: %w", err)
 	}
 
-	if _, err = client.BucketExists(ctx, cfg.BucketName); err != nil {
+	var exists bool
+	if exists, err = client.BucketExists(ctx, cfg.BucketName); err != nil {
 		fmt.Println()
 		return nil, fmt.Errorf("MinIO: failed to connect: %w", err)
+	} else if !exists {
+		if err = client.MakeBucket(ctx, cfg.BucketName, minio.MakeBucketOptions{}); err != nil {
+			fmt.Println()
+			return nil, fmt.Errorf("MinIO: failed to create bucket '%s': %w", cfg.BucketName, err)
+		}
 	}
 
 	fmt.Println(colors.Green(" Done."))
