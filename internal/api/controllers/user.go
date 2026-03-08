@@ -30,8 +30,7 @@ type UserService interface {
 	VerifyEmail(ctx context.Context, token string) error
 	LogIn(ctx context.Context, req models.LogInUserRequest) (models.User, error)
 	GetUserByID(ctx context.Context, id uuid.UUID) (models.User, error)
-	UpdateUserByID(ctx context.Context, id uuid.UUID, req models.UpdateUserRequest) error //TODO: Rename to "Current"?
-	//UpdateAvatar(ctx context.Context, id uuid.UUID, filePath, contentType string) error
+	UpdateUserByID(ctx context.Context, id uuid.UUID, req models.UpdateUserRequest) error
 	UpdateAvatar(ctx context.Context, id uuid.UUID, reader io.Reader, size int64, contentType string) error
 	DeleteAvatar(ctx context.Context, id uuid.UUID) error
 	VerifyPassword(ctx context.Context, id uuid.UUID, password string) error
@@ -43,9 +42,9 @@ type UserService interface {
 
 type UsersController struct {
 	router      *gin.Engine
+	mw          *middlewares.Middlewares
 	authService AuthService
 	userService UserService
-	mw          *middlewares.Middlewares
 }
 
 func NewUsersController(e *gin.Engine, mw *middlewares.Middlewares, as AuthService, us UserService) *UsersController {
@@ -76,11 +75,22 @@ func (ctrl *UsersController) RegisterRoutes() {
 			authedUserRoutes.PATCH("/me/update-password", ctrl.UpdateCurrentPassword)
 			authedUserRoutes.DELETE("/me", ctrl.DeleteCurrentUser)
 
-			authedUserRoutes.GET("/:uuid", ctrl.GetUserByID)
+			authedUserRoutes.GET("/:user_id", ctrl.GetUserByID)
 		}
 	}
 }
 
+// Register GoDoc
+// @Summary Init user registration
+// @Description Register a new account and return auth tokens; if email is provided, verification flow is also initiated
+// @Tags auth
+// @Accept json
+// @Produce json
+// @Param RegisterRequest body models.RegisterUserRequest true "Registration payload"
+// @Success 201 {object} models.AuthResponse
+// @Failure 400 {object} apiModels.APIError
+// @Failure 500 {object} apiModels.APIError
+// @Router /auth/register [post]
 func (ctrl *UsersController) Register(ctx *gin.Context) {
 	var req models.RegisterUserRequest
 	if err := ctx.ShouldBindJSON(&req); err != nil {
@@ -109,6 +119,17 @@ func (ctrl *UsersController) Register(ctx *gin.Context) {
 	})
 }
 
+// VerifyEmail GoDoc
+// @Summary Verify email
+// @Description Verify user email by token
+// @Tags auth
+// @Accept json
+// @Produce json
+// @Param request body models.VerifyEmailRequest true "Verification token"
+// @Success 200 {object} apiModels.APIResponse
+// @Failure 400 {object} apiModels.APIError
+// @Failure 500 {object} apiModels.APIError
+// @Router /auth/verify-email [post]
 func (ctrl *UsersController) VerifyEmail(ctx *gin.Context) {
 	var req models.VerifyEmailRequest
 	if err := ctx.ShouldBindJSON(&req); err != nil {
@@ -128,6 +149,18 @@ func (ctrl *UsersController) VerifyEmail(ctx *gin.Context) {
 	ctx.JSON(200, apiModels.APIResponse{Message: "email verified"})
 }
 
+// LogIn GoDoc
+// @Summary Login user
+// @Description Login with username and password
+// @Tags auth
+// @Accept json
+// @Produce json
+// @Param request body models.LogInUserRequest true "Credentials"
+// @Success 200 {object} models.AuthResponse
+// @Failure 400 {object} apiModels.APIError
+// @Failure 401 {object} apiModels.APIError
+// @Failure 500 {object} apiModels.APIError
+// @Router /auth/login [post]
 func (ctrl *UsersController) LogIn(ctx *gin.Context) {
 	var req models.LogInUserRequest
 	if err := ctx.ShouldBindJSON(&req); err != nil {
@@ -156,6 +189,18 @@ func (ctrl *UsersController) LogIn(ctx *gin.Context) {
 	})
 }
 
+// RefreshTokens GoDoc
+// @Summary Refresh tokens
+// @Description Get new access and refresh tokens
+// @Tags auth
+// @Accept json
+// @Produce json
+// @Param request body models.RefreshTokenRequest true "Refresh token"
+// @Success 200 {object} models.AuthTokensResponse
+// @Failure 400 {object} apiModels.APIError
+// @Failure 401 {object} apiModels.APIError
+// @Failure 500 {object} apiModels.APIError
+// @Router /auth/refresh [post]
 func (ctrl *UsersController) RefreshTokens(ctx *gin.Context) {
 	var req models.RefreshTokenRequest
 	if err := ctx.ShouldBindJSON(&req); err != nil {
@@ -181,6 +226,19 @@ func (ctrl *UsersController) RefreshTokens(ctx *gin.Context) {
 	})
 }
 
+// LogOut GoDoc
+// @Summary Logout user
+// @Description Revoke access and refresh tokens
+// @Tags auth
+// @Accept json
+// @Produce json
+// @Security BearerAuth
+// @Param request body models.RefreshTokenRequest true "Refresh token"
+// @Success 200 {object} apiModels.APIResponse
+// @Failure 400 {object} apiModels.APIError
+// @Failure 401 {object} apiModels.APIError
+// @Failure 500 {object} apiModels.APIError
+// @Router /auth/logout [post]
 func (ctrl *UsersController) LogOut(ctx *gin.Context) {
 	var req models.RefreshTokenRequest
 	if err := ctx.ShouldBindJSON(&req); err != nil {
@@ -202,6 +260,16 @@ func (ctrl *UsersController) LogOut(ctx *gin.Context) {
 	ctx.JSON(200, apiModels.APIResponse{Message: "logged out"})
 }
 
+// GetCurrentUser GoDoc
+// @Summary Get current user
+// @Description Get current authenticated user profile
+// @Tags users
+// @Produce json
+// @Security BearerAuth
+// @Success 200 {object} models.UserResponse
+// @Failure 401 {object} apiModels.APIError
+// @Failure 500 {object} apiModels.APIError
+// @Router /users/me [get]
 func (ctrl *UsersController) GetCurrentUser(ctx *gin.Context) {
 	userID, ok := middlewares.GetUserID(ctx)
 	if !ok {
@@ -218,8 +286,20 @@ func (ctrl *UsersController) GetCurrentUser(ctx *gin.Context) {
 	ctx.JSON(200, user.ToPrivateResponse())
 }
 
+// GetUserByID GoDoc
+// @Summary Get user by ID
+// @Description Get user public profile by ID
+// @Tags users
+// @Produce json
+// @Security BearerAuth
+// @Param user_id path string true "User ID (UUID)"
+// @Success 200 {object} models.UserResponse
+// @Failure 400 {object} apiModels.APIError
+// @Failure 401 {object} apiModels.APIError
+// @Failure 500 {object} apiModels.APIError
+// @Router /users/{user_id} [get]
 func (ctrl *UsersController) GetUserByID(ctx *gin.Context) {
-	userID, err := uuid.Parse(ctx.Param("id"))
+	userID, err := uuid.Parse(ctx.Param("user_id"))
 	if err != nil {
 		apiModels.Error(ctx, http.StatusBadRequest, "invalid user ID")
 		return
@@ -234,6 +314,19 @@ func (ctrl *UsersController) GetUserByID(ctx *gin.Context) {
 	ctx.JSON(200, user.ToPublicResponse())
 }
 
+// UpdateCurrentUser GoDoc
+// @Summary Update current user
+// @Description Update current authenticated user fields
+// @Tags users
+// @Accept json
+// @Produce json
+// @Security BearerAuth
+// @Param request body models.UpdateUserRequest true "Update payload"
+// @Success 200 {object} models.UserResponse
+// @Failure 400 {object} apiModels.APIError
+// @Failure 401 {object} apiModels.APIError
+// @Failure 500 {object} apiModels.APIError
+// @Router /users/me [patch]
 func (ctrl *UsersController) UpdateCurrentUser(ctx *gin.Context) {
 	userID, ok := middlewares.GetUserID(ctx)
 	if !ok {
@@ -261,6 +354,19 @@ func (ctrl *UsersController) UpdateCurrentUser(ctx *gin.Context) {
 	ctx.JSON(200, user.ToPrivateResponse())
 }
 
+// UpdateAvatar GoDoc
+// @Summary Update user avatar
+// @Description Upload new avatar for current user
+// @Tags users
+// @Accept multipart/form-data
+// @Produce json
+// @Security BearerAuth
+// @Param avatar formData file true "Avatar file"
+// @Success 200 {object} models.UserResponse
+// @Failure 400 {object} apiModels.APIError
+// @Failure 401 {object} apiModels.APIError
+// @Failure 500 {object} apiModels.APIError
+// @Router /users/me/avatar [put]
 func (ctrl *UsersController) UpdateAvatar(ctx *gin.Context) {
 	userID, ok := middlewares.GetUserID(ctx)
 	if !ok {
@@ -283,10 +389,10 @@ func (ctrl *UsersController) UpdateAvatar(ctx *gin.Context) {
 
 	contentType := fileHeader.Header.Get("Content-Type")
 	switch contentType {
-	case /*"image/heic", "image/heif",*/ "image/jpeg", "image/png", "image/webp", "image/gif": //TODO: HEIF isn't native for browsers except Safari, will need to use some lib to convert to JPG
+	case /*"image/heic", */ "image/jpeg", "image/png", "image/webp", "image/gif": //TODO: HEIC isn't native for browsers except Safari, will need to use some lib to convert to JPG
 		// continue
 	default:
-		apiModels.Error(ctx, http.StatusBadRequest, "unsupported image format (PNG, JPG, WEBP or GIF only)") // HEIC/HEIF
+		apiModels.Error(ctx, http.StatusBadRequest, "unsupported image format (PNG, JPG, WEBP or GIF only)") // HEIC
 		return
 	}
 
@@ -311,6 +417,16 @@ func (ctrl *UsersController) UpdateAvatar(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, user.ToPrivateResponse())
 }
 
+// DeleteAvatar GoDoc
+// @Summary Delete user avatar
+// @Description Delete current user avatar
+// @Tags users
+// @Produce json
+// @Security BearerAuth
+// @Success 200 {object} apiModels.APIResponse
+// @Failure 401 {object} apiModels.APIError
+// @Failure 500 {object} apiModels.APIError
+// @Router /users/me/avatar [delete]
 func (ctrl *UsersController) DeleteAvatar(ctx *gin.Context) {
 	userID, ok := middlewares.GetUserID(ctx)
 	if !ok {
@@ -326,6 +442,19 @@ func (ctrl *UsersController) DeleteAvatar(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, apiModels.APIResponse{Message: "avatar deleted"})
 }
 
+// UpdateCurrentPassword GoDoc
+// @Summary Change current password
+// @Description Change password for current authenticated user
+// @Tags users
+// @Accept json
+// @Produce json
+// @Security BearerAuth
+// @Param request body models.ChangePasswordRequest true "Current and new password"
+// @Success 200 {object} apiModels.APIResponse
+// @Failure 400 {object} apiModels.APIError
+// @Failure 401 {object} apiModels.APIError
+// @Failure 500 {object} apiModels.APIError
+// @Router /users/me/update-password [patch]
 func (ctrl *UsersController) UpdateCurrentPassword(ctx *gin.Context) {
 	userID, ok := middlewares.GetUserID(ctx)
 	if !ok {
@@ -351,6 +480,17 @@ func (ctrl *UsersController) UpdateCurrentPassword(ctx *gin.Context) {
 	ctx.JSON(200, apiModels.APIResponse{Message: "password changed"})
 }
 
+// ForgotPassword GoDoc
+// @Summary Request password reset
+// @Description Send password reset link if account exists
+// @Tags auth
+// @Accept json
+// @Produce json
+// @Param request body models.ForgotPasswordRequest true "Email"
+// @Success 200 {object} apiModels.APIResponse
+// @Failure 400 {object} apiModels.APIError
+// @Failure 500 {object} apiModels.APIError
+// @Router /auth/forgot-password [post]
 func (ctrl *UsersController) ForgotPassword(ctx *gin.Context) {
 	var req models.ForgotPasswordRequest
 	if err := ctx.ShouldBindJSON(&req); err != nil {
@@ -366,6 +506,17 @@ func (ctrl *UsersController) ForgotPassword(ctx *gin.Context) {
 	ctx.JSON(200, apiModels.APIResponse{Message: "if account with this email exists, you will receive a password reset link shortly"})
 }
 
+// SetNewPassword GoDoc
+// @Summary Set new password
+// @Description Set new password by reset token
+// @Tags auth
+// @Accept json
+// @Produce json
+// @Param request body models.SetNewPasswordRequest true "Token and new password"
+// @Success 200 {object} apiModels.APIResponse
+// @Failure 400 {object} apiModels.APIError
+// @Failure 500 {object} apiModels.APIError
+// @Router /auth/set-new-password [post]
 func (ctrl *UsersController) SetNewPassword(ctx *gin.Context) {
 	var req models.SetNewPasswordRequest
 	if err := ctx.ShouldBindJSON(&req); err != nil {
@@ -381,6 +532,19 @@ func (ctrl *UsersController) SetNewPassword(ctx *gin.Context) {
 	ctx.JSON(200, apiModels.APIResponse{Message: "password has been reset"})
 }
 
+// DeleteCurrentUser GoDoc
+// @Summary Delete current user
+// @Description Delete current user account
+// @Tags users
+// @Accept json
+// @Produce json
+// @Security BearerAuth
+// @Param request body models.DeleteAccountRequest true "Current password"
+// @Success 200 {object} apiModels.APIResponse
+// @Failure 400 {object} apiModels.APIError
+// @Failure 401 {object} apiModels.APIError
+// @Failure 500 {object} apiModels.APIError
+// @Router /users/me [delete]
 func (ctrl *UsersController) DeleteCurrentUser(ctx *gin.Context) {
 	userID, ok := middlewares.GetUserID(ctx)
 	if !ok {

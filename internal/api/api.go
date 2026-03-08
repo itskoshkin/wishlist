@@ -13,7 +13,10 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/spf13/viper"
+	"github.com/swaggo/files"
+	"github.com/swaggo/gin-swagger"
 
+	"wishlist/docs"
 	"wishlist/internal/api/controllers"
 	"wishlist/internal/api/middlewares"
 	"wishlist/internal/config"
@@ -43,7 +46,7 @@ func NewEngine() *gin.Engine {
 		gin.SetMode(gin.ReleaseMode)
 	}
 	engine := gin.New()
-	_ = engine.SetTrustedProxies(nil)
+	_ = engine.SetTrustedProxies(nil) // Can nil produce an error? Or can a robot write a symphony?
 	return engine
 }
 
@@ -58,6 +61,14 @@ func (api *API) RegisterRoutes() {
 	api.userCtrl.RegisterRoutes()
 	api.listCtrl.RegisterRoutes()
 	api.wishCtrl.RegisterRoutes()
+	// Swagger
+	{
+		{
+			docs.SwaggerInfo.Host = fmt.Sprintf("%s", viper.GetString(config.WebAppDomain))
+			docs.SwaggerInfo.BasePath = viper.GetString(config.ApiBasePath)
+		}
+		api.engine.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
+	}
 }
 
 func (api *API) Run() {
