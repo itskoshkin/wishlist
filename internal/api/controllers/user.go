@@ -66,7 +66,7 @@ func (ctrl *UsersController) RegisterRoutes() {
 	}
 	userRoutes := basePath.Group("/users")
 	{
-		authedUserRoutes := userRoutes.Use(ctrl.mw.AuthMiddleware())
+		authedUserRoutes := userRoutes.Group("").Use(ctrl.mw.AuthMiddleware())
 		{
 			authedUserRoutes.GET("/me", ctrl.GetCurrentUser)
 			authedUserRoutes.PATCH("/me", ctrl.UpdateCurrentUser)
