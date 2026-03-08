@@ -79,7 +79,7 @@ func (ctrl *ListsController) RegisterRoutes() {
 func (ctrl *ListsController) CreateList(ctx *gin.Context) {
 	userID, ok := middlewares.GetUserID(ctx)
 	if !ok {
-		apiModels.Error(ctx, http.StatusUnauthorized, "user ID not found in context")
+		apiModels.Error(ctx, http.StatusUnauthorized, "unauthorized")
 		return
 	}
 
@@ -114,7 +114,7 @@ func (ctrl *ListsController) CreateList(ctx *gin.Context) {
 func (ctrl *ListsController) GetListByID(ctx *gin.Context) {
 	userID, ok := middlewares.GetUserID(ctx)
 	if !ok {
-		apiModels.Error(ctx, http.StatusUnauthorized, "user ID not found in context")
+		apiModels.Error(ctx, http.StatusUnauthorized, "unauthorized")
 		return
 	}
 
@@ -216,7 +216,7 @@ func (ctrl *ListsController) GetListBySharedLink(ctx *gin.Context) {
 func (ctrl *ListsController) GetCurrentUserLists(ctx *gin.Context) {
 	userID, ok := middlewares.GetUserID(ctx)
 	if !ok {
-		apiModels.Error(ctx, http.StatusUnauthorized, "user ID not found in context")
+		apiModels.Error(ctx, http.StatusUnauthorized, "unauthorized")
 		return
 	}
 
@@ -249,7 +249,7 @@ func (ctrl *ListsController) GetCurrentUserLists(ctx *gin.Context) {
 func (ctrl *ListsController) GetPublicListsByUserID(ctx *gin.Context) {
 	currentUserID, ok := middlewares.GetUserID(ctx)
 	if !ok {
-		apiModels.Error(ctx, http.StatusUnauthorized, "user ID not found in context")
+		apiModels.Error(ctx, http.StatusUnauthorized, "unauthorized")
 		return
 	}
 
@@ -294,7 +294,7 @@ func (ctrl *ListsController) GetPublicListsByUserID(ctx *gin.Context) {
 func (ctrl *ListsController) UpdateList(ctx *gin.Context) {
 	userID, ok := middlewares.GetUserID(ctx)
 	if !ok {
-		apiModels.Error(ctx, http.StatusUnauthorized, "user ID not found in context")
+		apiModels.Error(ctx, http.StatusUnauthorized, "unauthorized")
 		return
 	}
 
@@ -339,7 +339,7 @@ func (ctrl *ListsController) UpdateList(ctx *gin.Context) {
 func (ctrl *ListsController) RotateSharedLink(ctx *gin.Context) {
 	userID, ok := middlewares.GetUserID(ctx)
 	if !ok {
-		apiModels.Error(ctx, http.StatusUnauthorized, "user ID not found in context")
+		apiModels.Error(ctx, http.StatusUnauthorized, "unauthorized")
 		return
 	}
 
@@ -378,7 +378,7 @@ func (ctrl *ListsController) RotateSharedLink(ctx *gin.Context) {
 func (ctrl *ListsController) DeleteList(ctx *gin.Context) {
 	userID, ok := middlewares.GetUserID(ctx)
 	if !ok {
-		apiModels.Error(ctx, http.StatusUnauthorized, "user ID not found in context")
+		apiModels.Error(ctx, http.StatusUnauthorized, "unauthorized")
 		return
 	}
 

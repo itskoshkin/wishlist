@@ -24,6 +24,7 @@ func (us *UserStorageImpl) CreateUser(ctx context.Context, user models.User) err
 	); err != nil {
 		return fmt.Errorf("failed to create user: %w", err)
 	}
+
 	return nil
 }
 
