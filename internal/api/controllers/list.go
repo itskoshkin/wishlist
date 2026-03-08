@@ -63,6 +63,19 @@ func (ctrl *ListsController) RegisterRoutes() {
 	}
 }
 
+// CreateList GoDoc
+// @Summary Create wishlist
+// @Description Create a new wishlist for current user
+// @Tags lists
+// @Accept json
+// @Produce json
+// @Security BearerAuth
+// @Param request body models.CreateListRequest true "Wishlist data"
+// @Success 201 {object} models.ListResponse
+// @Failure 400 {object} apiModels.APIError
+// @Failure 401 {object} apiModels.APIError
+// @Failure 500 {object} apiModels.APIError
+// @Router /lists [post]
 func (ctrl *ListsController) CreateList(ctx *gin.Context) {
 	userID, ok := middlewares.GetUserID(ctx)
 	if !ok {
@@ -85,6 +98,19 @@ func (ctrl *ListsController) CreateList(ctx *gin.Context) {
 	ctx.JSON(http.StatusCreated, list.ToOwnerResponse())
 }
 
+// GetListByID GoDoc
+// @Summary Get wishlist by ID
+// @Description Get wishlist with wishes by list ID
+// @Tags lists
+// @Produce json
+// @Security BearerAuth
+// @Param list_id path string true "List ID (UUID)"
+// @Success 200 {object} models.ListResponse
+// @Failure 400 {object} apiModels.APIError
+// @Failure 401 {object} apiModels.APIError
+// @Failure 403 {object} apiModels.APIError
+// @Failure 500 {object} apiModels.APIError
+// @Router /lists/{list_id} [get]
 func (ctrl *ListsController) GetListByID(ctx *gin.Context) {
 	userID, ok := middlewares.GetUserID(ctx)
 	if !ok {
@@ -129,6 +155,16 @@ func (ctrl *ListsController) GetListByID(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, response)
 }
 
+// GetListBySharedLink GoDoc
+// @Summary Get wishlist by shared link
+// @Description Get wishlist with wishes by shared slug
+// @Tags lists
+// @Produce json
+// @Param slug path string true "Shared slug (32 chars)"
+// @Success 200 {object} models.ListResponse
+// @Failure 400 {object} apiModels.APIError
+// @Failure 500 {object} apiModels.APIError
+// @Router /lists/shared/{slug} [get]
 func (ctrl *ListsController) GetListBySharedLink(ctx *gin.Context) {
 	slug := ctx.Param("slug")
 	if slug == "" || len(slug) != 32 {
@@ -167,6 +203,16 @@ func (ctrl *ListsController) GetListBySharedLink(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, response)
 }
 
+// GetCurrentUserLists GoDoc
+// @Summary Get current user wishlists
+// @Description Get all wishlists of current user
+// @Tags lists
+// @Produce json
+// @Security BearerAuth
+// @Success 200 {array} models.ListResponse
+// @Failure 401 {object} apiModels.APIError
+// @Failure 500 {object} apiModels.APIError
+// @Router /lists [get]
 func (ctrl *ListsController) GetCurrentUserLists(ctx *gin.Context) {
 	userID, ok := middlewares.GetUserID(ctx)
 	if !ok {
@@ -188,6 +234,18 @@ func (ctrl *ListsController) GetCurrentUserLists(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, response)
 }
 
+// GetPublicListsByUserID GoDoc
+// @Summary Get public wishlists by user ID
+// @Description Get public wishlists of selected user
+// @Tags lists
+// @Produce json
+// @Security BearerAuth
+// @Param user_id path string true "User ID (UUID)"
+// @Success 200 {array} models.ListResponse
+// @Failure 400 {object} apiModels.APIError
+// @Failure 401 {object} apiModels.APIError
+// @Failure 500 {object} apiModels.APIError
+// @Router /users/{user_id}/lists [get]
 func (ctrl *ListsController) GetPublicListsByUserID(ctx *gin.Context) {
 	currentUserID, ok := middlewares.GetUserID(ctx)
 	if !ok {
@@ -219,6 +277,20 @@ func (ctrl *ListsController) GetPublicListsByUserID(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, response)
 }
 
+// UpdateList GoDoc
+// @Summary Update wishlist
+// @Description Update wishlist fields
+// @Tags lists
+// @Accept json
+// @Security BearerAuth
+// @Param list_id path string true "List ID (UUID)"
+// @Param request body models.UpdateListRequest true "Update payload"
+// @Success 204 {string} string "No Content"
+// @Failure 400 {object} apiModels.APIError
+// @Failure 401 {object} apiModels.APIError
+// @Failure 403 {object} apiModels.APIError
+// @Failure 500 {object} apiModels.APIError
+// @Router /lists/{list_id} [patch]
 func (ctrl *ListsController) UpdateList(ctx *gin.Context) {
 	userID, ok := middlewares.GetUserID(ctx)
 	if !ok {
@@ -251,6 +323,19 @@ func (ctrl *ListsController) UpdateList(ctx *gin.Context) {
 	ctx.Status(http.StatusNoContent)
 }
 
+// RotateSharedLink GoDoc
+// @Summary Rotate shared link
+// @Description Generate new shared token for wishlist
+// @Tags lists
+// @Produce json
+// @Security BearerAuth
+// @Param list_id path string true "List ID (UUID)"
+// @Success 200 {object} map[string]string
+// @Failure 400 {object} apiModels.APIError
+// @Failure 401 {object} apiModels.APIError
+// @Failure 403 {object} apiModels.APIError
+// @Failure 500 {object} apiModels.APIError
+// @Router /lists/{list_id}/rotate-share-link [post]
 func (ctrl *ListsController) RotateSharedLink(ctx *gin.Context) {
 	userID, ok := middlewares.GetUserID(ctx)
 	if !ok {
@@ -278,6 +363,18 @@ func (ctrl *ListsController) RotateSharedLink(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, gin.H{"share_token": token})
 }
 
+// DeleteList GoDoc
+// @Summary Delete wishlist
+// @Description Delete wishlist by ID
+// @Tags lists
+// @Security BearerAuth
+// @Param list_id path string true "List ID (UUID)"
+// @Success 204 {string} string "No Content"
+// @Failure 400 {object} apiModels.APIError
+// @Failure 401 {object} apiModels.APIError
+// @Failure 403 {object} apiModels.APIError
+// @Failure 500 {object} apiModels.APIError
+// @Router /lists/{list_id} [delete]
 func (ctrl *ListsController) DeleteList(ctx *gin.Context) {
 	userID, ok := middlewares.GetUserID(ctx)
 	if !ok {

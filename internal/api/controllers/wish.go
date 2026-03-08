@@ -50,6 +50,21 @@ func (ctrl *WishesController) RegisterRoutes() {
 	}
 }
 
+// CreateWish GoDoc
+// @Summary Create wish
+// @Description Create wish in wishlist
+// @Tags wishes
+// @Accept json
+// @Produce json
+// @Security BearerAuth
+// @Param list_id path string true "List ID (UUID)"
+// @Param request body models.CreateWishRequest true "Wish data"
+// @Success 201 {object} models.WishResponse
+// @Failure 400 {object} apiModels.APIError
+// @Failure 401 {object} apiModels.APIError
+// @Failure 403 {object} apiModels.APIError
+// @Failure 500 {object} apiModels.APIError
+// @Router /lists/{list_id}/wishes [post]
 func (ctrl *WishesController) CreateWish(ctx *gin.Context) {
 	userID, ok := middlewares.GetUserID(ctx)
 	if !ok {
@@ -83,6 +98,21 @@ func (ctrl *WishesController) CreateWish(ctx *gin.Context) {
 	ctx.JSON(http.StatusCreated, wish.ToOwnerResponse())
 }
 
+// UpdateWish GoDoc
+// @Summary Update wish
+// @Description Update wish fields
+// @Tags wishes
+// @Accept json
+// @Security BearerAuth
+// @Param list_id path string true "List ID (UUID)"
+// @Param wish_id path string true "Wish ID (UUID)"
+// @Param request body models.UpdateWishRequest true "Update payload"
+// @Success 204 {string} string "No Content"
+// @Failure 400 {object} apiModels.APIError
+// @Failure 401 {object} apiModels.APIError
+// @Failure 403 {object} apiModels.APIError
+// @Failure 500 {object} apiModels.APIError
+// @Router /lists/{list_id}/wishes/{wish_id} [patch]
 func (ctrl *WishesController) UpdateWish(ctx *gin.Context) {
 	userID, ok := middlewares.GetUserID(ctx)
 	if !ok {
@@ -121,6 +151,18 @@ func (ctrl *WishesController) UpdateWish(ctx *gin.Context) {
 	ctx.Status(http.StatusNoContent)
 }
 
+// ReserveWish GoDoc
+// @Summary Reserve wish
+// @Description Reserve wish for current user
+// @Tags wishes
+// @Security BearerAuth
+// @Param list_id path string true "List ID (UUID)"
+// @Param wish_id path string true "Wish ID (UUID)"
+// @Success 204 {string} string "No Content"
+// @Failure 400 {object} apiModels.APIError
+// @Failure 401 {object} apiModels.APIError
+// @Failure 500 {object} apiModels.APIError
+// @Router /lists/{list_id}/wishes/{wish_id}/reserve [post]
 func (ctrl *WishesController) ReserveWish(ctx *gin.Context) {
 	userID, ok := middlewares.GetUserID(ctx)
 	if !ok {
@@ -153,6 +195,18 @@ func (ctrl *WishesController) ReserveWish(ctx *gin.Context) {
 	ctx.Status(http.StatusNoContent)
 }
 
+// ReleaseWish GoDoc
+// @Summary Release wish reservation
+// @Description Release wish reservation by current user
+// @Tags wishes
+// @Security BearerAuth
+// @Param list_id path string true "List ID (UUID)"
+// @Param wish_id path string true "Wish ID (UUID)"
+// @Success 204 {string} string "No Content"
+// @Failure 400 {object} apiModels.APIError
+// @Failure 401 {object} apiModels.APIError
+// @Failure 500 {object} apiModels.APIError
+// @Router /lists/{list_id}/wishes/{wish_id}/reserve [delete]
 func (ctrl *WishesController) ReleaseWish(ctx *gin.Context) {
 	userID, ok := middlewares.GetUserID(ctx)
 	if !ok {
@@ -180,6 +234,19 @@ func (ctrl *WishesController) ReleaseWish(ctx *gin.Context) {
 	ctx.Status(http.StatusNoContent)
 }
 
+// DeleteWish GoDoc
+// @Summary Delete wish
+// @Description Delete wish from wishlist
+// @Tags wishes
+// @Security BearerAuth
+// @Param list_id path string true "List ID (UUID)"
+// @Param wish_id path string true "Wish ID (UUID)"
+// @Success 204 {string} string "No Content"
+// @Failure 400 {object} apiModels.APIError
+// @Failure 401 {object} apiModels.APIError
+// @Failure 403 {object} apiModels.APIError
+// @Failure 500 {object} apiModels.APIError
+// @Router /lists/{list_id}/wishes/{wish_id} [delete]
 func (ctrl *WishesController) DeleteWish(ctx *gin.Context) {
 	userID, ok := middlewares.GetUserID(ctx)
 	if !ok {

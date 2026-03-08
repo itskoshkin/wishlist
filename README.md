@@ -8,7 +8,7 @@
   - [ ] Add pagination for lists
 - [x] Add goose migrations
 - [x] Add build instructions
-- [ ] Add Swagger documentation for API
+- [x] Add Swagger documentation for API
 - [ ] Add unit and integration tests
 - [ ] Dockerize, set up CI/CD and deploy
 - [ ] Add message broker for... Emails? Price change notifications?
