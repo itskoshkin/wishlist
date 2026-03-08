@@ -6,7 +6,7 @@
 - [x] Add S3 for user avatars and other media
 - [x] Add Wish and Wishlist entities to API
   - [ ] Add pagination for lists
-- [ ] Add goose migrations
+- [x] Add goose migrations
 - [ ] Add example config and build instructions
 - [ ] Add Swagger documentation for API
 - [ ] Add unit and integration tests
