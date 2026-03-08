@@ -56,7 +56,7 @@ func (ctrl *ListsController) RegisterRoutes() {
 	}
 	userRoutes := basePath.Group("/users")
 	{
-		authedUserRoutes := userRoutes.Use(ctrl.mw.AuthMiddleware())
+		authedUserRoutes := userRoutes.Group("").Use(ctrl.mw.AuthMiddleware())
 		{
 			authedUserRoutes.GET("/:user_id/lists", ctrl.GetPublicListsByUserID)
 		}

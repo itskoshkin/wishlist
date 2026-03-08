@@ -39,7 +39,7 @@ func (ctrl *WishesController) RegisterRoutes() {
 	basePath := ctrl.router.Group(viper.GetString(config.ApiBasePath))
 	listRoutes := basePath.Group("/lists")
 	{
-		authedListRoutes := listRoutes.Use(ctrl.mw.AuthMiddleware())
+		authedListRoutes := listRoutes.Group("").Use(ctrl.mw.AuthMiddleware())
 		{
 			authedListRoutes.POST("/:list_id/wishes", ctrl.CreateWish)
 			authedListRoutes.PATCH("/:list_id/wishes/:wish_id", ctrl.UpdateWish)
