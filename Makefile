@@ -1,9 +1,10 @@
 BIN_NAME ?= wishlist
 MAIN_PATH ?= ./cmd/main.go
 CURL_TEST_PATH = ./tests/test_endpoints_with_curl.sh
+E2E_BASE_URL ?= http://localhost:8080/api/v1
 SWAG_ARGS ?= -o docs -g main.go -d ./cmd,./internal/api/controllers,./internal/models,./internal/api/errors --parseInternal
 
-.PHONY: build run test-curl swagger swagger-clean migrate clean
+.PHONY: build run test test-curl test-unit test-integration test-e2e swagger swagger-clean migrate clean
 
 build: ## Build application binary
 	go build -o $(BIN_NAME) $(MAIN_PATH)
@@ -11,8 +12,19 @@ build: ## Build application binary
 run: ## Run app
 	go run $(MAIN_PATH)
 
+test: test-unit test-integration test-e2e ## Run all tests
+
 test-curl: ## Run interactive curl test script
 	bash $(CURL_TEST_PATH)
+
+test-unit: ## Run unit tests
+	go test -race -count=1 ./...
+
+test-integration: ## Run integration tests
+	go test -count=1 -tags=integration ./...
+
+test-e2e: ## Run end-to-end test
+	E2E_BASE_URL="$(E2E_BASE_URL)" go test -v -count=1 -tags=e2e ./tests/e2e
 
 swagger: ## Generate Swagger docs
 	swag init $(SWAG_ARGS)

@@ -9,7 +9,7 @@
 - [x] Add goose migrations
 - [x] Add build instructions
 - [x] Add Swagger documentation for API
-- [ ] Add unit and integration tests
+- [x] Add unit, integration and end-to-end tests
 - [ ] Dockerize, set up CI/CD and deploy
 - [ ] Add message broker for... Emails? Price change notifications?
 
