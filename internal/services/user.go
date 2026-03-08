@@ -34,7 +34,6 @@ type UserStorage interface {
 
 type AvatarStorage interface {
 	GetBaseURL() string
-	//UploadObject(ctx context.Context, objectName, filePath, contentType string) error
 	UploadObject(ctx context.Context, objectName string, reader io.Reader, size int64, contentType string) error
 	GetObjectURL(objectName string) string
 	DeleteObject(ctx context.Context, objectName string) error

@@ -68,7 +68,7 @@ func (ctrl *WishesController) RegisterRoutes() {
 func (ctrl *WishesController) CreateWish(ctx *gin.Context) {
 	userID, ok := middlewares.GetUserID(ctx)
 	if !ok {
-		apiModels.Error(ctx, http.StatusUnauthorized, "user ID not found in context")
+		apiModels.Error(ctx, http.StatusUnauthorized, "unauthorized")
 		return
 	}
 
@@ -116,7 +116,7 @@ func (ctrl *WishesController) CreateWish(ctx *gin.Context) {
 func (ctrl *WishesController) UpdateWish(ctx *gin.Context) {
 	userID, ok := middlewares.GetUserID(ctx)
 	if !ok {
-		apiModels.Error(ctx, http.StatusUnauthorized, "user ID not found in context")
+		apiModels.Error(ctx, http.StatusUnauthorized, "unauthorized")
 		return
 	}
 
@@ -166,7 +166,7 @@ func (ctrl *WishesController) UpdateWish(ctx *gin.Context) {
 func (ctrl *WishesController) ReserveWish(ctx *gin.Context) {
 	userID, ok := middlewares.GetUserID(ctx)
 	if !ok {
-		apiModels.Error(ctx, http.StatusUnauthorized, "user ID not found in context")
+		apiModels.Error(ctx, http.StatusUnauthorized, "unauthorized")
 		return
 	}
 
@@ -210,7 +210,7 @@ func (ctrl *WishesController) ReserveWish(ctx *gin.Context) {
 func (ctrl *WishesController) ReleaseWish(ctx *gin.Context) {
 	userID, ok := middlewares.GetUserID(ctx)
 	if !ok {
-		apiModels.Error(ctx, http.StatusUnauthorized, "user ID not found in context")
+		apiModels.Error(ctx, http.StatusUnauthorized, "unauthorized")
 		return
 	}
 
@@ -250,7 +250,7 @@ func (ctrl *WishesController) ReleaseWish(ctx *gin.Context) {
 func (ctrl *WishesController) DeleteWish(ctx *gin.Context) {
 	userID, ok := middlewares.GetUserID(ctx)
 	if !ok {
-		apiModels.Error(ctx, http.StatusUnauthorized, "user ID not found in context")
+		apiModels.Error(ctx, http.StatusUnauthorized, "unauthorized")
 		return
 	}
 

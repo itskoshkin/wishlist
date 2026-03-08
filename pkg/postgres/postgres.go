@@ -25,7 +25,7 @@ func NewInstance(ctx context.Context, cfg Config) (*pgxpool.Pool, error) {
 	config, err := pgxpool.ParseConfig(fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=%s", cfg.Host, cfg.Port, cfg.User, cfg.Password, cfg.Database, cfg.SSLMode))
 	if err != nil {
 		fmt.Println()
-		return nil, fmt.Errorf("failed to parse config: %w", err)
+		return nil, fmt.Errorf("pgx: failed to parse config: %w", err)
 	}
 
 	config.MinConns = 2
@@ -34,13 +34,13 @@ func NewInstance(ctx context.Context, cfg Config) (*pgxpool.Pool, error) {
 	pool, err := pgxpool.NewWithConfig(ctx, config)
 	if err != nil {
 		fmt.Println()
-		return nil, fmt.Errorf("failed to create database connection pool: %w", err)
+		return nil, fmt.Errorf("pgx: failed to create database connection pool: %w", err)
 	}
 
 	if err = pool.Ping(ctx); err != nil {
 		pool.Close()
 		fmt.Println()
-		return nil, fmt.Errorf("failed to connect to database: %w", err)
+		return nil, fmt.Errorf("pgx: failed to connect to database: %w", err)
 	}
 
 	fmt.Println(colors.Green(" Done."))

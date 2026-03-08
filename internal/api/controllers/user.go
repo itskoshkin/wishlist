@@ -273,7 +273,7 @@ func (ctrl *UsersController) LogOut(ctx *gin.Context) {
 func (ctrl *UsersController) GetCurrentUser(ctx *gin.Context) {
 	userID, ok := middlewares.GetUserID(ctx)
 	if !ok {
-		apiModels.Error(ctx, http.StatusUnauthorized, "user ID not found in context")
+		apiModels.Error(ctx, http.StatusUnauthorized, "unauthorized")
 		return
 	}
 
@@ -330,7 +330,7 @@ func (ctrl *UsersController) GetUserByID(ctx *gin.Context) {
 func (ctrl *UsersController) UpdateCurrentUser(ctx *gin.Context) {
 	userID, ok := middlewares.GetUserID(ctx)
 	if !ok {
-		apiModels.Error(ctx, http.StatusUnauthorized, "user ID not found in context")
+		apiModels.Error(ctx, http.StatusUnauthorized, "unauthorized")
 		return
 	}
 
@@ -370,7 +370,7 @@ func (ctrl *UsersController) UpdateCurrentUser(ctx *gin.Context) {
 func (ctrl *UsersController) UpdateAvatar(ctx *gin.Context) {
 	userID, ok := middlewares.GetUserID(ctx)
 	if !ok {
-		apiModels.Error(ctx, http.StatusUnauthorized, "user ID not found in context")
+		apiModels.Error(ctx, http.StatusUnauthorized, "unauthorized")
 		return
 	}
 
@@ -430,7 +430,7 @@ func (ctrl *UsersController) UpdateAvatar(ctx *gin.Context) {
 func (ctrl *UsersController) DeleteAvatar(ctx *gin.Context) {
 	userID, ok := middlewares.GetUserID(ctx)
 	if !ok {
-		apiModels.Error(ctx, http.StatusUnauthorized, "user ID not found in context")
+		apiModels.Error(ctx, http.StatusUnauthorized, "unauthorized")
 		return
 	}
 
@@ -458,7 +458,7 @@ func (ctrl *UsersController) DeleteAvatar(ctx *gin.Context) {
 func (ctrl *UsersController) UpdateCurrentPassword(ctx *gin.Context) {
 	userID, ok := middlewares.GetUserID(ctx)
 	if !ok {
-		apiModels.Error(ctx, http.StatusUnauthorized, "user ID not found in context")
+		apiModels.Error(ctx, http.StatusUnauthorized, "unauthorized")
 		return
 	}
 
@@ -548,7 +548,7 @@ func (ctrl *UsersController) SetNewPassword(ctx *gin.Context) {
 func (ctrl *UsersController) DeleteCurrentUser(ctx *gin.Context) {
 	userID, ok := middlewares.GetUserID(ctx)
 	if !ok {
-		apiModels.Error(ctx, http.StatusUnauthorized, "user ID not found in context")
+		apiModels.Error(ctx, http.StatusUnauthorized, "unauthorized")
 		return
 	}
 
