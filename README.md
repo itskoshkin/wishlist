@@ -10,7 +10,9 @@
 - [x] Add build instructions
 - [x] Add Swagger documentation for API
 - [x] Add unit, integration and end-to-end tests
-- [ ] Dockerize, set up CI/CD and deploy
+- [x] Dockerize
+- [ ] Set up CI/CD
+- [ ] Deploy
 - [ ] Add message broker for... Emails? Price change notifications?
 
 ---

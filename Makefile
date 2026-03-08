@@ -4,7 +4,7 @@ CURL_TEST_PATH = ./tests/test_endpoints_with_curl.sh
 E2E_BASE_URL ?= http://localhost:8080/api/v1
 SWAG_ARGS ?= -o docs -g main.go -d ./cmd,./internal/api/controllers,./internal/models,./internal/api/errors --parseInternal
 
-.PHONY: build run test test-curl test-unit test-integration test-e2e swagger swagger-clean migrate clean
+.PHONY: build run test test-curl test-unit test-integration test-e2e swagger swagger-clean docker-build docker-run compose-up compose-down migrate clean
 
 build: ## Build application binary
 	go build -o $(BIN_NAME) $(MAIN_PATH)
@@ -31,6 +31,18 @@ swagger: ## Generate Swagger docs
 
 swagger-clean: ## Remove generated Swagger files
 	rm -r ./docs/
+
+docker-build: ## Build Docker image
+	docker build -t $(DOCKER_IMAGE) .
+
+docker-run: ## Run Docker image
+	docker run --rm -p 8080:8080 -v "$(PWD)/config.yaml:/app/config.yaml:ro" $(DOCKER_IMAGE)
+
+compose-up: ## Start full stack in Docker (application, postgres, redis, minio)
+	docker compose up -d
+
+compose-down: ## Start full stack in Docker (application, postgres, redis, minio)
+	docker compose down
 
 migrate: ## Apply database migrations
 	goose postgres "$(GOOSE_DSN)" -dir migrations up
