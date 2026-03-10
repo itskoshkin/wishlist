@@ -60,11 +60,12 @@ func Load() *App {
 	mw := middlewares.NewMiddlewares(authSvc)
 
 	// Controllers
+	webCtrl := controllers.NewWebController()
 	userCtrl := controllers.NewUsersController(e, mw, authSvc, userSvc)
 	listCtrl := controllers.NewListsController(e, mw, listSvc)
 	wishCtrl := controllers.NewWishesController(e, mw, wishSvc)
 
-	return &App{API: api.NewAPI(e, userCtrl, listCtrl, wishCtrl)}
+	return &App{API: api.NewAPI(e, webCtrl, userCtrl, listCtrl, wishCtrl)}
 }
 
 func (a *App) Run() {
