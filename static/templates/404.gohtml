@@ -1,0 +1,129 @@
+{{define "404"}}
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <title>Wishlist 404</title>
+        {{template "head"}}
+    </head>
+    <body>
+        <!-- Gradient blob for liquid glass effect -->
+        <div class="gradient-blob"></div>
+
+        <!-- FAB: Language toggle (left) -->
+        <button class="fab fab-left" onclick="toggleLanguageMenu(event)" title="Toggle Language">
+            <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path d="M12.87 15.07l-2.54-2.51.03-.03c1.74-1.94 2.98-4.17 3.71-6.53H17V4h-7V2H8v2H1v1.99h11.17C11.5 7.92 10.44 9.75 9 11.35 8.07 10.32 7.3 9.19 6.69 8h-2c.73 1.63 1.73 3.17 2.98 4.56l-5.09 5.02L4 19l5-5 3.11 3.11.76-2.04zM18.5 10h-2L12 22h2l1.12-3h4.75L21 22h2l-4.5-12zm-2.62 7l1.62-4.33L19.12 17h-3.24z"/>
+            </svg>
+            <!-- Language popup menu -->
+            <div class="popup-menu" id="langMenu">
+                <div class="popup-menu-item" onclick="selectLanguage('ru', event)">Русский</div>
+                <div class="popup-menu-item" onclick="selectLanguage('en', event)">English</div>
+            </div>
+        </button>
+
+        <!-- Header -->
+        <header class="header">
+            <!-- Left side: Logo and title -->
+            <a href="/" class="header-left">
+                <img src="/static/assets/images/wishlist.png" alt="Wishlist Logo" class="header-logo">
+                <span class="header-title" data-i18n="home.title">Wishlist</span>
+            </a>
+        </header>
+
+        <!-- FAB: Theme toggle (right) -->
+        <button class="fab fab-right" onclick="toggleThemeMenu(event)" title="Toggle Theme">
+            <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path d="M12 3c-4.97 0-9 4.03-9 9s4.03 9 9 9 9-4.03 9-9c0-.46-.04-.92-.1-1.36-.98 1.37-2.58 2.26-4.4 2.26-2.98 0-5.4-2.42-5.4-5.4 0-1.81.89-3.42 2.26-4.4-.44-.06-.9-.1-1.36-.1z"/>
+            </svg>
+            <!-- Theme popup menu -->
+            <div class="popup-menu" id="themeMenu">
+                <div class="popup-menu-item" onclick="selectTheme('light', event)">
+                    <span data-i18n="theme.light">Светлая</span>
+                </div>
+                <div class="popup-menu-item" onclick="selectTheme('system', event)">
+                    <span data-i18n="theme.system">Системная</span>
+                </div>
+                <div class="popup-menu-item" onclick="selectTheme('dark', event)">
+                    <span data-i18n="theme.dark">Тёмная</span>
+                </div>
+            </div>
+        </button>
+
+        <!-- Main content -->
+        <div class="container">
+            <div class="empty-state" style="padding: 8rem 2rem;">
+                <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" fill="currentColor">
+                    <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/>
+                </svg>
+                <h3 style="font-size: 3rem; margin-bottom: 1rem;">404</h3>
+                <p style="font-size: 1.25rem; margin-bottom: 2rem;" data-i18n="notFound.message">Страница не найдена</p>
+                <a href="/" class="btn" data-i18n="notFound.backHome">Вернуться на главную</a>
+            </div>
+        </div>
+
+        <script>
+            // Toggle language menu
+            function toggleLanguageMenu(event) {
+                event.stopPropagation();
+                const menu = document.getElementById('langMenu');
+                menu.classList.toggle('active');
+                closeOtherMenus('langMenu');
+            }
+
+            // Select language
+            function selectLanguage(lang, event) {
+                event?.stopPropagation();
+                setLanguage(lang);
+                const menu = document.getElementById('langMenu');
+                menu.classList.remove('active');
+                menu.querySelectorAll('.popup-menu-item').forEach(item => {
+                    item.classList.remove('selected');
+                });
+                const selectedItem = event?.target?.closest('.popup-menu-item');
+                if (selectedItem) {
+                    selectedItem.classList.add('selected');
+                }
+            }
+
+            // Toggle theme menu
+            function toggleThemeMenu(event) {
+                event.stopPropagation();
+                const menu = document.getElementById('themeMenu');
+                menu.classList.toggle('active');
+                closeOtherMenus('themeMenu');
+            }
+
+            // Select theme
+            function selectTheme(theme, event) {
+                event?.stopPropagation();
+                setTheme(theme);
+                const menu = document.getElementById('themeMenu');
+                menu.classList.remove('active');
+                menu.querySelectorAll('.popup-menu-item').forEach(item => {
+                    item.classList.remove('selected');
+                });
+                const selectedItem = event?.target?.closest('.popup-menu-item');
+                if (selectedItem) {
+                    selectedItem.classList.add('selected');
+                }
+            }
+
+            // Close other menus
+            function closeOtherMenus(exceptId) {
+                const menus = ['langMenu', 'themeMenu'];
+                menus.forEach(menuId => {
+                    const menu = document.getElementById(menuId);
+                    if (menu && menuId !== exceptId) {
+                        menu.classList.remove('active');
+                    }
+                });
+            }
+
+            // Close all menus on outside click
+            document.addEventListener('click', () => {
+                closeOtherMenus(null);
+            });
+        </script>
+    </body>
+</html>
+{{end}}
