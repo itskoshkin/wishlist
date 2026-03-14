@@ -23,8 +23,8 @@ type registerResponse struct {
 }
 
 type listResponse struct {
-	ID         string `json:"id"`
-	ShareToken string `json:"share_token"`
+	ID   string `json:"id"`
+	Slug string `json:"slug"`
 }
 
 type wishResponse struct {
@@ -76,8 +76,8 @@ func Test_E2E_FullFlow(t *testing.T) {
 	// Create list
 	var list listResponse
 	doJSON(t, client, http.MethodPost, baseURL+"/lists", user1.AccessToken, map[string]any{"title": "E2E list", "notes": "notes"}, &list)
-	if list.ID == "" || list.ShareToken == "" {
-		t.Fatal("list response missing id/share_token")
+	if list.ID == "" || list.Slug == "" {
+		t.Fatal("list response missing id/slug")
 	}
 
 	// Get current user lists
@@ -91,20 +91,20 @@ func Test_E2E_FullFlow(t *testing.T) {
 
 	// Rotate share link
 	var rotated struct {
-		ShareToken string `json:"share_token"`
+		Slug string `json:"slug"`
 	}
 	doJSON(t, client, http.MethodPost, baseURL+"/lists/"+list.ID+"/rotate-share-link", user1.AccessToken, nil, &rotated)
-	if rotated.ShareToken == "" {
-		t.Fatal("rotate share token is empty")
+	if rotated.Slug == "" {
+		t.Fatal("rotate slug is empty")
 	}
-	list.ShareToken = rotated.ShareToken
+	list.Slug = rotated.Slug
 
 	// Public lists by user ID
 	doNoBody(t, client, http.MethodGet, baseURL+"/users/"+user1.User.ID+"/lists", user1.AccessToken)
 
 	// Shared link (guest + authorized)
-	doNoBody(t, client, http.MethodGet, baseURL+"/lists/shared/"+list.ShareToken, "")
-	doNoBody(t, client, http.MethodGet, baseURL+"/lists/shared/"+list.ShareToken, user1.AccessToken)
+	doNoBody(t, client, http.MethodGet, baseURL+"/lists/shared/"+list.Slug, "")
+	doNoBody(t, client, http.MethodGet, baseURL+"/lists/shared/"+list.Slug, user1.AccessToken)
 
 	// Create wish
 	var wish wishResponse

@@ -166,13 +166,13 @@ func TestListsController_CreateList(t *testing.T) {
 	t.Run("success", func(t *testing.T) {
 		now := time.Now().UTC()
 		expected := models.List{
-			ID:         uuid.New(),
-			UserID:     currentUserID,
-			Title:      "Birthday",
-			IsPublic:   true,
-			ShareToken: "12345678901234567890123456789012",
-			CreatedAt:  now,
-			UpdatedAt:  now,
+			ID:        uuid.New(),
+			UserID:    currentUserID,
+			Title:     "Birthday",
+			IsPublic:  true,
+			Slug:      "12345678901234567890123456789012",
+			CreatedAt: now,
+			UpdatedAt: now,
 		}
 		ls := &listControllerServiceMock{createListFn: func(ctx context.Context, userID uuid.UUID, req models.CreateListRequest) (models.List, error) {
 			if userID != currentUserID || req.Title != "Birthday" {
@@ -190,7 +190,7 @@ func TestListsController_CreateList(t *testing.T) {
 		if err := json.Unmarshal(w.Body.Bytes(), &response); err != nil {
 			t.Fatalf("json unmarshal: %v", err)
 		}
-		if response.ID != expected.ID || response.ShareToken != expected.ShareToken {
+		if response.ID != expected.ID || response.Slug != expected.Slug {
 			t.Fatalf("unexpected response: %+v", response)
 		}
 	})
@@ -247,6 +247,17 @@ func TestListsController_GetListByID(t *testing.T) {
 		}
 	})
 
+	t.Run("not found", func(t *testing.T) {
+		ls := &listControllerServiceMock{getListWithWishesFn: func(ctx context.Context, gotListID, gotUserID uuid.UUID) (models.List, []models.Wish, error) {
+			return models.List{}, nil, svcErr.NotFoundError{Entity: "list", Field: "id", Value: gotListID.String()}
+		}}
+		router := setupListControllerForTest(as, ls)
+		w := listJSONRequest(router, http.MethodGet, "/api/v1/lists/"+listID.String(), "", "ok")
+		if w.Code != http.StatusNotFound {
+			t.Fatalf("status = %d, want %d", w.Code, http.StatusNotFound)
+		}
+	})
+
 	t.Run("internal error", func(t *testing.T) {
 		ls := &listControllerServiceMock{getListWithWishesFn: func(ctx context.Context, gotListID, gotUserID uuid.UUID) (models.List, []models.Wish, error) {
 			return models.List{}, nil, errors.New("db")
@@ -260,7 +271,7 @@ func TestListsController_GetListByID(t *testing.T) {
 
 	t.Run("success owner", func(t *testing.T) {
 		ls := &listControllerServiceMock{getListWithWishesFn: func(ctx context.Context, gotListID, gotUserID uuid.UUID) (models.List, []models.Wish, error) {
-			return models.List{ID: listID, UserID: currentUserID, Title: "Mine", IsPublic: true, ShareToken: "token"}, []models.Wish{{ID: uuid.New(), ListID: listID, Title: "Gift"}}, nil
+			return models.List{ID: listID, UserID: currentUserID, Title: "Mine", IsPublic: true, Slug: "token"}, []models.Wish{{ID: uuid.New(), ListID: listID, Title: "Gift"}}, nil
 		}}
 		router := setupListControllerForTest(as, ls)
 		w := listJSONRequest(router, http.MethodGet, "/api/v1/lists/"+listID.String(), "", "ok")
@@ -465,7 +476,7 @@ func TestListsController_GetListBySharedLink(t *testing.T) {
 	t.Run("success owner", func(t *testing.T) {
 		as := &listControllerAuthMock{validateAccessTokenFn: func(ctx context.Context, token string) (uuid.UUID, error) { return ownerID, nil }}
 		ls := &listControllerServiceMock{getListWithWishesBySharedFn: func(ctx context.Context, token string) (models.List, []models.Wish, error) {
-			return models.List{ID: listID, UserID: ownerID, Title: "Shared", IsPublic: true, ShareToken: slug}, []models.Wish{{ID: uuid.New(), ListID: listID, Title: "Gift"}}, nil
+			return models.List{ID: listID, UserID: ownerID, Title: "Shared", IsPublic: true, Slug: slug}, []models.Wish{{ID: uuid.New(), ListID: listID, Title: "Gift"}}, nil
 		}}
 		router := setupListControllerForTest(as, ls)
 		w := listJSONRequest(router, http.MethodGet, "/api/v1/lists/shared/"+slug, "", "ok")
@@ -503,7 +514,7 @@ func TestListsController_GetPublicListsByUserID(t *testing.T) {
 		ls := &listControllerServiceMock{getPublicListsByUserIDFn: func(ctx context.Context, userID uuid.UUID) ([]models.List, error) {
 			return []models.List{
 				{ID: uuid.New(), UserID: targetUserID, Title: "Public", IsPublic: true},
-				{ID: uuid.New(), UserID: currentUserID, Title: "Mine", IsPublic: true, ShareToken: "token"},
+				{ID: uuid.New(), UserID: currentUserID, Title: "Mine", IsPublic: true, Slug: "token"},
 			}, nil
 		}}
 		router := setupListControllerForTest(as, ls)

@@ -182,7 +182,7 @@ LIST=$(curl -sS -X POST "$BASE_URL/lists" \
   -d '{"title":"My wishlist","notes":"notes"}')
 print_json_or_raw "$LIST"
 LIST_ID=$(jq -er '.id' <<<"$LIST")
-SHARE_TOKEN=$(jq -er '.share_token' <<<"$LIST")
+SLUG=$(jq -er '.slug' <<<"$LIST")
 
 step "Get current user lists"
 GET_LISTS=$(curl -sS "$BASE_URL/lists" -H "Authorization: Bearer $ACCESS_TOKEN")
@@ -202,7 +202,7 @@ step "Rotate shared link"
 ROTATE=$(curl -sS -X POST "$BASE_URL/lists/$LIST_ID/rotate-share-link" \
   -H "Authorization: Bearer $ACCESS_TOKEN")
 print_json_or_raw "$ROTATE"
-SHARE_TOKEN=$(jq -er '.share_token' <<<"$ROTATE")
+SLUG=$(jq -er '.slug' <<<"$ROTATE")
 
 step "Get public lists by user ID"
 GET_PUBLIC_LISTS=$(curl -sS "$BASE_URL/users/$USER1_ID/lists" \
@@ -210,11 +210,11 @@ GET_PUBLIC_LISTS=$(curl -sS "$BASE_URL/users/$USER1_ID/lists" \
 print_json_or_raw "$GET_PUBLIC_LISTS"
 
 step "Get list by shared link (guest)"
-SHARED_GUEST=$(curl -sS "$BASE_URL/lists/shared/$SHARE_TOKEN")
+SHARED_GUEST=$(curl -sS "$BASE_URL/lists/shared/$SLUG")
 print_json_or_raw "$SHARED_GUEST"
 
 step "Get list by shared link (authorized)"
-SHARED_AUTH=$(curl -sS "$BASE_URL/lists/shared/$SHARE_TOKEN" \
+SHARED_AUTH=$(curl -sS "$BASE_URL/lists/shared/$SLUG" \
   -H "Authorization: Bearer $ACCESS_TOKEN")
 print_json_or_raw "$SHARED_AUTH"
 
@@ -319,4 +319,4 @@ step "Done"
 echo "Tests completed."
 step "Summary"
 echo "BASE_URL=$BASE_URL"
-echo "USER1_ID=$USER1_ID USER2_ID=$USER2_ID LIST_ID=$LIST_ID WISH_ID=$WISH_ID SHARE_TOKEN=$SHARE_TOKEN"
+echo "USER1_ID=$USER1_ID USER2_ID=$USER2_ID LIST_ID=$LIST_ID WISH_ID=$WISH_ID SLUG=$SLUG"

@@ -121,6 +121,11 @@ type userStorageServiceMock struct {
 
 	userByUsername    models.User
 	userByUsernameErr error
+	gotUsernameQuery  string
+	searchUsers       []models.User
+	searchUsersErr    error
+	searchQuery       string
+	searchLimit       int
 
 	userByEmail    models.User
 	userByEmailErr error
@@ -155,10 +160,20 @@ func (m *userStorageServiceMock) GetUserByID(ctx context.Context, id uuid.UUID) 
 }
 
 func (m *userStorageServiceMock) GetUserByUsername(ctx context.Context, username string) (models.User, error) {
+	m.gotUsernameQuery = username
 	if m.userByUsernameErr != nil {
 		return models.User{}, m.userByUsernameErr
 	}
 	return m.userByUsername, nil
+}
+
+func (m *userStorageServiceMock) SearchUsersByUsername(ctx context.Context, query string, limit int) ([]models.User, error) {
+	m.searchQuery = query
+	m.searchLimit = limit
+	if m.searchUsersErr != nil {
+		return nil, m.searchUsersErr
+	}
+	return m.searchUsers, nil
 }
 
 func (m *userStorageServiceMock) GetUserByEmail(ctx context.Context, email string) (models.User, error) {
@@ -246,6 +261,48 @@ func TestUserService_Register_WithoutEmail(t *testing.T) {
 	}
 	if mailer.verificationCalls != 0 {
 		t.Fatalf("SendEmailVerificationLetter calls = %d, want 0", mailer.verificationCalls)
+	}
+}
+
+func TestUserService_Register_TrimsUsernameAndPreservesCase(t *testing.T) {
+	st := &userStorageServiceMock{}
+	svc := NewUserService(&userEmailServiceMock{}, st, &userTokenStorageMock{}, &userAvatarStorageMock{}, &userLoggerMock{})
+
+	user, err := svc.Register(context.Background(), models.RegisterUserRequest{
+		Name:     "John",
+		Username: "  ТанЯ123  ",
+		Password: "password123",
+	})
+	if err != nil {
+		t.Fatalf("Register() error = %v", err)
+	}
+	if user.Username != "ТанЯ123" {
+		t.Fatalf("Register() username = %q, want %q", user.Username, "ТанЯ123")
+	}
+	if st.createdUser.Username != "ТанЯ123" {
+		t.Fatalf("CreateUser() username = %q, want %q", st.createdUser.Username, "ТанЯ123")
+	}
+}
+
+func TestUserService_Register_InvalidUsername(t *testing.T) {
+	st := &userStorageServiceMock{}
+	svc := NewUserService(&userEmailServiceMock{}, st, &userTokenStorageMock{}, &userAvatarStorageMock{}, &userLoggerMock{})
+
+	_, err := svc.Register(context.Background(), models.RegisterUserRequest{
+		Name:     "John",
+		Username: "john.doe",
+		Password: "password123",
+	})
+	if err == nil {
+		t.Fatal("Register() error = nil, want validation error")
+	}
+
+	var validation svcErr.ValidationError
+	if !errors.As(err, &validation) {
+		t.Fatalf("Register() error = %T, want ValidationError", err)
+	}
+	if validation.Message != "username may contain only latin letters, russian letters, digits, underscore, and hyphen" {
+		t.Fatalf("Register() validation message = %q", validation.Message)
 	}
 }
 
@@ -365,12 +422,15 @@ func TestUserService_LogIn_Success(t *testing.T) {
 	st := &userStorageServiceMock{userByUsername: expected}
 	svc := NewUserService(&userEmailServiceMock{}, st, &userTokenStorageMock{}, &userAvatarStorageMock{}, &userLoggerMock{})
 
-	actual, err := svc.LogIn(context.Background(), models.LogInUserRequest{Username: "johnny", Password: "password123"})
+	actual, err := svc.LogIn(context.Background(), models.LogInUserRequest{Username: "  JoHnNy  ", Password: "password123"})
 	if err != nil {
 		t.Fatalf("LogIn() error = %v", err)
 	}
 	if actual.ID != userID {
 		t.Fatalf("LogIn() user ID = %s, want %s", actual.ID, userID)
+	}
+	if st.gotUsernameQuery != "johnny" {
+		t.Fatalf("LogIn() queried username = %q, want %q", st.gotUsernameQuery, "johnny")
 	}
 }
 
@@ -414,6 +474,56 @@ func TestUserService_GetAndUpdateByID(t *testing.T) {
 	}
 	if st.updatedUserReq.Name == nil || *st.updatedUserReq.Name != name {
 		t.Fatal("updated name mismatch")
+	}
+}
+
+func TestUserService_UpdateUserByID_TrimsUsernameAndPreservesCase(t *testing.T) {
+	userID := uuid.New()
+	st := &userStorageServiceMock{}
+	svc := NewUserService(&userEmailServiceMock{}, st, &userTokenStorageMock{}, &userAvatarStorageMock{}, &userLoggerMock{})
+
+	username := "  АлиСА42  "
+	if err := svc.UpdateUserByID(context.Background(), userID, models.UpdateUserRequest{Username: &username}); err != nil {
+		t.Fatalf("UpdateUserByID() error = %v", err)
+	}
+	if st.updatedUserReq.Username == nil || *st.updatedUserReq.Username != "АлиСА42" {
+		t.Fatalf("UpdateUserByID() username = %v, want %q", st.updatedUserReq.Username, "АлиСА42")
+	}
+}
+
+func TestUserService_GetUserByUsername_NormalizesInput(t *testing.T) {
+	expected := models.User{ID: uuid.New(), Username: "таня"}
+	st := &userStorageServiceMock{userByUsername: expected}
+	svc := NewUserService(&userEmailServiceMock{}, st, &userTokenStorageMock{}, &userAvatarStorageMock{}, &userLoggerMock{})
+
+	user, err := svc.GetUserByUsername(context.Background(), "  ТанЯ  ")
+	if err != nil {
+		t.Fatalf("GetUserByUsername() error = %v", err)
+	}
+	if user.ID != expected.ID {
+		t.Fatalf("GetUserByUsername() ID = %s, want %s", user.ID, expected.ID)
+	}
+	if st.gotUsernameQuery != "таня" {
+		t.Fatalf("GetUserByUsername() queried username = %q, want %q", st.gotUsernameQuery, "таня")
+	}
+}
+
+func TestUserService_SearchUsersByUsername_NormalizesInput(t *testing.T) {
+	st := &userStorageServiceMock{searchUsers: []models.User{{ID: uuid.New(), Username: "таня"}}}
+	svc := NewUserService(&userEmailServiceMock{}, st, &userTokenStorageMock{}, &userAvatarStorageMock{}, &userLoggerMock{})
+
+	users, err := svc.SearchUsersByUsername(context.Background(), "  Тан  ", 8)
+	if err != nil {
+		t.Fatalf("SearchUsersByUsername() error = %v", err)
+	}
+	if len(users) != 1 {
+		t.Fatalf("SearchUsersByUsername() len = %d, want 1", len(users))
+	}
+	if st.searchQuery != "тан" {
+		t.Fatalf("SearchUsersByUsername() query = %q, want %q", st.searchQuery, "тан")
+	}
+	if st.searchLimit != 8 {
+		t.Fatalf("SearchUsersByUsername() limit = %d, want 8", st.searchLimit)
 	}
 }
 

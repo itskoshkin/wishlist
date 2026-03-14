@@ -53,14 +53,14 @@ func Load() *App {
 	minioSvc := storage.NewMinioService(s3)
 	userSvc := services.NewUserService(emailSvc, userStore, tokenStore, minioSvc, logger.GlobalLogger{})
 	listSvc := services.NewListService(listStore, wishStore)
-	wishSvc := services.NewWishService(wishStore, listStore)
+	wishSvc := services.NewWishService(wishStore, listStore, minioSvc)
 
 	// API
 	e := api.NewEngine()
 	mw := middlewares.NewMiddlewares(authSvc)
 
 	// Controllers
-	webCtrl := controllers.NewWebController()
+	webCtrl := controllers.NewWebController(e, userSvc)
 	userCtrl := controllers.NewUsersController(e, mw, authSvc, userSvc)
 	listCtrl := controllers.NewListsController(e, mw, listSvc)
 	wishCtrl := controllers.NewWishesController(e, mw, wishSvc)

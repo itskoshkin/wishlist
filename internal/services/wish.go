@@ -2,12 +2,17 @@ package services
 
 import (
 	"context"
+	"errors"
+	"fmt"
+	"io"
+	"strings"
 	"time"
 
 	"github.com/google/uuid"
 
 	"wishlist/internal/models"
 	"wishlist/internal/services/errors"
+	"wishlist/internal/storage"
 )
 
 type WishStorage interface {
@@ -23,10 +28,11 @@ type WishStorage interface {
 type WishServiceImpl struct {
 	wishes    WishStorage
 	wishlists ListStorage
+	s3        AvatarStorage
 }
 
-func NewWishService(ws WishStorage, wl ListStorage) *WishServiceImpl {
-	return &WishServiceImpl{wishes: ws, wishlists: wl}
+func NewWishService(ws WishStorage, wl ListStorage, s3 AvatarStorage) *WishServiceImpl {
+	return &WishServiceImpl{wishes: ws, wishlists: wl, s3: s3}
 }
 
 func (svc *WishServiceImpl) CreateWish(ctx context.Context, listID, userID uuid.UUID, req models.CreateWishRequest) (models.Wish, error) {
@@ -84,6 +90,35 @@ func (svc *WishServiceImpl) UpdateWish(ctx context.Context, listID, wishID, user
 	return svc.wishes.UpdateWishByID(ctx, wishID, req)
 }
 
+func (svc *WishServiceImpl) UpdateWishImage(ctx context.Context, listID, wishID, userID uuid.UUID, reader io.Reader, size int64, contentType string) error {
+	wish, err := svc.wishes.GetWishByID(ctx, wishID)
+	if err != nil {
+		return err
+	}
+
+	if wish.ListID != listID {
+		return svcErr.ValidationError{Message: "wish does not belong to this list"}
+	}
+
+	list, err := svc.wishlists.GetListByID(ctx, wish.ListID)
+	if err != nil {
+		return err
+	}
+
+	if list.UserID != userID {
+		return svcErr.ForbiddenError{Message: "you are not the owner of this wish"}
+	}
+
+	objectName := fmt.Sprintf(storage.WishImagePrefix, wishID, uuid.NewString())
+
+	if err = svc.s3.UploadObject(ctx, objectName, reader, size, contentType); err != nil {
+		return fmt.Errorf("failed to upload wish image: %w", err)
+	}
+
+	imageURL := svc.s3.GetObjectURL(objectName)
+	return svc.wishes.UpdateWishByID(ctx, wishID, models.UpdateWishRequest{Image: &imageURL})
+}
+
 func (svc *WishServiceImpl) ReserveWish(ctx context.Context, listID, wishID, userID uuid.UUID) error {
 	wish, err := svc.wishes.GetWishByID(ctx, wishID)
 	if err != nil {
@@ -103,7 +138,18 @@ func (svc *WishServiceImpl) ReserveWish(ctx context.Context, listID, wishID, use
 		return svcErr.ValidationError{Message: "you cannot reserve your own wish"}
 	}
 
-	return svc.wishes.ReserveWish(ctx, wishID, userID)
+	if err = svc.wishes.ReserveWish(ctx, wishID, userID); err != nil {
+		var validationErr svcErr.ValidationError
+		if errors.As(err, &validationErr) {
+			return err
+		}
+		if strings.Contains(strings.ToLower(err.Error()), "already reserved or not found") {
+			return svcErr.ValidationError{Message: "wish is already reserved"}
+		}
+		return err
+	}
+
+	return nil
 }
 
 func (svc *WishServiceImpl) ReleaseWish(ctx context.Context, listID, wishID, userID uuid.UUID) error {
@@ -116,7 +162,18 @@ func (svc *WishServiceImpl) ReleaseWish(ctx context.Context, listID, wishID, use
 		return svcErr.ValidationError{Message: "wish does not belong to this list"}
 	}
 
-	return svc.wishes.ReleaseWish(ctx, wishID, userID)
+	if err = svc.wishes.ReleaseWish(ctx, wishID, userID); err != nil {
+		var validationErr svcErr.ValidationError
+		if errors.As(err, &validationErr) {
+			return err
+		}
+		if strings.Contains(strings.ToLower(err.Error()), "not reserved by you or not found") {
+			return svcErr.ValidationError{Message: "wish is not reserved by you"}
+		}
+		return err
+	}
+
+	return nil
 }
 
 func (svc *WishServiceImpl) DeleteWish(ctx context.Context, listID, wishID, userID uuid.UUID) error {
