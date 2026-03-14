@@ -38,7 +38,7 @@ func (m *listStorageMock) GetListByID(ctx context.Context, id uuid.UUID) (models
 	return m.listToReturn, nil
 }
 
-func (m *listStorageMock) GetListBySharedLink(ctx context.Context, token string) (models.List, error) {
+func (m *listStorageMock) GetListBySharedLink(ctx context.Context, slug string) (models.List, error) {
 	if m.getErr != nil {
 		return models.List{}, m.getErr
 	}
@@ -57,9 +57,9 @@ func (m *listStorageMock) UpdateListByID(ctx context.Context, id uuid.UUID, req 
 	return m.updateErr
 }
 
-func (m *listStorageMock) RotateSharedLink(ctx context.Context, id uuid.UUID, token string) error {
+func (m *listStorageMock) RotateSharedLink(ctx context.Context, id uuid.UUID, slug string) error {
 	m.rotatedID = id
-	m.rotatedWith = token
+	m.rotatedWith = slug
 	return m.rotateErr
 }
 
@@ -99,7 +99,7 @@ func (m *listWishStorageMock) ReleaseWish(ctx context.Context, wishID, userID uu
 
 func (m *listWishStorageMock) DeleteWishByID(ctx context.Context, wishID uuid.UUID) error { return nil }
 
-func TestListService_CreateList_DefaultsAndToken(t *testing.T) {
+func TestListService_CreateList_DefaultsAndSlug(t *testing.T) {
 	ls := &listStorageMock{}
 	ws := &listWishStorageMock{}
 	svc := NewListService(ls, ws)
@@ -117,8 +117,8 @@ func TestListService_CreateList_DefaultsAndToken(t *testing.T) {
 	if !list.IsPublic {
 		t.Fatal("CreateList() IsPublic = false, want true")
 	}
-	if len(list.ShareToken) != 32 {
-		t.Fatalf("CreateList() ShareToken len = %d, want 32", len(list.ShareToken))
+	if len(list.Slug) != 32 {
+		t.Fatalf("CreateList() Slug len = %d, want 32", len(list.Slug))
 	}
 	if ls.createdList.UserID != userID {
 		t.Fatalf("CreateList() stored UserID = %s, want %s", ls.createdList.UserID, userID)
@@ -197,27 +197,27 @@ func TestListService_RotateSharedLink(t *testing.T) {
 	}}
 	svc := NewListService(ls, &listWishStorageMock{})
 
-	token, err := svc.RotateSharedLink(context.Background(), listID, userID)
+	slug, err := svc.RotateSharedLink(context.Background(), listID, userID)
 	if err != nil {
 		t.Fatalf("RotateSharedLink() error = %v", err)
 	}
-	if len(token) != 32 {
-		t.Fatalf("RotateSharedLink() token len = %d, want 32", len(token))
+	if len(slug) != 32 {
+		t.Fatalf("RotateSharedLink() slug len = %d, want 32", len(slug))
 	}
 	if ls.rotatedID != listID {
 		t.Fatalf("RotateSharedLink() storage listID = %s, want %s", ls.rotatedID, listID)
 	}
-	if ls.rotatedWith != token {
-		t.Fatalf("RotateSharedLink() storage token mismatch")
+	if ls.rotatedWith != slug {
+		t.Fatalf("RotateSharedLink() storage slug mismatch")
 	}
 }
 
 func TestListService_GetListBySharedLink(t *testing.T) {
-	expected := models.List{ID: uuid.New(), ShareToken: "12345678901234567890123456789012"}
+	expected := models.List{ID: uuid.New(), Slug: "12345678901234567890123456789012"}
 	ls := &listStorageMock{listToReturn: expected}
 	svc := NewListService(ls, &listWishStorageMock{})
 
-	actual, err := svc.GetListBySharedLink(context.Background(), expected.ShareToken)
+	actual, err := svc.GetListBySharedLink(context.Background(), expected.Slug)
 	if err != nil {
 		t.Fatalf("GetListBySharedLink() error = %v", err)
 	}
@@ -227,13 +227,13 @@ func TestListService_GetListBySharedLink(t *testing.T) {
 }
 
 func TestListService_GetListWithWishesBySharedLink(t *testing.T) {
-	list := models.List{ID: uuid.New(), ShareToken: "12345678901234567890123456789012"}
+	list := models.List{ID: uuid.New(), Slug: "12345678901234567890123456789012"}
 	wishes := []models.Wish{{ID: uuid.New(), ListID: list.ID}}
 	ls := &listStorageMock{listToReturn: list}
 	ws := &listWishStorageMock{wishes: wishes}
 	svc := NewListService(ls, ws)
 
-	gotList, gotWishes, err := svc.GetListWithWishesBySharedLink(context.Background(), list.ShareToken)
+	gotList, gotWishes, err := svc.GetListWithWishesBySharedLink(context.Background(), list.Slug)
 	if err != nil {
 		t.Fatalf("GetListWithWishesBySharedLink() error = %v", err)
 	}

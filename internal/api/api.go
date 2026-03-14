@@ -66,14 +66,7 @@ func (api *API) RegisterMiddlewares() {
 
 func (api *API) RegisterRoutes() {
 	// Web
-	api.engine.GET("/", api.webCtrl.Index)
-	api.engine.GET("/wishes", api.webCtrl.Wishes)
-	api.engine.GET("/wishlists/:list_id", api.webCtrl.WishlistByID)
-	api.engine.GET("/wishlists/shared/:slug", api.webCtrl.WishlistBySharedSlug)
-	api.engine.GET("/wishes/:list_id", func(ctx *gin.Context) {
-		ctx.Redirect(http.StatusMovedPermanently, fmt.Sprintf("/wishlists/%s", ctx.Param("list_id")))
-	})
-	api.engine.NoRoute(api.webCtrl.NotFound)
+	api.webCtrl.RegisterRoutes()
 
 	// API
 	api.userCtrl.RegisterRoutes()

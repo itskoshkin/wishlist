@@ -7,41 +7,44 @@ import (
 )
 
 type List struct {
-	ID         uuid.UUID
-	UserID     uuid.UUID
-	Image      *string
-	Title      string
-	Notes      *string
-	IsPublic   bool
-	ShareToken string
-	CreatedAt  time.Time
-	UpdatedAt  time.Time
+	ID          uuid.UUID
+	UserID      uuid.UUID
+	Image       *string
+	Title       string
+	Notes       *string
+	IsPublic    bool
+	Slug        string
+	WishesCount int
+	CreatedAt   time.Time
+	UpdatedAt   time.Time
 }
 
 func (l List) ToOwnerResponse() ListResponse {
 	return ListResponse{
-		ID:         l.ID,
-		UserID:     l.UserID,
-		Image:      l.Image,
-		Title:      l.Title,
-		Notes:      l.Notes,
-		IsPublic:   l.IsPublic,
-		ShareToken: l.ShareToken,
-		CreatedAt:  l.CreatedAt,
-		UpdatedAt:  l.UpdatedAt,
+		ID:          l.ID,
+		UserID:      l.UserID,
+		Image:       l.Image,
+		Title:       l.Title,
+		Notes:       l.Notes,
+		IsPublic:    l.IsPublic,
+		Slug:        l.Slug,
+		WishesCount: l.WishesCount,
+		CreatedAt:   l.CreatedAt,
+		UpdatedAt:   l.UpdatedAt,
 	}
 }
 
 func (l List) ToViewerResponse(currentUserID *uuid.UUID) ListResponse {
 	return ListResponse{
-		ID:        l.ID,
-		UserID:    l.UserID,
-		Image:     l.Image,
-		Title:     l.Title,
-		Notes:     l.Notes,
-		IsPublic:  l.IsPublic,
-		CreatedAt: l.CreatedAt,
-		UpdatedAt: l.UpdatedAt,
+		ID:          l.ID,
+		UserID:      l.UserID,
+		Image:       l.Image,
+		Title:       l.Title,
+		Notes:       l.Notes,
+		IsPublic:    l.IsPublic,
+		WishesCount: l.WishesCount,
+		CreatedAt:   l.CreatedAt,
+		UpdatedAt:   l.UpdatedAt,
 	}
 }
 
@@ -58,14 +61,15 @@ type UpdateListRequest struct {
 }
 
 type ListResponse struct {
-	ID         uuid.UUID      `json:"id"`
-	UserID     uuid.UUID      `json:"user_id"`
-	Image      *string        `json:"image"`
-	Title      string         `json:"title"`
-	Notes      *string        `json:"notes,omitempty"`
-	IsPublic   bool           `json:"is_public"`
-	ShareToken string         `json:"share_token"`
-	CreatedAt  time.Time      `json:"created_at"`
-	UpdatedAt  time.Time      `json:"updated_at"`
-	Wishes     []WishResponse `json:"wishes,omitempty"`
+	ID          uuid.UUID      `json:"id"`
+	UserID      uuid.UUID      `json:"user_id"`
+	Image       *string        `json:"image"`
+	Title       string         `json:"title"`
+	Notes       *string        `json:"notes,omitempty"`
+	IsPublic    bool           `json:"is_public"`
+	Slug        string         `json:"slug"`
+	WishesCount int            `json:"wishes_count"`
+	CreatedAt   time.Time      `json:"created_at"`
+	UpdatedAt   time.Time      `json:"updated_at"`
+	Wishes      []WishResponse `json:"wishes,omitempty"`
 }

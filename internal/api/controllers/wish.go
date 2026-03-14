@@ -3,6 +3,7 @@ package controllers
 import (
 	"context"
 	"errors"
+	"io"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -20,6 +21,7 @@ type WishService interface {
 	CreateWish(ctx context.Context, listID, userID uuid.UUID, req models.CreateWishRequest) (models.Wish, error)
 	GetWishByID(ctx context.Context, wishID uuid.UUID) (models.Wish, error)
 	UpdateWish(ctx context.Context, listID, wishID, userID uuid.UUID, req models.UpdateWishRequest) error
+	UpdateWishImage(ctx context.Context, listID, wishID, userID uuid.UUID, reader io.Reader, size int64, contentType string) error
 	ReserveWish(ctx context.Context, listID, wishID, userID uuid.UUID) error
 	ReleaseWish(ctx context.Context, listID, wishID, userID uuid.UUID) error
 	DeleteWish(ctx context.Context, listID, wishID, userID uuid.UUID) error
@@ -43,6 +45,7 @@ func (ctrl *WishesController) RegisterRoutes() {
 		{
 			authedListRoutes.POST("/:list_id/wishes", ctrl.CreateWish)
 			authedListRoutes.PATCH("/:list_id/wishes/:wish_id", ctrl.UpdateWish)
+			authedListRoutes.PUT("/:list_id/wishes/:wish_id/image", ctrl.UpdateWishImage)
 			authedListRoutes.POST("/:list_id/wishes/:wish_id/reserve", ctrl.ReserveWish)
 			authedListRoutes.DELETE("/:list_id/wishes/:wish_id/reserve", ctrl.ReleaseWish)
 			authedListRoutes.DELETE("/:list_id/wishes/:wish_id", ctrl.DeleteWish)
@@ -149,6 +152,69 @@ func (ctrl *WishesController) UpdateWish(ctx *gin.Context) {
 	}
 
 	ctx.Status(http.StatusNoContent)
+}
+
+// UpdateWishImage GoDoc
+// @Summary Update wish image
+// @Description Upload image for wish
+// @Tags wishes
+// @Accept multipart/form-data
+// @Produce json
+// @Security BearerAuth
+// @Param list_id path string true "List ID (UUID)"
+// @Param wish_id path string true "Wish ID (UUID)"
+// @Param image formData file true "Image file"
+// @Success 200 {object} models.WishResponse
+// @Failure 400 {object} apiModels.APIError
+// @Failure 401 {object} apiModels.APIError
+// @Failure 403 {object} apiModels.APIError
+// @Failure 500 {object} apiModels.APIError
+// @Router /lists/{list_id}/wishes/{wish_id}/image [put]
+func (ctrl *WishesController) UpdateWishImage(ctx *gin.Context) {
+	userID, ok := middlewares.GetUserID(ctx)
+	if !ok {
+		apiModels.Error(ctx, http.StatusUnauthorized, "unauthorized")
+		return
+	}
+
+	listID, err := uuid.Parse(ctx.Param("list_id"))
+	if err != nil {
+		apiModels.Error(ctx, http.StatusBadRequest, "invalid list ID")
+		return
+	}
+
+	wishID, err := uuid.Parse(ctx.Param("wish_id"))
+	if err != nil {
+		apiModels.Error(ctx, http.StatusBadRequest, "invalid wish ID")
+		return
+	}
+
+	fileHeader, err := ctx.FormFile("image")
+	if err != nil {
+		apiModels.Error(ctx, http.StatusBadRequest, "image file is required")
+		return
+	}
+
+	contentType := fileHeader.Header.Get("Content-Type")
+	file, err := fileHeader.Open()
+	if err != nil {
+		apiModels.InternalError(ctx, err.Error())
+		return
+	}
+	defer func() { _ = file.Close() }()
+
+	if err = ctrl.wishService.UpdateWishImage(ctx, listID, wishID, userID, file, fileHeader.Size, contentType); err != nil {
+		apiModels.InternalError(ctx, err.Error())
+		return
+	}
+
+	wish, err := ctrl.wishService.GetWishByID(ctx, wishID)
+	if err != nil {
+		apiModels.InternalError(ctx, err.Error())
+		return
+	}
+
+	ctx.JSON(http.StatusOK, wish.ToOwnerResponse())
 }
 
 // ReserveWish GoDoc
