@@ -12,9 +12,9 @@
 - [x] Add unit, integration and end-to-end tests
 - [x] Dockerize
 - [x] Ask Claude to conjure some UI
+- [ ] Add message broker for emails
 - [ ] Set up CI/CD
 - [ ] Deploy
-- [ ] Add message broker for... Emails? Price change notifications?
 
 ---
 
