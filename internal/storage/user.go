@@ -193,8 +193,7 @@ func (us *UserStorageImpl) DeleteUserByID(ctx context.Context, id uuid.UUID) err
 }
 
 func mapUserWriteError(err error) error {
-	var pgErr *pgconn.PgError
-	if errors.As(err, &pgErr) && pgErr.Code == "23505" {
+	if pgErr, ok := errors.AsType[*pgconn.PgError](err); ok && pgErr.Code == "23505" {
 		switch pgErr.ConstraintName {
 		case "users_username_key", "users_username_lower_key":
 			return svcErr.ConflictError{Message: "username is already taken"}
