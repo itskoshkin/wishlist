@@ -146,6 +146,11 @@ func mustRedis(t *testing.T) *redisgo.Client {
 	if err != nil {
 		t.Skipf("redis unavailable: %v", err)
 	}
+
+	if err = client.FlushDB(ctx).Err(); err != nil {
+		t.Skipf("redis flush failed: %v", err)
+	}
+	
 	return client
 }
 
