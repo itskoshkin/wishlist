@@ -294,6 +294,7 @@ func (ctrl *ListsController) GetPublicListsByUserID(ctx *gin.Context) {
 // @Failure 403 {object} apiModels.APIError
 // @Failure 500 {object} apiModels.APIError
 // @Router /lists/{list_id} [patch]
+// noinspection DuplicatedCode
 func (ctrl *ListsController) UpdateList(ctx *gin.Context) {
 	userID, ok := middlewares.GetUserID(ctx)
 	if !ok {
