@@ -24,7 +24,7 @@ func (us *UserStorageImpl) CreateUser(ctx context.Context, user models.User) err
 		`INSERT INTO users (id, name, username, email, password, created_at, updated_at) VALUES ($1, $2, $3, $4, $5, $6, $7)`,
 		user.ID, user.Name, user.Username, user.Email, user.Password, user.CreatedAt, user.UpdatedAt,
 	); err != nil {
-		if mappedErr := mapUserWriteError(err); mappedErr != err {
+		if mappedErr := mapUserWriteError(err); !errors.Is(mappedErr, err) {
 			return mappedErr
 		}
 		return fmt.Errorf("failed to create user: %w", err)
@@ -161,7 +161,7 @@ func (us *UserStorageImpl) UpdateUserByID(ctx context.Context, id uuid.UUID, req
 	args = append(args, id)
 
 	if result, err := us.pool.Exec(ctx, fmt.Sprintf("UPDATE users SET"+" %s WHERE id = $%d", strings.Join(clauses, ", "), index), args...); err != nil { // "+" to suppress false-positive "<set assignment> expected, got '%'" on "SET %s", "//noinspection ALL" didn't work
-		if mappedErr := mapUserWriteError(err); mappedErr != err {
+		if mappedErr := mapUserWriteError(err); !errors.Is(mappedErr, err) {
 			return mappedErr
 		}
 		return fmt.Errorf("failed to update user with ID '%s': %w", id, err) //                                                                                                                                                                                   ^

@@ -5,6 +5,7 @@ package storage
 import (
 	"bytes"
 	"context"
+	"errors"
 	"fmt"
 	"os"
 	"strconv"
@@ -12,6 +13,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/jackc/pgx/v5/pgxpool"
 	minio "github.com/minio/minio-go/v7"
 	redisgo "github.com/redis/go-redis/v9"
@@ -548,3 +550,65 @@ func TestMinioStorage_Integration(t *testing.T) {
 }
 
 func bytesReader(b []byte) *bytes.Reader { return bytes.NewReader(b) }
+
+func TestMapUserWriteErrorBehavior(t *testing.T) {
+	// Arrange
+	originalErr := errors.New("some error")
+
+	// Case 1: mapUserWriteError returns same error
+	t.Run("same error returned", func(t *testing.T) {
+		mapped := mapUserWriteError(originalErr)
+
+		// Current logic: mappedErr != err
+		usingEquality := mapped != originalErr
+
+		// Proposed logic: !errors.Is(mappedErr, err)
+		usingErrorsIs := !errors.Is(mapped, originalErr)
+
+		t.Logf("Equality check: %v", usingEquality)
+		t.Logf("errors.Is check: %v", usingErrorsIs)
+
+		if usingEquality != usingErrorsIs {
+			t.Errorf("Behavior differs! Equality=%v, errors.Is=%v",
+				usingEquality, usingErrorsIs)
+		}
+	})
+
+	// Case 2: mapUserWriteError returns domain error
+	t.Run("domain error returned", func(t *testing.T) {
+		pgErr := &pgconn.PgError{Code: "23505"}
+		mapped := mapUserWriteError(pgErr)
+
+		usingEquality := mapped != pgErr
+		usingErrorsIs := !errors.Is(mapped, pgErr)
+
+		t.Logf("Equality check: %v", usingEquality)
+		t.Logf("errors.Is check: %v", usingErrorsIs)
+
+		if usingEquality != usingErrorsIs {
+			t.Errorf("Behavior differs! Equality=%v, errors.Is=%v",
+				usingEquality, usingErrorsIs)
+		}
+	})
+
+	// Case 3: if mapUserWriteError wraps (hypothetical)
+	t.Run("wrapped error", func(t *testing.T) {
+		originalErr = &pgconn.PgError{Code: "23505"}
+		// Simulate if mapUserWriteError starts wrapping
+		wrappedErr := fmt.Errorf("wrapped: %w", originalErr)
+
+		usingEquality := wrappedErr != originalErr
+		usingErrorsIs := !errors.Is(wrappedErr, originalErr)
+
+		t.Logf("Equality check: %v (expects true)", usingEquality)
+		t.Logf("errors.Is check: %v (expects false!)", usingErrorsIs)
+
+		// This shows the difference
+		if usingEquality == usingErrorsIs {
+			t.Logf("Both methods agree")
+		} else {
+			t.Logf("DIFFERENCE DETECTED: Equality=%v, errors.Is=%v",
+				usingEquality, usingErrorsIs)
+		}
+	})
+}
