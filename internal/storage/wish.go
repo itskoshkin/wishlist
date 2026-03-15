@@ -44,6 +44,7 @@ func (s *WishStorageImpl) GetWishByID(ctx context.Context, wishID uuid.UUID) (mo
 }
 
 func (s *WishStorageImpl) GetWishesByListID(ctx context.Context, listID uuid.UUID) ([]models.Wish, error) {
+	//noinspection SqlRedundantOrderingDirection
 	rows, err := s.pool.Query(ctx, `SELECT id, list_id, image, title, notes, link, price, currency, reserved_by, created_at, updated_at FROM wishes WHERE list_id = $1 ORDER BY created_at ASC`, listID)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get wishes for list with ID '%s': %w", listID, err)
@@ -62,6 +63,7 @@ func (s *WishStorageImpl) GetWishesByListID(ctx context.Context, listID uuid.UUI
 	return wishes, rows.Err()
 }
 
+// noinspection DuplicatedCode
 func (s *WishStorageImpl) UpdateWishByID(ctx context.Context, wishID uuid.UUID, req models.UpdateWishRequest) error {
 	var clauses []string
 	var args []any

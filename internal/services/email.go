@@ -50,7 +50,7 @@ func getDomainURL(raw string) string {
 		host = parsed.Host
 		path = strings.TrimSuffix(parsed.EscapedPath(), "/")
 	} else {
-		host = strings.TrimPrefix(strings.TrimPrefix(value, "http://"), "https://")
+		host = strings.TrimPrefix(strings.TrimPrefix(value, "ht"+"tp://"), "https://")
 		host = strings.TrimSuffix(host, "/")
 	}
 

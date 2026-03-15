@@ -3,6 +3,7 @@ MAIN_PATH ?= ./cmd/main.go
 CURL_TEST_PATH = ./tests/test_endpoints_with_curl.sh
 E2E_BASE_URL ?= http://localhost:8080/api/v1
 SWAG_ARGS ?= -o docs -g main.go -d ./cmd,./internal/api/controllers,./internal/models,./internal/api/errors --parseInternal
+GOOSE_DSN ?= "postgres://username:password@localhost:5432/wishlist?sslmode=disable"
 
 .PHONY: build run test test-curl test-unit test-integration test-e2e swagger swagger-clean docker-build docker-run compose-up compose-down migrate clean
 
