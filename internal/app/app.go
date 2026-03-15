@@ -58,8 +58,14 @@ func Load() *App {
 	// Services
 	authSvc := services.NewAuthService(tokenStore)
 	emailSvc := services.NewEmailService()
+	var emailSender services.EmailSender
+	if publisher == nil {
+		emailSender = services.NewSMTPEmailSender(emailSvc)
+	} else {
+		emailSender = events.NewEmailSender(publisher)
+	}
 	minioSvc := storage.NewMinioService(s3)
-	userSvc := services.NewUserService(emailSvc, userStore, tokenStore, minioSvc, logger.GlobalLogger{})
+	userSvc := services.NewUserService(emailSender, userStore, tokenStore, minioSvc, logger.GlobalLogger{})
 	listSvc := services.NewListService(listStore, wishStore)
 	wishSvc := services.NewWishService(wishStore, listStore, minioSvc)
 
