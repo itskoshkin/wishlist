@@ -63,6 +63,17 @@ const (
 	EmailUser     = "app.email.user"
 	EmailPassword = "app.email.password"
 	EmailFrom     = "app.email.from"
+
+	BrokerType         = "app.broker.type"
+	KafkaBrokers       = "app.broker.kafka.brokers"
+	KafkaGroupID       = "app.broker.kafka.group_id"
+	KafkaTopicPrefix   = "app.broker.kafka.topic_prefix"
+	KafkaAuthEnabled   = "app.broker.kafka.auth.enabled"
+	KafkaAuthMechanism = "app.broker.kafka.auth.mechanism"
+	KafkaAuthUsername  = "app.broker.kafka.auth.username"
+	KafkaAuthPassword  = "app.broker.kafka.auth.password"
+	KafkaAuthTLS       = "app.broker.kafka.auth.tls"
+	RabbitMQURL        = "app.broker.rabbitmq.url"
 )
 
 func LoadConfig() {
@@ -96,9 +107,11 @@ func ValidateConfigFields() error {
 		EmailHost: {EmailUser, EmailPassword, EmailFrom},
 	}
 	var possibleValues = map[string][]string{ // If present, must be one of these values
-		LogLevel:    {"DEBUG", "INFO", "WARN", "ERROR"},
-		LogFormat:   {"text", "json"},
-		LogFileMode: {"append", "overwrite", "rotate"},
+		LogLevel:           {"DEBUG", "INFO", "WARN", "ERROR"},
+		LogFormat:          {"text", "json"},
+		LogFileMode:        {"append", "overwrite", "rotate"},
+		BrokerType:         {"none", "kafka", "rabbitmq"},
+		KafkaAuthMechanism: {"plain"},
 	}
 	var defaults = map[string]any{ // Will be set if not present, overwrites above required/dependent
 		/* Log */ LogLevel: "INFO", LogFormat: "text", LogToConsole: true, LogToFile: true, LogFilePath: "application.log", LogFileMode: "append",
@@ -108,6 +121,7 @@ func ValidateConfigFields() error {
 		/* JWT */ AccessTokenTTL: "24h", RefreshTokenTTL: "168h" /* 7 days */, PwdResetTokenTTL: "1h", JwtIssuer: "wishlist", JwtAudience: "Wishlist API",
 		/* Email */ EmailPort: "587" /* Default port */, EmailVerifyTokenTTL: "24h",
 		/* Minio */ MinioBucketName: "wishlist", MinioMaxFileSize: 5,
+		/* Broker */ BrokerType: "none",
 	}
 
 	for k, v := range defaults {
@@ -118,13 +132,31 @@ func ValidateConfigFields() error {
 
 	var missing []string
 	for _, key := range required {
-		if !viper.IsSet(key) || strings.TrimSpace(viper.GetString(key)) == "" {
+		if isEmptyValue(key) {
 			missing = append(missing, key)
 		}
 	}
 	if viper.GetString(LogFileMode) == "rotate" {
-		if !viper.IsSet(LogFilesFolder) || strings.TrimSpace(viper.GetString(LogFilesFolder)) == "" {
+		if isEmptyValue(LogFilesFolder) {
 			missing = append(missing, fmt.Sprintf("%s (required when %s=rotate)", LogFilesFolder, LogFileMode))
+		}
+	}
+	switch CurrentBrokerType() {
+	case "kafka":
+		if isEmptyValue(KafkaBrokers) {
+			missing = append(missing, fmt.Sprintf("%s (required when %s=kafka)", KafkaBrokers, BrokerType))
+		}
+		if viper.GetBool(KafkaAuthEnabled) {
+			if isEmptyValue(KafkaAuthUsername) {
+				missing = append(missing, fmt.Sprintf("%s (required when %s=true)", KafkaAuthUsername, KafkaAuthEnabled))
+			}
+			if isEmptyValue(KafkaAuthPassword) {
+				missing = append(missing, fmt.Sprintf("%s (required when %s=true)", KafkaAuthPassword, KafkaAuthEnabled))
+			}
+		}
+	case "rabbitmq":
+		if isEmptyValue(RabbitMQURL) {
+			missing = append(missing, fmt.Sprintf("%s (required when %s=rabbitmq)", RabbitMQURL, BrokerType))
 		}
 	}
 	if len(missing) > 0 {
@@ -134,7 +166,7 @@ func ValidateConfigFields() error {
 	for triggerKey, requiredKeys := range dependent {
 		if viper.GetBool(triggerKey) || (viper.IsSet(triggerKey) && viper.GetString(triggerKey) != "") {
 			for _, key := range requiredKeys {
-				if strings.TrimSpace(viper.GetString(key)) == "" {
+				if isEmptyValue(key) {
 					missing = append(missing, fmt.Sprintf("%s (%s is set)", key, triggerKey))
 				}
 			}
@@ -176,6 +208,23 @@ func ValidateConfigFields() error {
 	return nil
 }
 
+func isEmptyValue(key string) bool {
+	if !viper.IsSet(key) {
+		return true
+	}
+
+	switch value := viper.Get(key).(type) {
+	case string:
+		return strings.TrimSpace(value) == ""
+	case []string:
+		return len(value) == 0
+	case []any:
+		return len(value) == 0
+	default:
+		return strings.TrimSpace(viper.GetString(key)) == ""
+	}
+}
+
 func PostgresConfig() postgres.Config {
 	return postgres.Config{
 		Host:     viper.GetString(DatabaseHost),
@@ -205,4 +254,8 @@ func MinioConfig() minio.Config {
 		UseSSL:          viper.GetBool(MinioUseSSL),
 		BucketName:      viper.GetString(MinioBucketName),
 	}
+}
+
+func CurrentBrokerType() string {
+	return strings.ToLower(strings.TrimSpace(viper.GetString(BrokerType)))
 }

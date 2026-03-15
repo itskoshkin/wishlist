@@ -8,6 +8,7 @@ import (
 	"wishlist/internal/api/controllers"
 	"wishlist/internal/api/middlewares"
 	"wishlist/internal/config"
+	"wishlist/internal/events"
 	"wishlist/internal/logger"
 	"wishlist/internal/services"
 	"wishlist/internal/storage"
@@ -17,7 +18,8 @@ import (
 )
 
 type App struct {
-	API *api.API
+	API       *api.API
+	publisher *events.Publisher
 }
 
 func Load() *App {
@@ -37,6 +39,12 @@ func Load() *App {
 		logger.Fatal(err)
 	}
 	s3, err := minio.NewClient(ctx, config.MinioConfig())
+	if err != nil {
+		logger.Fatal(err)
+	}
+
+	// Events publisher
+	publisher, err := events.NewEventPublisher()
 	if err != nil {
 		logger.Fatal(err)
 	}
@@ -65,11 +73,23 @@ func Load() *App {
 	listCtrl := controllers.NewListsController(e, mw, listSvc)
 	wishCtrl := controllers.NewWishesController(e, mw, wishSvc)
 
-	return &App{API: api.NewAPI(e, webCtrl, userCtrl, listCtrl, wishCtrl)}
+	return &App{
+		API:       api.NewAPI(e, webCtrl, userCtrl, listCtrl, wishCtrl),
+		publisher: publisher,
+	}
 }
 
 func (a *App) Run() {
+	defer a.closeEventPublisher()
 	a.API.RegisterMiddlewares()
 	a.API.RegisterRoutes()
 	a.API.Run()
+}
+
+func (a *App) closeEventPublisher() {
+	if a.publisher != nil {
+		if err := a.publisher.Close(); err != nil {
+			logger.Error("Failed to close broker producer: %v", err)
+		}
+	}
 }
