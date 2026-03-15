@@ -2,7 +2,6 @@ package controllers
 
 import (
 	"context"
-	"errors"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -13,7 +12,6 @@ import (
 	"wishlist/internal/api/middlewares"
 	"wishlist/internal/config"
 	"wishlist/internal/models"
-	"wishlist/internal/services/errors"
 )
 
 type ListService interface {
@@ -85,12 +83,15 @@ func (ctrl *ListsController) CreateList(ctx *gin.Context) {
 
 	var req models.CreateListRequest
 	if err := ctx.ShouldBindJSON(&req); err != nil {
-		apiModels.Error(ctx, http.StatusBadRequest, err.Error())
+		apiModels.RespondWithBindError(ctx, err)
 		return
 	}
 
 	list, err := ctrl.listService.CreateList(ctx, userID, req)
 	if err != nil {
+		if apiModels.RespondWithServiceError(ctx, err) {
+			return
+		}
 		apiModels.InternalError(ctx, err.Error())
 		return
 	}
@@ -126,9 +127,7 @@ func (ctrl *ListsController) GetListByID(ctx *gin.Context) {
 
 	list, wishes, err := ctrl.listService.GetListWithWishes(ctx, listID, userID)
 	if err != nil {
-		var forbiddenError svcErr.ForbiddenError
-		if errors.As(err, &forbiddenError) {
-			apiModels.Error(ctx, http.StatusForbidden, err.Error())
+		if apiModels.RespondWithServiceError(ctx, err) {
 			return
 		}
 		apiModels.InternalError(ctx, err.Error())
@@ -175,6 +174,9 @@ func (ctrl *ListsController) GetListBySharedLink(ctx *gin.Context) {
 
 	list, wishes, err := ctrl.listService.GetListWithWishesBySharedLink(ctx, slug)
 	if err != nil {
+		if apiModels.RespondWithServiceError(ctx, err) {
+			return
+		}
 		apiModels.InternalError(ctx, err.Error())
 		return
 	}
@@ -307,14 +309,12 @@ func (ctrl *ListsController) UpdateList(ctx *gin.Context) {
 
 	var req models.UpdateListRequest
 	if err = ctx.ShouldBindJSON(&req); err != nil {
-		apiModels.Error(ctx, http.StatusBadRequest, err.Error())
+		apiModels.RespondWithBindError(ctx, err)
 		return
 	}
 
 	if err = ctrl.listService.UpdateList(ctx, listID, userID, req); err != nil {
-		var forbiddenError svcErr.ForbiddenError
-		if errors.As(err, &forbiddenError) {
-			apiModels.Error(ctx, http.StatusForbidden, err.Error())
+		if apiModels.RespondWithServiceError(ctx, err) {
 			return
 		}
 		apiModels.InternalError(ctx, err.Error())
@@ -352,9 +352,7 @@ func (ctrl *ListsController) RotateSharedLink(ctx *gin.Context) {
 
 	token, err := ctrl.listService.RotateSharedLink(ctx, listID, userID)
 	if err != nil {
-		var forbiddenError svcErr.ForbiddenError
-		if errors.As(err, &forbiddenError) {
-			apiModels.Error(ctx, http.StatusForbidden, err.Error())
+		if apiModels.RespondWithServiceError(ctx, err) {
 			return
 		}
 		apiModels.InternalError(ctx, err.Error())
@@ -390,9 +388,7 @@ func (ctrl *ListsController) DeleteList(ctx *gin.Context) {
 	}
 
 	if err = ctrl.listService.DeleteList(ctx, listID, userID); err != nil {
-		var forbiddenError svcErr.ForbiddenError
-		if errors.As(err, &forbiddenError) {
-			apiModels.Error(ctx, http.StatusForbidden, err.Error())
+		if apiModels.RespondWithServiceError(ctx, err) {
 			return
 		}
 		apiModels.InternalError(ctx, err.Error())

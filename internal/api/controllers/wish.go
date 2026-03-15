@@ -2,7 +2,6 @@ package controllers
 
 import (
 	"context"
-	"errors"
 	"io"
 	"net/http"
 
@@ -14,7 +13,6 @@ import (
 	"wishlist/internal/api/middlewares"
 	"wishlist/internal/config"
 	"wishlist/internal/models"
-	"wishlist/internal/services/errors"
 )
 
 type WishService interface {
@@ -83,15 +81,13 @@ func (ctrl *WishesController) CreateWish(ctx *gin.Context) {
 
 	var req models.CreateWishRequest
 	if err = ctx.ShouldBindJSON(&req); err != nil {
-		apiModels.Error(ctx, http.StatusBadRequest, err.Error())
+		apiModels.RespondWithBindError(ctx, err)
 		return
 	}
 
 	wish, err := ctrl.wishService.CreateWish(ctx, listID, userID, req)
 	if err != nil {
-		var forbiddenError svcErr.ForbiddenError
-		if errors.As(err, &forbiddenError) {
-			apiModels.Error(ctx, http.StatusForbidden, err.Error())
+		if apiModels.RespondWithServiceError(ctx, err) {
 			return
 		}
 		apiModels.InternalError(ctx, err.Error())
@@ -137,14 +133,12 @@ func (ctrl *WishesController) UpdateWish(ctx *gin.Context) {
 
 	var req models.UpdateWishRequest
 	if err = ctx.ShouldBindJSON(&req); err != nil {
-		apiModels.Error(ctx, http.StatusBadRequest, err.Error())
+		apiModels.RespondWithBindError(ctx, err)
 		return
 	}
 
 	if err = ctrl.wishService.UpdateWish(ctx, listID, wishID, userID, req); err != nil {
-		var forbiddenError svcErr.ForbiddenError
-		if errors.As(err, &forbiddenError) {
-			apiModels.Error(ctx, http.StatusForbidden, err.Error())
+		if apiModels.RespondWithServiceError(ctx, err) {
 			return
 		}
 		apiModels.InternalError(ctx, err.Error())
@@ -204,12 +198,18 @@ func (ctrl *WishesController) UpdateWishImage(ctx *gin.Context) {
 	defer func() { _ = file.Close() }()
 
 	if err = ctrl.wishService.UpdateWishImage(ctx, listID, wishID, userID, file, fileHeader.Size, contentType); err != nil {
+		if apiModels.RespondWithServiceError(ctx, err) {
+			return
+		}
 		apiModels.InternalError(ctx, err.Error())
 		return
 	}
 
 	wish, err := ctrl.wishService.GetWishByID(ctx, wishID)
 	if err != nil {
+		if apiModels.RespondWithServiceError(ctx, err) {
+			return
+		}
 		apiModels.InternalError(ctx, err.Error())
 		return
 	}
@@ -249,9 +249,7 @@ func (ctrl *WishesController) ReserveWish(ctx *gin.Context) {
 	}
 
 	if err = ctrl.wishService.ReserveWish(ctx, listID, wishID, userID); err != nil {
-		var validationError svcErr.ValidationError
-		if errors.As(err, &validationError) {
-			apiModels.Error(ctx, http.StatusBadRequest, err.Error())
+		if apiModels.RespondWithServiceError(ctx, err) {
 			return
 		}
 		apiModels.InternalError(ctx, err.Error())
@@ -293,6 +291,9 @@ func (ctrl *WishesController) ReleaseWish(ctx *gin.Context) {
 	}
 
 	if err = ctrl.wishService.ReleaseWish(ctx, listID, wishID, userID); err != nil {
+		if apiModels.RespondWithServiceError(ctx, err) {
+			return
+		}
 		apiModels.InternalError(ctx, err.Error())
 		return
 	}
@@ -333,9 +334,7 @@ func (ctrl *WishesController) DeleteWish(ctx *gin.Context) {
 	}
 
 	if err = ctrl.wishService.DeleteWish(ctx, listID, wishID, userID); err != nil {
-		var forbiddenError svcErr.ForbiddenError
-		if errors.As(err, &forbiddenError) {
-			apiModels.Error(ctx, http.StatusForbidden, err.Error())
+		if apiModels.RespondWithServiceError(ctx, err) {
 			return
 		}
 		apiModels.InternalError(ctx, err.Error())
