@@ -274,14 +274,14 @@ func TestListStorage_Integration(t *testing.T) {
 	}
 
 	list := models.List{
-		ID:         uuid.New(),
-		UserID:     userID,
-		Title:      "List",
-		Notes:      nil,
-		IsPublic:   true,
-		Slug: "12345678901234567890123456789012",
-		CreatedAt:  time.Now(),
-		UpdatedAt:  time.Now(),
+		ID:        uuid.New(),
+		UserID:    userID,
+		Title:     "List",
+		Notes:     nil,
+		IsPublic:  true,
+		Slug:      "12345678901234567890123456789012",
+		CreatedAt: time.Now(),
+		UpdatedAt: time.Now(),
 	}
 	if err := lists.CreateList(ctx, list); err != nil {
 		t.Fatalf("CreateList() error = %v", err)
@@ -347,13 +347,13 @@ func TestWishStorage_Integration(t *testing.T) {
 	}
 
 	list := models.List{
-		ID:         uuid.New(),
-		UserID:     ownerID,
-		Title:      "List",
-		IsPublic:   true,
-		Slug: "12345678901234567890123456789012",
-		CreatedAt:  time.Now(),
-		UpdatedAt:  time.Now(),
+		ID:        uuid.New(),
+		UserID:    ownerID,
+		Title:     "List",
+		IsPublic:  true,
+		Slug:      "12345678901234567890123456789012",
+		CreatedAt: time.Now(),
+		UpdatedAt: time.Now(),
 	}
 	if err := lists.CreateList(ctx, list); err != nil {
 		t.Fatalf("CreateList() error = %v", err)
@@ -446,13 +446,13 @@ func TestCascadeDelete_Integration(t *testing.T) {
 	}
 
 	list := models.List{
-		ID:         uuid.New(),
-		UserID:     userID,
-		Title:      "Cascade list",
-		IsPublic:   true,
-		Slug: "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
-		CreatedAt:  time.Now(),
-		UpdatedAt:  time.Now(),
+		ID:        uuid.New(),
+		UserID:    userID,
+		Title:     "Cascade list",
+		IsPublic:  true,
+		Slug:      "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+		CreatedAt: time.Now(),
+		UpdatedAt: time.Now(),
 	}
 	if err := lists.CreateList(ctx, list); err != nil {
 		t.Fatalf("CreateList() error = %v", err)
