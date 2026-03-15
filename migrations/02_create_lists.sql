@@ -7,10 +7,10 @@ CREATE TABLE lists (
                        title TEXT NOT NULL,
                        notes TEXT,
                        is_public BOOLEAN NOT NULL DEFAULT TRUE,
-                       share_token VARCHAR(32) NOT NULL UNIQUE,
+                       slug VARCHAR(32) NOT NULL UNIQUE,
                        created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
                        updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-                       CONSTRAINT lists_share_token_len CHECK (char_length(share_token) = 32)
+                       CONSTRAINT lists_slug_len CHECK (char_length(slug) = 32)
 );
 
 CREATE INDEX idx_lists_user_id_created_at_desc ON lists (user_id, created_at DESC);

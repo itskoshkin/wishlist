@@ -41,6 +41,32 @@ func NewClient(ctx context.Context, cfg Config) (*minio.Client, error) {
 		}
 	}
 
+	allowPublicReadPolicy := fmt.Sprintf(`{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "PublicReadObjects",
+      "Effect": "Allow",
+      "Principal": {
+        "AWS": [
+          "*"
+        ]
+      },
+      "Action": [
+        "s3:GetObject"
+      ],
+      "Resource": [
+        "arn:aws:s3:::%s/*"
+      ]
+    }
+  ]
+}`, cfg.BucketName)
+	
+	if err = client.SetBucketPolicy(ctx, cfg.BucketName, allowPublicReadPolicy); err != nil {
+		fmt.Println()
+		return nil, fmt.Errorf("MinIO: failed to set public read policy for bucket '%s': %w", cfg.BucketName, err)
+	}
+
 	fmt.Println(colors.Green(" Done."))
 	return client, nil
 }

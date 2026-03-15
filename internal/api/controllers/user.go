@@ -30,6 +30,8 @@ type UserService interface {
 	VerifyEmail(ctx context.Context, token string) error
 	LogIn(ctx context.Context, req models.LogInUserRequest) (models.User, error)
 	GetUserByID(ctx context.Context, id uuid.UUID) (models.User, error)
+	GetUserByUsername(ctx context.Context, username string) (models.User, error)
+	SearchUsersByUsername(ctx context.Context, query string, limit int) ([]models.User, error)
 	UpdateUserByID(ctx context.Context, id uuid.UUID, req models.UpdateUserRequest) error
 	UpdateAvatar(ctx context.Context, id uuid.UUID, reader io.Reader, size int64, contentType string) error
 	DeleteAvatar(ctx context.Context, id uuid.UUID) error
@@ -75,6 +77,8 @@ func (ctrl *UsersController) RegisterRoutes() {
 			authedUserRoutes.PATCH("/me/update-password", ctrl.UpdateCurrentPassword)
 			authedUserRoutes.DELETE("/me", ctrl.DeleteCurrentUser)
 
+			authedUserRoutes.GET("/search", ctrl.SearchUsers)
+			authedUserRoutes.GET("/by-username/:username", ctrl.GetUserByUsername)
 			authedUserRoutes.GET("/:user_id", ctrl.GetUserByID)
 		}
 	}
@@ -312,6 +316,56 @@ func (ctrl *UsersController) GetUserByID(ctx *gin.Context) {
 	}
 
 	ctx.JSON(200, user.ToPublicResponse())
+}
+
+// GetUserByUsername GoDoc
+// @Summary Get user by username
+// @Description Get user public profile by username
+// @Tags users
+// @Produce json
+// @Security BearerAuth
+// @Param username path string true "Username"
+// @Success 200 {object} models.UserResponse
+// @Failure 400 {object} apiModels.APIError
+// @Failure 401 {object} apiModels.APIError
+// @Failure 404 {object} apiModels.APIError
+// @Failure 500 {object} apiModels.APIError
+// @Router /users/by-username/{username} [get]
+func (ctrl *UsersController) GetUserByUsername(ctx *gin.Context) {
+	username := strings.TrimSpace(ctx.Param("username"))
+	if username == "" {
+		apiModels.Error(ctx, http.StatusBadRequest, "invalid username")
+		return
+	}
+
+	user, err := ctrl.userService.GetUserByUsername(ctx, username)
+	if err != nil {
+		apiModels.InternalError(ctx, err.Error())
+		return
+	}
+
+	ctx.JSON(http.StatusOK, user.ToPublicResponse())
+}
+
+func (ctrl *UsersController) SearchUsers(ctx *gin.Context) {
+	query := strings.TrimSpace(ctx.Query("query"))
+	if len(query) < 2 {
+		apiModels.Error(ctx, http.StatusBadRequest, "search query too short")
+		return
+	}
+
+	users, err := ctrl.userService.SearchUsersByUsername(ctx, query, 8)
+	if err != nil {
+		apiModels.InternalError(ctx, err.Error())
+		return
+	}
+
+	resp := make([]models.UserResponse, 0, len(users))
+	for _, user := range users {
+		resp = append(resp, user.ToPublicResponse())
+	}
+
+	ctx.JSON(http.StatusOK, resp)
 }
 
 // UpdateCurrentUser GoDoc

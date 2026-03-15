@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"errors"
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -30,12 +31,13 @@ func (m *wishControllerAuthMock) ValidateAccessToken(ctx context.Context, token 
 }
 
 type wishControllerServiceMock struct {
-	createWishFn  func(ctx context.Context, listID, userID uuid.UUID, req models.CreateWishRequest) (models.Wish, error)
-	getWishByIDFn func(ctx context.Context, wishID uuid.UUID) (models.Wish, error)
-	updateWishFn  func(ctx context.Context, listID, wishID, userID uuid.UUID, req models.UpdateWishRequest) error
-	reserveWishFn func(ctx context.Context, listID, wishID, userID uuid.UUID) error
-	releaseWishFn func(ctx context.Context, listID, wishID, userID uuid.UUID) error
-	deleteWishFn  func(ctx context.Context, listID, wishID, userID uuid.UUID) error
+	createWishFn      func(ctx context.Context, listID, userID uuid.UUID, req models.CreateWishRequest) (models.Wish, error)
+	getWishByIDFn     func(ctx context.Context, wishID uuid.UUID) (models.Wish, error)
+	updateWishFn      func(ctx context.Context, listID, wishID, userID uuid.UUID, req models.UpdateWishRequest) error
+	updateWishImageFn func(ctx context.Context, listID, wishID, userID uuid.UUID, reader io.Reader, size int64, contentType string) error
+	reserveWishFn     func(ctx context.Context, listID, wishID, userID uuid.UUID) error
+	releaseWishFn     func(ctx context.Context, listID, wishID, userID uuid.UUID) error
+	deleteWishFn      func(ctx context.Context, listID, wishID, userID uuid.UUID) error
 }
 
 func (m *wishControllerServiceMock) CreateWish(ctx context.Context, listID, userID uuid.UUID, req models.CreateWishRequest) (models.Wish, error) {
@@ -55,6 +57,13 @@ func (m *wishControllerServiceMock) GetWishByID(ctx context.Context, wishID uuid
 func (m *wishControllerServiceMock) UpdateWish(ctx context.Context, listID, wishID, userID uuid.UUID, req models.UpdateWishRequest) error {
 	if m.updateWishFn != nil {
 		return m.updateWishFn(ctx, listID, wishID, userID, req)
+	}
+	return nil
+}
+
+func (m *wishControllerServiceMock) UpdateWishImage(ctx context.Context, listID, wishID, userID uuid.UUID, reader io.Reader, size int64, contentType string) error {
+	if m.updateWishImageFn != nil {
+		return m.updateWishImageFn(ctx, listID, wishID, userID, reader, size, contentType)
 	}
 	return nil
 }
@@ -321,6 +330,17 @@ func TestWishesController_ReleaseWish(t *testing.T) {
 		w := wishJSONRequest(router, http.MethodDelete, "/api/v1/lists/"+listID.String()+"/wishes/"+wishID.String()+"/reserve", "", "ok")
 		if w.Code != http.StatusInternalServerError {
 			t.Fatalf("status = %d, want %d", w.Code, http.StatusInternalServerError)
+		}
+	})
+
+	t.Run("validation", func(t *testing.T) {
+		ws := &wishControllerServiceMock{releaseWishFn: func(ctx context.Context, gotListID, gotWishID, gotUserID uuid.UUID) error {
+			return svcErr.ValidationError{Message: "wish is not reserved by you"}
+		}}
+		router := setupWishControllerForTest(as, ws)
+		w := wishJSONRequest(router, http.MethodDelete, "/api/v1/lists/"+listID.String()+"/wishes/"+wishID.String()+"/reserve", "", "ok")
+		if w.Code != http.StatusBadRequest {
+			t.Fatalf("status = %d, want %d", w.Code, http.StatusBadRequest)
 		}
 	})
 

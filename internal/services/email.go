@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"net"
 	"net/smtp"
+	"net/url"
 	"strings"
 
 	"github.com/spf13/viper"
@@ -30,10 +31,36 @@ func NewEmailService() *EmailServiceImpl {
 		user:     viper.GetString(config.EmailUser),
 		password: viper.GetString(config.EmailPassword),
 		from:     viper.GetString(config.EmailFrom),
-		domain:   "https://" + viper.GetString(config.WebAppDomain),
+		domain:   getDomainURL(viper.GetString(config.WebAppDomain)),
 	}
 	es.sender = es.send
 	return es
+}
+
+func getDomainURL(raw string) string {
+	value := strings.TrimSpace(raw)
+	if value == "" {
+		return ""
+	}
+
+	var host string
+	var path string
+
+	if parsed, err := url.Parse(value); err == nil && parsed.Host != "" {
+		host = parsed.Host
+		path = strings.TrimSuffix(parsed.EscapedPath(), "/")
+	} else {
+		host = strings.TrimPrefix(strings.TrimPrefix(value, "http://"), "https://")
+		host = strings.TrimSuffix(host, "/")
+	}
+
+	scheme := "https"
+	lowerHost := strings.ToLower(host)
+	if strings.HasPrefix(lowerHost, "localhost") || strings.HasPrefix(lowerHost, "127.0.0.1") || strings.HasPrefix(lowerHost, "[::1]") {
+		scheme = "http"
+	}
+
+	return strings.TrimSuffix(fmt.Sprintf("%s://%s%s", scheme, host, path), "/")
 }
 
 func (svc *EmailServiceImpl) SendEmailVerificationLetter(_ context.Context, to, token string) error {

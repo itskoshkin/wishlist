@@ -11,6 +11,7 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 
 	"wishlist/internal/models"
+	"wishlist/internal/services/errors"
 )
 
 type WishStorageImpl struct{ pool *pgxpool.Pool }
@@ -34,7 +35,7 @@ func (s *WishStorageImpl) GetWishByID(ctx context.Context, wishID uuid.UUID) (mo
 		&wish.ID, &wish.ListID, &wish.Image, &wish.Title, &wish.Notes, &wish.Link, &wish.Price, &wish.Currency, &wish.ReservedBy, &wish.CreatedAt, &wish.UpdatedAt,
 	); err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
-			return models.Wish{}, fmt.Errorf("failed to get wish with ID '%s': not found", wishID)
+			return models.Wish{}, svcErr.NotFoundError{Entity: "wish", Field: "id", Value: wishID.String()}
 		}
 		return models.Wish{}, fmt.Errorf("failed to get wish with ID '%s': %w", wishID, err)
 	}
@@ -106,7 +107,7 @@ func (s *WishStorageImpl) UpdateWishByID(ctx context.Context, wishID uuid.UUID, 
 	if result, err := s.pool.Exec(ctx, fmt.Sprintf("UPDATE wishes SET"+" %s WHERE id = $%d", strings.Join(clauses, ", "), index), args...); err != nil {
 		return fmt.Errorf("failed to update wish with ID '%s': %w", wishID, err)
 	} else if result.RowsAffected() == 0 {
-		return fmt.Errorf("failed to update wish with ID '%s': not found", wishID)
+		return svcErr.NotFoundError{Entity: "wish", Field: "id", Value: wishID.String()}
 	}
 
 	return nil
@@ -136,7 +137,7 @@ func (s *WishStorageImpl) DeleteWishByID(ctx context.Context, wishID uuid.UUID) 
 	if result, err := s.pool.Exec(ctx, "DELETE FROM wishes WHERE id = $1", wishID); err != nil {
 		return fmt.Errorf("failed to delete wish with ID '%s': %w", wishID, err)
 	} else if result.RowsAffected() == 0 {
-		return fmt.Errorf("failed to delete wish with ID '%s': not found", wishID)
+		return svcErr.NotFoundError{Entity: "wish", Field: "id", Value: wishID.String()}
 	}
 
 	return nil

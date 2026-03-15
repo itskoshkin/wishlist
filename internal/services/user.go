@@ -4,6 +4,8 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"net/url"
+	"regexp"
 	"strings"
 	"time"
 
@@ -26,6 +28,7 @@ type UserStorage interface {
 	SetUserEmailAsVerified(ctx context.Context, id uuid.UUID) error
 	GetUserByID(ctx context.Context, id uuid.UUID) (models.User, error)
 	GetUserByUsername(ctx context.Context, username string) (models.User, error)
+	SearchUsersByUsername(ctx context.Context, query string, limit int) ([]models.User, error)
 	GetUserByEmail(ctx context.Context, email string) (models.User, error)
 	UpdateUserByID(ctx context.Context, id uuid.UUID, req models.UpdateUserRequest) error
 	RemoveUserAvatar(ctx context.Context, id uuid.UUID) error
@@ -56,6 +59,11 @@ func NewUserService(es EmailService, us UserStorage, ts TokenStorage, ms AvatarS
 }
 
 func (svc *UserServiceImpl) Register(ctx context.Context, req models.RegisterUserRequest) (models.User, error) {
+	req.Username = trimUsername(req.Username)
+	if err := validateUsername(req.Username); err != nil {
+		return models.User{}, err
+	}
+
 	hash, err := bcrypt.GenerateFromPassword([]byte(req.Password), bcrypt.DefaultCost)
 	if err != nil {
 		return models.User{}, fmt.Errorf("failed to hash password: %w", err)
@@ -121,6 +129,8 @@ func (svc *UserServiceImpl) VerifyEmail(ctx context.Context, token string) error
 }
 
 func (svc *UserServiceImpl) LogIn(ctx context.Context, req models.LogInUserRequest) (models.User, error) {
+	req.Username = getCanonicalUsername(req.Username)
+
 	user, err := svc.storage.GetUserByUsername(ctx, req.Username)
 	if err != nil {
 		return models.User{}, err
@@ -141,8 +151,43 @@ func (svc *UserServiceImpl) GetUserByID(ctx context.Context, id uuid.UUID) (mode
 	return svc.storage.GetUserByID(ctx, id)
 }
 
+func (svc *UserServiceImpl) GetUserByUsername(ctx context.Context, username string) (models.User, error) {
+	username = getCanonicalUsername(username)
+	return svc.storage.GetUserByUsername(ctx, username)
+}
+
+func (svc *UserServiceImpl) SearchUsersByUsername(ctx context.Context, query string, limit int) ([]models.User, error) {
+	query = getCanonicalUsername(query)
+	return svc.storage.SearchUsersByUsername(ctx, query, limit)
+}
+
 func (svc *UserServiceImpl) UpdateUserByID(ctx context.Context, id uuid.UUID, req models.UpdateUserRequest) error {
+	if req.Username != nil {
+		trimmedUsername := trimUsername(*req.Username)
+		if err := validateUsername(trimmedUsername); err != nil {
+			return err
+		}
+		req.Username = &trimmedUsername
+	}
+
 	return svc.storage.UpdateUserByID(ctx, id, req)
+}
+
+func extractObjectNameFromURL(fileURL, baseURL string) string {
+	parsedFileURL, fileErr := url.Parse(fileURL)
+	parsedBaseURL, baseErr := url.Parse(baseURL)
+	if fileErr == nil && baseErr == nil {
+		basePath := strings.TrimSuffix(parsedBaseURL.Path, "/")
+		objectPath := strings.TrimPrefix(parsedFileURL.Path, basePath+"/")
+		return strings.TrimPrefix(objectPath, "/")
+	}
+
+	objectName := strings.TrimPrefix(fileURL, strings.TrimSuffix(baseURL, "/")+"/")
+	if queryStart := strings.Index(objectName, "?"); queryStart >= 0 {
+		objectName = objectName[:queryStart]
+	}
+
+	return strings.TrimPrefix(objectName, "/")
 }
 
 func (svc *UserServiceImpl) UpdateAvatar(ctx context.Context, id uuid.UUID, reader io.Reader, size int64, contentType string) error {
@@ -163,9 +208,11 @@ func (svc *UserServiceImpl) UpdateAvatar(ctx context.Context, id uuid.UUID, read
 	}
 
 	if user.Avatar != nil {
-		objectName = strings.TrimPrefix(*user.Avatar, svc.s3.GetBaseURL()+"/")
-		if err = svc.s3.DeleteObject(ctx, objectName); err != nil {
-			svc.log.Error("failed to delete previous avatar for user with ID '%s': %v", user.ID.String(), err)
+		objectName = extractObjectNameFromURL(*user.Avatar, svc.s3.GetBaseURL())
+		if objectName != "" {
+			if deleteErr := svc.s3.DeleteObject(ctx, objectName); deleteErr != nil {
+				svc.log.Error("failed to delete previous avatar for user with ID '%s': %v", user.ID.String(), deleteErr)
+			}
 		}
 	}
 
@@ -182,9 +229,11 @@ func (svc *UserServiceImpl) DeleteAvatar(ctx context.Context, id uuid.UUID) erro
 		return nil // Nothing to delete
 	}
 
-	objectName := strings.TrimPrefix(*user.Avatar, svc.s3.GetBaseURL()+"/")
-	if err = svc.s3.DeleteObject(ctx, objectName); err != nil {
-		svc.log.Error("failed to delete avatar for user with ID '%s': %v", id, err)
+	objectName := extractObjectNameFromURL(*user.Avatar, svc.s3.GetBaseURL())
+	if objectName != "" {
+		if deleteErr := svc.s3.DeleteObject(ctx, objectName); deleteErr != nil {
+			svc.log.Error("failed to delete avatar for user with ID '%s': %v", id, deleteErr)
+		}
 	}
 
 	return svc.storage.RemoveUserAvatar(ctx, id)
@@ -280,4 +329,25 @@ func (svc *UserServiceImpl) ResetPassword(ctx context.Context, token, newPasswor
 
 func (svc *UserServiceImpl) Delete(ctx context.Context, id uuid.UUID) error {
 	return svc.storage.DeleteUserByID(ctx, id)
+}
+
+var usernamePattern = regexp.MustCompile(`^[a-z0-9а-я_-]+$`)
+
+func trimUsername(username string) string {
+	return strings.TrimSpace(username)
+}
+
+func getCanonicalUsername(username string) string {
+	return strings.ToLower(trimUsername(username))
+}
+
+func validateUsername(username string) error {
+	trimmedUsername := trimUsername(username)
+	if trimmedUsername == "" {
+		return svcErr.ValidationError{Message: "username is required"}
+	}
+	if !usernamePattern.MatchString(strings.ToLower(trimmedUsername)) {
+		return svcErr.ValidationError{Message: "username may contain only latin letters, russian letters, digits, underscore, and hyphen"}
+	}
+	return nil
 }

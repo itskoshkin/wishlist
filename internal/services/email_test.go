@@ -46,6 +46,17 @@ func TestNewEmailService_UsesConfig(t *testing.T) {
 	}
 }
 
+func TestNewEmailService_UsesHTTPForLocalhostDomain(t *testing.T) {
+	setEmailConfigForTests()
+	viper.Set(config.WebAppDomain, "localhost:8080")
+
+	svc := NewEmailService()
+
+	if svc.domain != "http://localhost:8080" {
+		t.Fatalf("domain = %s, want http://localhost:8080", svc.domain)
+	}
+}
+
 func TestBuildMessage(t *testing.T) {
 	msg := string(buildMessage("from@example.com", "to@example.com", "Hello", "Line 1\nLine 2"))
 

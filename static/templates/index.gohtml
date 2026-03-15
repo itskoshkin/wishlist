@@ -1,0 +1,626 @@
+{{define "index"}}
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <title>Wishlist</title>
+        {{template "head"}}
+    </head>
+    <body class="home-page">
+        <!-- Gradient blob for liquid glass effect -->
+        <div class="gradient-blob"></div>
+
+        <!-- FAB: Language toggle (left) -->
+        <button class="fab fab-left" onclick="toggleLanguageMenu(event)" title="Toggle Language">
+            <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path d="M12.87 15.07l-2.54-2.51.03-.03c1.74-1.94 2.98-4.17 3.71-6.53H17V4h-7V2H8v2H1v1.99h11.17C11.5 7.92 10.44 9.75 9 11.35 8.07 10.32 7.3 9.19 6.69 8h-2c.73 1.63 1.73 3.17 2.98 4.56l-5.09 5.02L4 19l5-5 3.11 3.11.76-2.04zM18.5 10h-2L12 22h2l1.12-3h4.75L21 22h2l-4.5-12zm-2.62 7l1.62-4.33L19.12 17h-3.24z"/>
+            </svg>
+            <!-- Language popup menu -->
+            <div class="popup-menu" id="langMenu">
+                <div class="popup-menu-item selected" onclick="selectLanguage('ru', event)">
+                    <span>Русский</span>
+                    <svg class="checkmark" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
+                    </svg>
+                </div>
+                <div class="popup-menu-item" onclick="selectLanguage('en', event)">
+                    <span>English</span>
+                    <svg class="checkmark" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
+                    </svg>
+                </div>
+            </div>
+        </button>
+
+        <!-- Header -->
+        <header class="header">
+            <!-- Left side: Logo and title -->
+            <a href="/" class="header-left">
+                <img src="/static/assets/images/wishlist.png" alt="Wishlist Logo" class="header-logo">
+                <span class="header-title" data-i18n="home.title">Wishlist</span>
+            </a>
+
+            <!-- Right side: Login button (or My Lists if logged in) -->
+            <div class="header-right">
+                <button class="btn" id="headerButton" onclick="handleHeaderButton()" data-i18n="header.login">Вход</button>
+            </div>
+        </header>
+
+        <!-- FAB: Theme toggle (right) -->
+        <button class="fab fab-right" onclick="toggleThemeMenu(event)" title="Toggle Theme">
+            <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path d="M12 3c-4.97 0-9 4.03-9 9s4.03 9 9 9 9-4.03 9-9c0-.46-.04-.92-.1-1.36-.98 1.37-2.58 2.26-4.4 2.26-2.98 0-5.4-2.42-5.4-5.4 0-1.81.89-3.42 2.26-4.4-.44-.06-.9-.1-1.36-.1z"/>
+            </svg>
+            <!-- Theme popup menu -->
+            <div class="popup-menu" id="themeMenu">
+                <div class="popup-menu-item" onclick="selectTheme('light', event)">
+                    <span data-i18n="theme.light">Светлая</span>
+                    <svg class="checkmark" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
+                    </svg>
+                </div>
+                <div class="popup-menu-item selected" onclick="selectTheme('system', event)">
+                    <span data-i18n="theme.system">Системная</span>
+                    <svg class="checkmark" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
+                    </svg>
+                </div>
+                <div class="popup-menu-item" onclick="selectTheme('dark', event)">
+                    <span data-i18n="theme.dark">Тёмная</span>
+                    <svg class="checkmark" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
+                    </svg>
+                </div>
+            </div>
+        </button>
+
+        <!-- Main content -->
+        <div class="container">
+            <!-- Hero section -->
+            <section class="hero">
+                <img src="/static/assets/images/wishlist.png" alt="Wishlist Logo" class="hero-logo">
+                <h1 class="hero-title" data-i18n="home.title">Wishlist</h1>
+                <p class="hero-subtitle" data-i18n="home.subtitle">Создавайте списки желаний и делитесь ими с близкими</p>
+            </section>
+
+            <!-- Features -->
+            <section class="features">
+                <!-- Feature 1 -->
+                <div class="feature-card">
+                    <svg class="feature-icon" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" fill="currentColor">
+                        <path d="M19 3h-4.18C14.4 1.84 13.3 1 12 1c-1.3 0-2.4.84-2.82 2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-7 0c.55 0 1 .45 1 1s-.45 1-1 1-1-.45-1-1 .45-1 1-1zm2 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"/>
+                    </svg>
+                    <h3 class="feature-title" data-i18n="home.feature1.title">Организуйте желания</h3>
+                    <p class="feature-description" data-i18n="home.feature1.desc">Создавайте списки для любых событий: дни рождения, праздники, мечты</p>
+                </div>
+
+                <!-- Feature 2 -->
+                <div class="feature-card">
+                    <svg class="feature-icon" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" fill="currentColor">
+                        <path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81 1.66 0 3-1.34 3-3s-1.34-3-3-3-3 1.34-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9c-1.66 0-3 1.34-3 3s1.34 3 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.16c-.05.21-.08.43-.08.65 0 1.61 1.31 2.92 2.92 2.92 1.61 0 2.92-1.31 2.92-2.92s-1.31-2.92-2.92-2.92z"/>
+                    </svg>
+                    <h3 class="feature-title" data-i18n="home.feature2.title">Делитесь с близкими</h3>
+                    <p class="feature-description" data-i18n="home.feature2.desc">Отправьте ссылку друзьям и родным, чтобы они знали, что вам подарить</p>
+                </div>
+
+                <!-- Feature 3 -->
+                <div class="feature-card feature-card-has-badge">
+                    <svg class="feature-icon" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" fill="currentColor">
+                        <path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm0 10.99h7c-.53 4.12-3.28 7.79-7 8.94V12H5V6.3l7-3.11v8.8z"/>
+                    </svg>
+                    <div class="feature-title-row">
+                        <h3 class="feature-title" data-i18n="home.feature3.title">Контролируйте приватность</h3>
+                        <span class="feature-badge" data-i18n="home.feature3.badge">Скоро</span>
+                    </div>
+                    <p class="feature-description" data-i18n="home.feature3.desc">Решайте сами, кто может видеть ваши списки: только вы или все по ссылке</p>
+                </div>
+            </section>
+        </div>
+
+        <!-- Auth Modal -->
+        <div class="modal-overlay" id="authModal">
+            <div class="modal">
+                <!-- Modal header -->
+                <div class="modal-header">
+                    <h2 class="modal-title" data-i18n="auth.login">Вход</h2>
+                    <button class="modal-close" onclick="closeModal('authModal')">
+                        <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>
+                        </svg>
+                    </button>
+                </div>
+
+                <!-- Segmented control for login/register -->
+                <div class="segmented-control">
+                    <button class="segmented-option active" onclick="switchAuthMode('login')" data-i18n="auth.login">Вход</button>
+                    <button class="segmented-option" onclick="switchAuthMode('register')" data-i18n="auth.register">Регистрация</button>
+                </div>
+
+                <!-- Login form -->
+                <form id="loginForm" class="auth-form" onsubmit="handleLogin(event)">
+                    <div class="form-group">
+                        <label class="form-label" data-i18n="auth.username">Имя пользователя</label>
+                        <input type="text" name="username" class="form-input" data-i18n-placeholder="auth.username" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" data-i18n="auth.password">Пароль</label>
+                        <input type="password" name="password" class="form-input" data-i18n-placeholder="auth.password" required>
+                    </div>
+                    <div class="auth-form-footer">
+                        <button type="button" class="auth-link-button" onclick="openForgotPasswordModal()" data-i18n="auth.forgotPassword">Забыли пароль?</button>
+                    </div>
+                    <button type="submit" class="btn form-submit" data-i18n="auth.loginButton">Войти</button>
+                </form>
+
+                <!-- Register form (hidden by default) -->
+                <form id="registerForm" class="auth-form hidden" onsubmit="handleRegister(event)">
+                    <div class="form-group">
+                        <label class="form-label" data-i18n="auth.name">Имя</label>
+                        <input type="text" name="name" class="form-input" data-i18n-placeholder="auth.name" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" data-i18n="auth.username">Имя пользователя</label>
+                        <input type="text" name="username" class="form-input" data-i18n-placeholder="auth.username" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" data-i18n="auth.email">Электронная почта</label>
+                        <input type="email" name="email" class="form-input" data-i18n-placeholder="auth.email" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" data-i18n="auth.password">Пароль</label>
+                        <input type="password" name="password" class="form-input" data-i18n-placeholder="auth.password" required>
+                    </div>
+                    <button type="submit" class="btn form-submit" data-i18n="auth.registerButton">Зарегистрироваться</button>
+                </form>
+            </div>
+        </div>
+
+        <div class="modal-overlay" id="forgotPasswordModal">
+            <div class="modal">
+                <div class="modal-header">
+                    <h2 class="modal-title" data-i18n="auth.forgotPasswordTitle">Восстановление пароля</h2>
+                    <button class="modal-close" onclick="closeModal('forgotPasswordModal')">
+                        <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>
+                        </svg>
+                    </button>
+                </div>
+
+                <p class="forgot-password-hint" data-i18n="auth.forgotPasswordHint">
+                    Укажите email аккаунта, и мы отправим ссылку для сброса пароля
+                </p>
+
+                <form id="forgotPasswordForm" class="auth-form" onsubmit="handleForgotPassword(event)">
+                    <div class="form-group">
+                        <label class="form-label" data-i18n="auth.email">Электронная почта</label>
+                        <input type="email" name="email" class="form-input" data-i18n-placeholder="auth.email" required>
+                    </div>
+                    <button type="submit" class="btn form-submit" data-i18n="auth.forgotPasswordSubmit">Отправить ссылку</button>
+                </form>
+            </div>
+        </div>
+
+        <script>
+            // Check if user is logged in on page load
+            document.addEventListener('DOMContentLoaded', () => {
+                checkAuthStatus(); // Check authentication status
+                initHomeFeatureCardGlow(); // Pointer glow for feature cards
+                syncHomePageScrollLock();
+
+                window.addEventListener('resize', syncHomePageScrollLock);
+                window.addEventListener('load', syncHomePageScrollLock);
+                if (document.fonts && document.fonts.ready) {
+                    document.fonts.ready.then(syncHomePageScrollLock).catch(() => {});
+                }
+            });
+
+            function syncHomePageScrollLock() {
+                const root = document.documentElement;
+                const fitsViewport = root.scrollHeight <= (window.innerHeight + 2);
+                document.body.classList.toggle('home-page-no-scroll', fitsViewport);
+            }
+
+            function initHomeFeatureCardGlow() {
+                if (window.__surfaceGlowUnified) return;
+                if (window.matchMedia('(pointer: coarse)').matches) return;
+
+                const targets = Array.from(document.querySelectorAll('.feature-card'));
+                if (targets.length === 0) return;
+
+                const CARD_MAX_DISTANCE = 240;
+                const CARD_BORDER_DISTANCE = 44;
+
+                let mouseX = -9999;
+                let mouseY = -9999;
+                let rafScheduled = false;
+
+                function distanceToRect(x, y, rect) {
+                    const dx = Math.max(rect.left - x, 0, x - rect.right);
+                    const dy = Math.max(rect.top - y, 0, y - rect.bottom);
+                    return Math.sqrt(dx * dx + dy * dy);
+                }
+
+                function distanceToRectSurface(x, y, rect) {
+                    if (x >= rect.left && x <= rect.right && y >= rect.top && y <= rect.bottom) {
+                        const distToLeft = x - rect.left;
+                        const distToRight = rect.right - x;
+                        const distToTop = y - rect.top;
+                        const distToBottom = rect.bottom - y;
+                        return Math.min(distToLeft, distToRight, distToTop, distToBottom);
+                    }
+
+                    const dx = Math.max(rect.left - x, 0, x - rect.right);
+                    const dy = Math.max(rect.top - y, 0, y - rect.bottom);
+                    return Math.sqrt(dx * dx + dy * dy);
+                }
+
+                function updateGlow() {
+                    rafScheduled = false;
+
+                    targets.forEach((target) => {
+                        const rect = target.getBoundingClientRect();
+                        const relativeX = mouseX - rect.left;
+                        const relativeY = mouseY - rect.top;
+
+                        const distance = distanceToRect(mouseX, mouseY, rect);
+                        const surfaceDistance = distanceToRectSurface(mouseX, mouseY, rect);
+                        const glowOpacity = Math.max(0, 1 - (distance / CARD_MAX_DISTANCE));
+                        const borderGlow = surfaceDistance <= CARD_BORDER_DISTANCE
+                            ? Math.max(0, 1 - (surfaceDistance / CARD_BORDER_DISTANCE))
+                            : 0;
+
+                        target.style.setProperty('--mouse-x', `${relativeX}px`);
+                        target.style.setProperty('--mouse-y', `${relativeY}px`);
+                        target.style.setProperty('--glow-opacity', glowOpacity.toFixed(3));
+                        target.style.setProperty('--border-glow-intensity', borderGlow.toFixed(3));
+                    });
+                }
+
+                document.addEventListener('mousemove', (event) => {
+                    mouseX = event.clientX;
+                    mouseY = event.clientY;
+
+                    if (!rafScheduled) {
+                        rafScheduled = true;
+                        window.requestAnimationFrame(updateGlow);
+                    }
+                });
+
+                document.addEventListener('mouseleave', () => {
+                    targets.forEach((target) => {
+                        target.style.setProperty('--glow-opacity', '0');
+                        target.style.setProperty('--border-glow-intensity', '0');
+                    });
+                });
+            }
+
+            // Check authentication status
+            function checkAuthStatus() {
+                const accessToken = localStorage.getItem('access_token'); // Get access token
+                const headerButton = document.getElementById('headerButton'); // Get header button
+
+                if (accessToken) {
+                    // User is logged in
+                    headerButton.setAttribute('data-i18n', 'header.myLists'); // Change button text key
+                    headerButton.textContent = t('header.myLists'); // Set button text
+                }
+            }
+
+            // Handle header button click
+            function handleHeaderButton() {
+                const accessToken = localStorage.getItem('access_token'); // Get access token
+
+                if (accessToken) {
+                    // User is logged in, go to wishlists
+                    window.location.href = '/wishlists';
+                } else {
+                    // User is not logged in, show auth modal
+                    openModal('authModal');
+                }
+            }
+
+            // Switch between login and register forms
+            function switchAuthMode(mode) {
+                const loginForm = document.getElementById('loginForm'); // Login form element
+                const registerForm = document.getElementById('registerForm'); // Register form element
+                const buttons = document.querySelectorAll('.segmented-option'); // Segmented control buttons
+
+                // Update active button
+                buttons.forEach(btn => btn.classList.remove('active'));
+                event.target.classList.add('active');
+                clearAuthFormErrors();
+
+                // Show/hide forms
+                if (mode === 'login') {
+                    loginForm.classList.remove('hidden'); // Show login form
+                    registerForm.classList.add('hidden'); // Hide register form
+                } else {
+                    loginForm.classList.add('hidden'); // Hide login form
+                    registerForm.classList.remove('hidden'); // Show register form
+                }
+            }
+
+            function openForgotPasswordModal() {
+                const forgotForm = document.getElementById('forgotPasswordForm');
+                if (forgotForm) {
+                    forgotForm.reset();
+                    clearAuthFormErrors(forgotForm);
+                }
+
+                closeModal('authModal');
+                openModal('forgotPasswordModal');
+
+                window.requestAnimationFrame(() => {
+                    document.querySelector('#forgotPasswordForm input[name=\"email\"]')?.focus();
+                });
+            }
+
+            function setAuthFieldError(input, isInvalid) {
+                if (!input) return;
+                input.classList.toggle('form-input-invalid', isInvalid);
+                input.setAttribute('aria-invalid', isInvalid ? 'true' : 'false');
+            }
+
+            function clearAuthFormErrors(form = null) {
+                const scope = form || document;
+                scope.querySelectorAll('.form-input-invalid').forEach((input) => {
+                    setAuthFieldError(input, false);
+                });
+            }
+
+            function markLoginFieldsInvalid(form) {
+                if (!form) return;
+                setAuthFieldError(form.querySelector('input[name="username"]'), true);
+                setAuthFieldError(form.querySelector('input[name="password"]'), true);
+            }
+
+            function normalizeAuthErrorMessage(message, fallbackKey = 'common.error') {
+                return translateApiErrorMessage(message, fallbackKey);
+            }
+
+            function markRegisterFieldsByError(form, message) {
+                if (!form) return;
+                const normalized = typeof normalizeApiErrorLookupKey === 'function'
+                    ? normalizeApiErrorLookupKey(message)
+                    : (message || '').toString().trim().toLowerCase();
+
+                if (
+                    normalized === 'username is already taken' ||
+                    normalized === 'username is required' ||
+                    normalized === 'username may contain only latin letters, russian letters, digits, underscore, and hyphen'
+                ) {
+                    setAuthFieldError(form.querySelector('input[name="username"]'), true);
+                }
+                if (normalized === 'email is already in use' || normalized === 'email must be a valid email address' || normalized === 'email is required') {
+                    setAuthFieldError(form.querySelector('input[name="email"]'), true);
+                }
+                if (normalized === 'password must be at least 8 characters' || normalized === 'password is required') {
+                    setAuthFieldError(form.querySelector('input[name="password"]'), true);
+                }
+                if (normalized === 'name is required') {
+                    setAuthFieldError(form.querySelector('input[name="name"]'), true);
+                }
+            }
+
+            function markForgotPasswordFieldsByError(form, message) {
+                if (!form) return;
+                const normalized = typeof normalizeApiErrorLookupKey === 'function'
+                    ? normalizeApiErrorLookupKey(message)
+                    : (message || '').toString().trim().toLowerCase();
+
+                if (normalized === 'email must be a valid email address' || normalized === 'email is required') {
+                    setAuthFieldError(form.querySelector('input[name="email"]'), true);
+                }
+            }
+
+            function setForgotPasswordSubmitDisabled(isDisabled) {
+                const button = document.querySelector('#forgotPasswordForm .form-submit');
+                if (!button) return;
+                button.disabled = Boolean(isDisabled);
+                button.setAttribute('aria-disabled', isDisabled ? 'true' : 'false');
+            }
+
+            document.addEventListener('DOMContentLoaded', () => {
+                ['loginForm', 'registerForm'].forEach((formId) => {
+                    const form = document.getElementById(formId);
+                    if (!form) return;
+                    form.querySelectorAll('.form-input').forEach((input) => {
+                        input.addEventListener('input', () => setAuthFieldError(input, false));
+                        input.addEventListener('focus', () => setAuthFieldError(input, false));
+                    });
+                });
+            });
+
+            // Handle login
+            async function handleLogin(event) {
+                event.preventDefault(); // Prevent form submission
+
+                const form = event.target; // Get form element
+                clearAuthFormErrors(form);
+                const formData = new FormData(form); // Get form data
+                const data = {
+                    username: formData.get('username'),
+                    password: formData.get('password')
+                };
+
+                try {
+                    const response = await fetch('/api/v1/auth/login', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(data)
+                    });
+
+                    if (!response.ok) {
+                        const error = await response.json();
+                        const rawMessage = error.message || t('auth.loginError');
+                        if ((error.message || '').toString().trim().toLowerCase() === 'invalid credentials') {
+                            markLoginFieldsInvalid(form);
+                        }
+                        showToast(normalizeAuthErrorMessage(rawMessage, 'auth.loginError'), 'error');
+                        return;
+                    }
+
+                    const result = await response.json();
+
+                    // Save tokens
+                    localStorage.setItem('access_token', result.access_token);
+                    localStorage.setItem('refresh_token', result.refresh_token);
+
+                    // Redirect to wishlists
+                    window.location.href = '/wishlists';
+                } catch (error) {
+                    console.error('Login error:', error);
+                    showToast(t('auth.loginRequestFailed'), 'error');
+                }
+            }
+
+            // Handle register
+            async function handleRegister(event) {
+                event.preventDefault(); // Prevent form submission
+
+                const form = event.target; // Get form element
+                const formData = new FormData(form); // Get form data
+                const data = {
+                    name: formData.get('name'),
+                    username: formData.get('username'),
+                    email: formData.get('email'),
+                    password: formData.get('password')
+                };
+
+                try {
+                    const response = await fetch('/api/v1/auth/register', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(data)
+                    });
+
+                    if (!response.ok) {
+                        const error = await response.json();
+                        markRegisterFieldsByError(form, error.message);
+                        showToast(normalizeAuthErrorMessage(error.message, 'auth.registerError'), 'error');
+                        return;
+                    }
+
+                    const result = await response.json();
+
+                    // Save tokens
+                    localStorage.setItem('access_token', result.access_token);
+                    localStorage.setItem('refresh_token', result.refresh_token);
+
+                    // Redirect to wishlists
+                    window.location.href = '/wishlists';
+                } catch (error) {
+                    console.error('Register error:', error);
+                    showToast(t('auth.registerRequestFailed'), 'error');
+                }
+            }
+
+            async function handleForgotPassword(event) {
+                event.preventDefault();
+
+                const form = event.target;
+                clearAuthFormErrors(form);
+                setForgotPasswordSubmitDisabled(true);
+                const formData = new FormData(form);
+                const email = (formData.get('email') || '').toString().trim();
+
+                try {
+                    const response = await fetch('/api/v1/auth/forgot-password', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ email })
+                    });
+
+                    if (!response.ok) {
+                        const error = await response.json();
+                        markForgotPasswordFieldsByError(form, error.message);
+                        showToast(normalizeAuthErrorMessage(error.message, 'auth.forgotPasswordError'), 'error');
+                        return;
+                    }
+
+                    form.reset();
+                    closeModal('forgotPasswordModal');
+                    showToast(t('auth.forgotPasswordSuccess'), 'success');
+                } catch (error) {
+                    console.error('Forgot password error:', error);
+                    showToast(t('auth.forgotPasswordError'), 'error');
+                } finally {
+                    window.setTimeout(() => {
+                        setForgotPasswordSubmitDisabled(false);
+                    }, 4000);
+                }
+            }
+
+            // Toggle language menu
+            function toggleLanguageMenu(event) {
+                event.stopPropagation(); // Prevent event bubbling
+                const menu = document.getElementById('langMenu'); // Get menu element
+                menu.classList.toggle('active'); // Toggle menu visibility
+                closeOtherMenus('langMenu'); // Close other menus
+            }
+
+            // Select language
+            function selectLanguage(lang, event) {
+                event?.stopPropagation(); // Prevent bubbling back to FAB button
+                setLanguage(lang); // Apply language
+
+                // Update selected item
+                const menu = document.getElementById('langMenu');
+                menu.querySelectorAll('.popup-menu-item').forEach(item => {
+                    item.classList.remove('selected');
+                });
+                const selectedItem = event?.target?.closest('.popup-menu-item');
+                if (selectedItem) {
+                    selectedItem.classList.add('selected');
+                }
+
+                menu.classList.remove('active'); // Close menu
+                checkAuthStatus(); // Update header button text
+                syncHomePageScrollLock();
+            }
+
+            // Toggle theme menu
+            function toggleThemeMenu(event) {
+                event.stopPropagation(); // Prevent event bubbling
+                const menu = document.getElementById('themeMenu'); // Get menu element
+                menu.classList.toggle('active'); // Toggle menu visibility
+                closeOtherMenus('themeMenu'); // Close other menus
+            }
+
+            // Select theme
+            function selectTheme(theme, event) {
+                event?.stopPropagation(); // Prevent bubbling back to FAB button
+                setTheme(theme); // Apply theme
+
+                // Update selected item
+                const menu = document.getElementById('themeMenu');
+                menu.querySelectorAll('.popup-menu-item').forEach(item => {
+                    item.classList.remove('selected');
+                });
+                const selectedItem = event?.target?.closest('.popup-menu-item');
+                if (selectedItem) {
+                    selectedItem.classList.add('selected');
+                }
+
+                menu.classList.remove('active'); // Close menu
+                syncHomePageScrollLock();
+            }
+
+            // Close other menus
+            function closeOtherMenus(exceptId) {
+                const menus = ['langMenu', 'themeMenu']; // All menu IDs
+                menus.forEach(menuId => {
+                    const menu = document.getElementById(menuId);
+                    if (menu && menuId !== exceptId) {
+                        menu.classList.remove('active'); // Close menu
+                    }
+                });
+            }
+
+            // Close all menus on outside click
+            document.addEventListener('click', () => {
+                closeOtherMenus(null); // Close all menus
+            });
+        </script>
+    </body>
+</html>
+{{end}}

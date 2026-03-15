@@ -105,7 +105,7 @@ func TestWishService_CreateWish_NotOwner(t *testing.T) {
 	callerID := uuid.New()
 	wishStorage := &wishSvcWishStorageMock{}
 	listStorage := &wishSvcListStorageMock{list: models.List{ID: listID, UserID: ownerID}}
-	svc := NewWishService(wishStorage, listStorage)
+	svc := NewWishService(wishStorage, listStorage, nil)
 
 	_, err := svc.CreateWish(context.Background(), listID, callerID, models.CreateWishRequest{Title: "PS5"})
 	if err == nil {
@@ -127,7 +127,7 @@ func TestWishService_UpdateWish_ListMismatch(t *testing.T) {
 		wishToReturn: models.Wish{ID: wishID, ListID: actualListID},
 	}
 	listStorage := &wishSvcListStorageMock{list: models.List{ID: actualListID, UserID: ownerID}}
-	svc := NewWishService(wishStorage, listStorage)
+	svc := NewWishService(wishStorage, listStorage, nil)
 
 	err := svc.UpdateWish(context.Background(), givenListID, wishID, ownerID, models.UpdateWishRequest{})
 	if err == nil {
@@ -149,7 +149,7 @@ func TestWishService_UpdateWish_NotOwner(t *testing.T) {
 		wishToReturn: models.Wish{ID: wishID, ListID: listID},
 	}
 	listStorage := &wishSvcListStorageMock{list: models.List{ID: listID, UserID: ownerID}}
-	svc := NewWishService(wishStorage, listStorage)
+	svc := NewWishService(wishStorage, listStorage, nil)
 
 	err := svc.UpdateWish(context.Background(), listID, wishID, callerID, models.UpdateWishRequest{})
 	if err == nil {
@@ -170,7 +170,7 @@ func TestWishService_ReserveWish_OwnWish(t *testing.T) {
 		wishToReturn: models.Wish{ID: wishID, ListID: listID},
 	}
 	listStorage := &wishSvcListStorageMock{list: models.List{ID: listID, UserID: ownerID}}
-	svc := NewWishService(wishStorage, listStorage)
+	svc := NewWishService(wishStorage, listStorage, nil)
 
 	err := svc.ReserveWish(context.Background(), listID, wishID, ownerID)
 	if err == nil {
@@ -192,13 +192,40 @@ func TestWishService_ReserveWish_Success(t *testing.T) {
 		wishToReturn: models.Wish{ID: wishID, ListID: listID},
 	}
 	listStorage := &wishSvcListStorageMock{list: models.List{ID: listID, UserID: ownerID}}
-	svc := NewWishService(wishStorage, listStorage)
+	svc := NewWishService(wishStorage, listStorage, nil)
 
 	if err := svc.ReserveWish(context.Background(), listID, wishID, callerID); err != nil {
 		t.Fatalf("ReserveWish() error = %v", err)
 	}
 	if wishStorage.reservedID != wishID || wishStorage.reservedBy != callerID {
 		t.Fatalf("ReserveWish() forwarded wrong params")
+	}
+}
+
+func TestWishService_ReserveWish_AlreadyReserved(t *testing.T) {
+	listID := uuid.New()
+	wishID := uuid.New()
+	ownerID := uuid.New()
+	callerID := uuid.New()
+
+	wishStorage := &wishSvcWishStorageMock{
+		wishToReturn: models.Wish{ID: wishID, ListID: listID},
+		reserveErr:   errors.New("failed to reserve wish with ID 'x': already reserved or not found"),
+	}
+	listStorage := &wishSvcListStorageMock{list: models.List{ID: listID, UserID: ownerID}}
+	svc := NewWishService(wishStorage, listStorage, nil)
+
+	err := svc.ReserveWish(context.Background(), listID, wishID, callerID)
+	if err == nil {
+		t.Fatal("ReserveWish() error = nil, want validation error")
+	}
+
+	var validation svcErr.ValidationError
+	if !errors.As(err, &validation) {
+		t.Fatalf("ReserveWish() error = %T, want ValidationError", err)
+	}
+	if validation.Message != "wish is already reserved" {
+		t.Fatalf("validation message = %q, want %q", validation.Message, "wish is already reserved")
 	}
 }
 
@@ -211,7 +238,7 @@ func TestWishService_DeleteWish_Success(t *testing.T) {
 		wishToReturn: models.Wish{ID: wishID, ListID: listID},
 	}
 	listStorage := &wishSvcListStorageMock{list: models.List{ID: listID, UserID: ownerID}}
-	svc := NewWishService(wishStorage, listStorage)
+	svc := NewWishService(wishStorage, listStorage, nil)
 
 	if err := svc.DeleteWish(context.Background(), listID, wishID, ownerID); err != nil {
 		t.Fatalf("DeleteWish() error = %v", err)
@@ -226,7 +253,7 @@ func TestWishService_CreateWish_Success(t *testing.T) {
 	ownerID := uuid.New()
 	wishStorage := &wishSvcWishStorageMock{}
 	listStorage := &wishSvcListStorageMock{list: models.List{ID: listID, UserID: ownerID}}
-	svc := NewWishService(wishStorage, listStorage)
+	svc := NewWishService(wishStorage, listStorage, nil)
 
 	price := int64(5000)
 	currency := "RUB"
@@ -247,7 +274,7 @@ func TestWishService_GetWishByID(t *testing.T) {
 	wishID := uuid.New()
 	expected := models.Wish{ID: wishID, Title: "Keyboard"}
 	wishStorage := &wishSvcWishStorageMock{wishToReturn: expected}
-	svc := NewWishService(wishStorage, &wishSvcListStorageMock{})
+	svc := NewWishService(wishStorage, &wishSvcListStorageMock{}, nil)
 
 	actual, err := svc.GetWishByID(context.Background(), wishID)
 	if err != nil {
@@ -267,7 +294,7 @@ func TestWishService_UpdateWish_Success(t *testing.T) {
 		wishToReturn: models.Wish{ID: wishID, ListID: listID},
 	}
 	listStorage := &wishSvcListStorageMock{list: models.List{ID: listID, UserID: ownerID}}
-	svc := NewWishService(wishStorage, listStorage)
+	svc := NewWishService(wishStorage, listStorage, nil)
 
 	if err := svc.UpdateWish(context.Background(), listID, wishID, ownerID, models.UpdateWishRequest{Title: ptr("New Title")}); err != nil {
 		t.Fatalf("UpdateWish() error = %v", err)
@@ -282,7 +309,7 @@ func TestWishService_ReleaseWish(t *testing.T) {
 	wishStorage := &wishSvcWishStorageMock{
 		wishToReturn: models.Wish{ID: wishID, ListID: listID},
 	}
-	svc := NewWishService(wishStorage, &wishSvcListStorageMock{})
+	svc := NewWishService(wishStorage, &wishSvcListStorageMock{}, nil)
 
 	err := svc.ReleaseWish(context.Background(), uuid.New(), wishID, userID)
 	if err == nil {
@@ -298,6 +325,31 @@ func TestWishService_ReleaseWish(t *testing.T) {
 	}
 }
 
+func TestWishService_ReleaseWish_NotReservedByUser(t *testing.T) {
+	listID := uuid.New()
+	wishID := uuid.New()
+	userID := uuid.New()
+
+	wishStorage := &wishSvcWishStorageMock{
+		wishToReturn: models.Wish{ID: wishID, ListID: listID},
+		releaseErr:   errors.New("failed to release wish with ID 'x': not reserved by you or not found"),
+	}
+	svc := NewWishService(wishStorage, &wishSvcListStorageMock{}, nil)
+
+	err := svc.ReleaseWish(context.Background(), listID, wishID, userID)
+	if err == nil {
+		t.Fatal("ReleaseWish() error = nil, want validation error")
+	}
+
+	var validation svcErr.ValidationError
+	if !errors.As(err, &validation) {
+		t.Fatalf("ReleaseWish() error = %T, want ValidationError", err)
+	}
+	if validation.Message != "wish is not reserved by you" {
+		t.Fatalf("validation message = %q, want %q", validation.Message, "wish is not reserved by you")
+	}
+}
+
 func TestWishService_DeleteWish_NotOwner(t *testing.T) {
 	listID := uuid.New()
 	wishID := uuid.New()
@@ -308,7 +360,7 @@ func TestWishService_DeleteWish_NotOwner(t *testing.T) {
 		wishToReturn: models.Wish{ID: wishID, ListID: listID},
 	}
 	listStorage := &wishSvcListStorageMock{list: models.List{ID: listID, UserID: ownerID}}
-	svc := NewWishService(wishStorage, listStorage)
+	svc := NewWishService(wishStorage, listStorage, nil)
 
 	err := svc.DeleteWish(context.Background(), listID, wishID, callerID)
 	if err == nil {
@@ -325,7 +377,7 @@ func TestWishService_CreateWish_StorageError(t *testing.T) {
 	ownerID := uuid.New()
 	wishStorage := &wishSvcWishStorageMock{createErr: errors.New("db error")}
 	listStorage := &wishSvcListStorageMock{list: models.List{ID: listID, UserID: ownerID}}
-	svc := NewWishService(wishStorage, listStorage)
+	svc := NewWishService(wishStorage, listStorage, nil)
 
 	_, err := svc.CreateWish(context.Background(), listID, ownerID, models.CreateWishRequest{Title: "PS5"})
 	if err == nil {
@@ -342,7 +394,7 @@ func TestWishService_UpdateWish_StorageError(t *testing.T) {
 		updateErr:    errors.New("db error"),
 	}
 	listStorage := &wishSvcListStorageMock{list: models.List{ID: listID, UserID: ownerID}}
-	svc := NewWishService(wishStorage, listStorage)
+	svc := NewWishService(wishStorage, listStorage, nil)
 
 	err := svc.UpdateWish(context.Background(), listID, wishID, ownerID, models.UpdateWishRequest{})
 	if err == nil {
@@ -357,7 +409,7 @@ func TestWishService_ReserveWish_ListMismatch(t *testing.T) {
 	wishStorage := &wishSvcWishStorageMock{
 		wishToReturn: models.Wish{ID: wishID, ListID: uuid.New()},
 	}
-	svc := NewWishService(wishStorage, &wishSvcListStorageMock{})
+	svc := NewWishService(wishStorage, &wishSvcListStorageMock{}, nil)
 
 	err := svc.ReserveWish(context.Background(), listID, wishID, userID)
 	if err == nil {

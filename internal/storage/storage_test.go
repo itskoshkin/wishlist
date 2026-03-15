@@ -65,13 +65,15 @@ func ensureSchema(t *testing.T, pool *pgxpool.Pool) {
 			id UUID PRIMARY KEY,
 			avatar TEXT,
 			name TEXT NOT NULL,
-			username TEXT NOT NULL UNIQUE,
+			username TEXT NOT NULL,
 			email TEXT UNIQUE,
 			email_verified BOOLEAN NOT NULL DEFAULT FALSE,
 			password TEXT NOT NULL,
 			created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
 			updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 		);`,
+		`ALTER TABLE users DROP CONSTRAINT IF EXISTS users_username_key;`,
+		`CREATE UNIQUE INDEX IF NOT EXISTS users_username_lower_key ON users ((lower(username)));`,
 		`CREATE TABLE IF NOT EXISTS lists (
 			id UUID PRIMARY KEY,
 			user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
@@ -79,10 +81,10 @@ func ensureSchema(t *testing.T, pool *pgxpool.Pool) {
 			title TEXT NOT NULL,
 			notes TEXT,
 			is_public BOOLEAN NOT NULL DEFAULT TRUE,
-			share_token VARCHAR(32) NOT NULL UNIQUE,
+			slug VARCHAR(32) NOT NULL UNIQUE,
 			created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
 			updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-			CONSTRAINT lists_share_token_len CHECK (char_length(share_token) = 32)
+			CONSTRAINT lists_slug_len CHECK (char_length(slug) = 32)
 		);`,
 		`CREATE INDEX IF NOT EXISTS idx_lists_user_id_created_at_desc ON lists (user_id, created_at DESC);`,
 		`CREATE TABLE IF NOT EXISTS wishes (
@@ -270,7 +272,7 @@ func TestListStorage_Integration(t *testing.T) {
 		Title:      "List",
 		Notes:      nil,
 		IsPublic:   true,
-		ShareToken: "12345678901234567890123456789012",
+		Slug: "12345678901234567890123456789012",
 		CreatedAt:  time.Now(),
 		UpdatedAt:  time.Now(),
 	}
@@ -283,7 +285,7 @@ func TestListStorage_Integration(t *testing.T) {
 		t.Fatalf("GetListByID() error=%v list=%+v", err, got)
 	}
 
-	got, err = lists.GetListBySharedLink(ctx, list.ShareToken)
+	got, err = lists.GetListBySharedLink(ctx, list.Slug)
 	if err != nil || got.ID != list.ID {
 		t.Fatalf("GetListBySharedLink() error=%v list=%+v", err, got)
 	}
@@ -342,7 +344,7 @@ func TestWishStorage_Integration(t *testing.T) {
 		UserID:     ownerID,
 		Title:      "List",
 		IsPublic:   true,
-		ShareToken: "12345678901234567890123456789012",
+		Slug: "12345678901234567890123456789012",
 		CreatedAt:  time.Now(),
 		UpdatedAt:  time.Now(),
 	}
@@ -441,7 +443,7 @@ func TestCascadeDelete_Integration(t *testing.T) {
 		UserID:     userID,
 		Title:      "Cascade list",
 		IsPublic:   true,
-		ShareToken: "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+		Slug: "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
 		CreatedAt:  time.Now(),
 		UpdatedAt:  time.Now(),
 	}
