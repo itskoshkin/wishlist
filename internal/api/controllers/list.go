@@ -143,7 +143,7 @@ func (ctrl *ListsController) GetListByID(ctx *gin.Context) {
 		}
 		response.Wishes = wishResponses
 	} else {
-		response = list.ToViewerResponse(&userID)
+		response = list.ToViewerResponse()
 		wishResponses := make([]models.WishResponse, len(wishes))
 		for i, wish := range wishes {
 			wishResponses[i] = wish.ToViewerResponse(&userID)
@@ -195,7 +195,7 @@ func (ctrl *ListsController) GetListBySharedLink(ctx *gin.Context) {
 		}
 		response.Wishes = wishResponses
 	} else {
-		response = list.ToViewerResponse(userID)
+		response = list.ToViewerResponse()
 		wishResponses := make([]models.WishResponse, len(wishes))
 		for i, wish := range wishes {
 			wishResponses[i] = wish.ToViewerResponse(userID)
@@ -273,7 +273,7 @@ func (ctrl *ListsController) GetPublicListsByUserID(ctx *gin.Context) {
 		if list.UserID == currentUserID {
 			response[i] = list.ToOwnerResponse()
 		} else {
-			response[i] = list.ToViewerResponse(&currentUserID)
+			response[i] = list.ToViewerResponse()
 		}
 	}
 

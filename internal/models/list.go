@@ -34,7 +34,7 @@ func (l List) ToOwnerResponse() ListResponse {
 	}
 }
 
-func (l List) ToViewerResponse(currentUserID *uuid.UUID) ListResponse {
+func (l List) ToViewerResponse() ListResponse {
 	return ListResponse{
 		ID:          l.ID,
 		UserID:      l.UserID,
