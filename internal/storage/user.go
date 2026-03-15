@@ -24,7 +24,7 @@ func (us *UserStorageImpl) CreateUser(ctx context.Context, user models.User) err
 		`INSERT INTO users (id, name, username, email, password, created_at, updated_at) VALUES ($1, $2, $3, $4, $5, $6, $7)`,
 		user.ID, user.Name, user.Username, user.Email, user.Password, user.CreatedAt, user.UpdatedAt,
 	); err != nil {
-		if mappedErr := mapUserWriteError(err); mappedErr != err {
+		if mappedErr := mapUserWriteError(err); !errors.Is(mappedErr, err) {
 			return mappedErr
 		}
 		return fmt.Errorf("failed to create user: %w", err)
@@ -85,6 +85,7 @@ func (us *UserStorageImpl) SearchUsersByUsername(ctx context.Context, query stri
 		limit = 5
 	}
 
+	//noinspection SqlRedundantOrderingDirection
 	rows, err := us.pool.Query(ctx, `SELECT id, avatar, name, username, email, email_verified, password, created_at, updated_at FROM users WHERE lower(username) LIKE $1 ORDER BY CASE WHEN lower(username) LIKE $2 THEN 0 ELSE 1 END, lower(username) ASC LIMIT $3`, "%"+search+"%", search+"%", limit)
 	if err != nil {
 		return nil, fmt.Errorf("failed to search users with query '%s': %w", search, err)
@@ -160,7 +161,7 @@ func (us *UserStorageImpl) UpdateUserByID(ctx context.Context, id uuid.UUID, req
 	args = append(args, id)
 
 	if result, err := us.pool.Exec(ctx, fmt.Sprintf("UPDATE users SET"+" %s WHERE id = $%d", strings.Join(clauses, ", "), index), args...); err != nil { // "+" to suppress false-positive "<set assignment> expected, got '%'" on "SET %s", "//noinspection ALL" didn't work
-		if mappedErr := mapUserWriteError(err); mappedErr != err {
+		if mappedErr := mapUserWriteError(err); !errors.Is(mappedErr, err) {
 			return mappedErr
 		}
 		return fmt.Errorf("failed to update user with ID '%s': %w", id, err) //                                                                                                                                                                                   ^
@@ -192,8 +193,7 @@ func (us *UserStorageImpl) DeleteUserByID(ctx context.Context, id uuid.UUID) err
 }
 
 func mapUserWriteError(err error) error {
-	var pgErr *pgconn.PgError
-	if errors.As(err, &pgErr) && pgErr.Code == "23505" {
+	if pgErr, ok := errors.AsType[*pgconn.PgError](err); ok && pgErr.Code == "23505" {
 		switch pgErr.ConstraintName {
 		case "users_username_key", "users_username_lower_key":
 			return svcErr.ConflictError{Message: "username is already taken"}

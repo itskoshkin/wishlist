@@ -202,8 +202,7 @@ func (svc *UserServiceImpl) UpdateAvatar(ctx context.Context, id uuid.UUID, read
 		return err
 	}
 
-	avatarURL := svc.s3.GetObjectURL(objectName)
-	if err = svc.storage.UpdateUserByID(ctx, id, models.UpdateUserRequest{Avatar: &avatarURL}); err != nil {
+	if err = svc.storage.UpdateUserByID(ctx, id, models.UpdateUserRequest{Avatar: new(svc.s3.GetObjectURL(objectName))}); err != nil {
 		return fmt.Errorf("failed to save avatar URL: %w", err)
 	}
 
@@ -267,9 +266,8 @@ func (svc *UserServiceImpl) ChangePassword(ctx context.Context, id uuid.UUID, re
 		return fmt.Errorf("failed to hash password: %w", err)
 	}
 
-	newPass := string(hash)
 	return svc.storage.UpdateUserByID(ctx, id, models.UpdateUserRequest{
-		Password: &newPass,
+		Password: new(string(hash)),
 	})
 }
 
@@ -314,8 +312,7 @@ func (svc *UserServiceImpl) ResetPassword(ctx context.Context, token, newPasswor
 		return fmt.Errorf("failed to hash password: %w", err)
 	}
 
-	newPass := string(hash)
-	if err = svc.storage.UpdateUserByID(ctx, userID, models.UpdateUserRequest{Password: &newPass}); err != nil {
+	if err = svc.storage.UpdateUserByID(ctx, userID, models.UpdateUserRequest{Password: new(string(hash))}); err != nil {
 		return fmt.Errorf("failed to update password: %w", err)
 	}
 

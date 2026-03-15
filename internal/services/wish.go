@@ -115,8 +115,7 @@ func (svc *WishServiceImpl) UpdateWishImage(ctx context.Context, listID, wishID,
 		return fmt.Errorf("failed to upload wish image: %w", err)
 	}
 
-	imageURL := svc.s3.GetObjectURL(objectName)
-	return svc.wishes.UpdateWishByID(ctx, wishID, models.UpdateWishRequest{Image: &imageURL})
+	return svc.wishes.UpdateWishByID(ctx, wishID, models.UpdateWishRequest{Image: new(svc.s3.GetObjectURL(objectName))})
 }
 
 func (svc *WishServiceImpl) ReserveWish(ctx context.Context, listID, wishID, userID uuid.UUID) error {
@@ -139,8 +138,7 @@ func (svc *WishServiceImpl) ReserveWish(ctx context.Context, listID, wishID, use
 	}
 
 	if err = svc.wishes.ReserveWish(ctx, wishID, userID); err != nil {
-		var validationErr svcErr.ValidationError
-		if errors.As(err, &validationErr) {
+		if _, ok := errors.AsType[svcErr.ValidationError](err); ok {
 			return err
 		}
 		if strings.Contains(strings.ToLower(err.Error()), "already reserved or not found") {
@@ -163,8 +161,7 @@ func (svc *WishServiceImpl) ReleaseWish(ctx context.Context, listID, wishID, use
 	}
 
 	if err = svc.wishes.ReleaseWish(ctx, wishID, userID); err != nil {
-		var validationErr svcErr.ValidationError
-		if errors.As(err, &validationErr) {
+		if _, ok := errors.AsType[svcErr.ValidationError](err); ok {
 			return err
 		}
 		if strings.Contains(strings.ToLower(err.Error()), "not reserved by you or not found") {

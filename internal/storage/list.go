@@ -59,6 +59,7 @@ func (s *ListStorageImpl) GetListBySharedLink(ctx context.Context, slug string) 
 	return list, nil
 }
 
+// noinspection DuplicatedCode
 func (s *ListStorageImpl) GetListsByUserID(ctx context.Context, userID uuid.UUID) ([]models.List, error) {
 	rows, err := s.pool.Query(ctx, `
 		SELECT l.id, l.user_id, l.image, l.title, l.notes, l.is_public, l.slug, l.created_at, l.updated_at, COALESCE(w.wishes_count, 0) AS wishes_count
@@ -88,6 +89,7 @@ func (s *ListStorageImpl) GetListsByUserID(ctx context.Context, userID uuid.UUID
 	return lists, rows.Err()
 }
 
+// noinspection DuplicatedCode
 func (s *ListStorageImpl) GetPublicListsByUserID(ctx context.Context, userID uuid.UUID) ([]models.List, error) {
 	rows, err := s.pool.Query(ctx, `
 		SELECT l.id, l.user_id, l.image, l.title, l.notes, l.is_public, l.slug, l.created_at, l.updated_at, COALESCE(w.wishes_count, 0) AS wishes_count
@@ -117,6 +119,7 @@ func (s *ListStorageImpl) GetPublicListsByUserID(ctx context.Context, userID uui
 	return lists, rows.Err()
 }
 
+// noinspection DuplicatedCode
 func (s *ListStorageImpl) UpdateListByID(ctx context.Context, listID uuid.UUID, req models.UpdateListRequest) error {
 	var clauses []string
 	var args []any

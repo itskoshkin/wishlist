@@ -2,7 +2,6 @@ package controllers
 
 import (
 	"context"
-	"errors"
 	"io"
 	"net/http"
 	"strings"
@@ -15,7 +14,6 @@ import (
 	"wishlist/internal/api/middlewares"
 	"wishlist/internal/config"
 	"wishlist/internal/models"
-	"wishlist/internal/services/errors"
 )
 
 type AuthService interface {
@@ -98,12 +96,15 @@ func (ctrl *UsersController) RegisterRoutes() {
 func (ctrl *UsersController) Register(ctx *gin.Context) {
 	var req models.RegisterUserRequest
 	if err := ctx.ShouldBindJSON(&req); err != nil {
-		apiModels.Error(ctx, http.StatusBadRequest, err.Error())
+		apiModels.RespondWithBindError(ctx, err)
 		return
 	}
 
 	user, err := ctrl.userService.Register(ctx, req)
 	if err != nil {
+		if apiModels.RespondWithServiceError(ctx, err) {
+			return
+		}
 		apiModels.InternalError(ctx, err.Error())
 		return
 	}
@@ -137,13 +138,12 @@ func (ctrl *UsersController) Register(ctx *gin.Context) {
 func (ctrl *UsersController) VerifyEmail(ctx *gin.Context) {
 	var req models.VerifyEmailRequest
 	if err := ctx.ShouldBindJSON(&req); err != nil {
-		apiModels.Error(ctx, http.StatusBadRequest, err.Error())
+		apiModels.RespondWithBindError(ctx, err)
 		return
 	}
 
 	if err := ctrl.userService.VerifyEmail(ctx, req.Token); err != nil {
-		if _, ok := errors.AsType[svcErr.ValidationError](err); ok {
-			apiModels.Error(ctx, http.StatusBadRequest, err.Error())
+		if apiModels.RespondWithServiceError(ctx, err) {
 			return
 		}
 		apiModels.InternalError(ctx, err.Error())
@@ -168,7 +168,7 @@ func (ctrl *UsersController) VerifyEmail(ctx *gin.Context) {
 func (ctrl *UsersController) LogIn(ctx *gin.Context) {
 	var req models.LogInUserRequest
 	if err := ctx.ShouldBindJSON(&req); err != nil {
-		apiModels.Error(ctx, http.StatusBadRequest, err.Error())
+		apiModels.RespondWithBindError(ctx, err)
 		return
 	}
 
@@ -208,7 +208,7 @@ func (ctrl *UsersController) LogIn(ctx *gin.Context) {
 func (ctrl *UsersController) RefreshTokens(ctx *gin.Context) {
 	var req models.RefreshTokenRequest
 	if err := ctx.ShouldBindJSON(&req); err != nil {
-		apiModels.Error(ctx, http.StatusBadRequest, err.Error())
+		apiModels.RespondWithBindError(ctx, err)
 		return
 	}
 
@@ -246,7 +246,7 @@ func (ctrl *UsersController) RefreshTokens(ctx *gin.Context) {
 func (ctrl *UsersController) LogOut(ctx *gin.Context) {
 	var req models.RefreshTokenRequest
 	if err := ctx.ShouldBindJSON(&req); err != nil {
-		apiModels.Error(ctx, http.StatusBadRequest, err.Error())
+		apiModels.RespondWithBindError(ctx, err)
 		return
 	}
 
@@ -283,6 +283,9 @@ func (ctrl *UsersController) GetCurrentUser(ctx *gin.Context) {
 
 	user, err := ctrl.userService.GetUserByID(ctx, userID)
 	if err != nil {
+		if apiModels.RespondWithServiceError(ctx, err) {
+			return
+		}
 		apiModels.InternalError(ctx, err.Error())
 		return
 	}
@@ -311,6 +314,9 @@ func (ctrl *UsersController) GetUserByID(ctx *gin.Context) {
 
 	user, err := ctrl.userService.GetUserByID(ctx, userID)
 	if err != nil {
+		if apiModels.RespondWithServiceError(ctx, err) {
+			return
+		}
 		apiModels.InternalError(ctx, err.Error())
 		return
 	}
@@ -340,6 +346,9 @@ func (ctrl *UsersController) GetUserByUsername(ctx *gin.Context) {
 
 	user, err := ctrl.userService.GetUserByUsername(ctx, username)
 	if err != nil {
+		if apiModels.RespondWithServiceError(ctx, err) {
+			return
+		}
 		apiModels.InternalError(ctx, err.Error())
 		return
 	}
@@ -381,6 +390,7 @@ func (ctrl *UsersController) SearchUsers(ctx *gin.Context) {
 // @Failure 401 {object} apiModels.APIError
 // @Failure 500 {object} apiModels.APIError
 // @Router /users/me [patch]
+// noinspection DuplicatedCode
 func (ctrl *UsersController) UpdateCurrentUser(ctx *gin.Context) {
 	userID, ok := middlewares.GetUserID(ctx)
 	if !ok {
@@ -390,17 +400,23 @@ func (ctrl *UsersController) UpdateCurrentUser(ctx *gin.Context) {
 
 	var req models.UpdateUserRequest
 	if err := ctx.ShouldBindJSON(&req); err != nil {
-		apiModels.Error(ctx, http.StatusBadRequest, err.Error())
+		apiModels.RespondWithBindError(ctx, err)
 		return
 	}
 
 	if err := ctrl.userService.UpdateUserByID(ctx, userID, req); err != nil {
+		if apiModels.RespondWithServiceError(ctx, err) {
+			return
+		}
 		apiModels.InternalError(ctx, err.Error())
 		return
 	}
 
 	user, err := ctrl.userService.GetUserByID(ctx, userID)
 	if err != nil {
+		if apiModels.RespondWithServiceError(ctx, err) {
+			return
+		}
 		apiModels.InternalError(ctx, err.Error())
 		return
 	}
@@ -458,12 +474,18 @@ func (ctrl *UsersController) UpdateAvatar(ctx *gin.Context) {
 	defer func() { _ = file.Close() }()
 
 	if err = ctrl.userService.UpdateAvatar(ctx, userID, file, fileHeader.Size, contentType); err != nil {
+		if apiModels.RespondWithServiceError(ctx, err) {
+			return
+		}
 		apiModels.InternalError(ctx, err.Error())
 		return
 	}
 
 	user, err := ctrl.userService.GetUserByID(ctx, userID)
 	if err != nil {
+		if apiModels.RespondWithServiceError(ctx, err) {
+			return
+		}
 		apiModels.InternalError(ctx, err.Error())
 		return
 	}
@@ -509,6 +531,7 @@ func (ctrl *UsersController) DeleteAvatar(ctx *gin.Context) {
 // @Failure 401 {object} apiModels.APIError
 // @Failure 500 {object} apiModels.APIError
 // @Router /users/me/update-password [patch]
+// noinspection DuplicatedCode
 func (ctrl *UsersController) UpdateCurrentPassword(ctx *gin.Context) {
 	userID, ok := middlewares.GetUserID(ctx)
 	if !ok {
@@ -518,13 +541,12 @@ func (ctrl *UsersController) UpdateCurrentPassword(ctx *gin.Context) {
 
 	var req models.ChangePasswordRequest
 	if err := ctx.ShouldBindJSON(&req); err != nil {
-		apiModels.Error(ctx, http.StatusBadRequest, err.Error())
+		apiModels.RespondWithBindError(ctx, err)
 		return
 	}
 
 	if err := ctrl.userService.ChangePassword(ctx, userID, req); err != nil {
-		if _, valid := errors.AsType[svcErr.ValidationError](err); valid {
-			apiModels.Error(ctx, http.StatusBadRequest, err.Error())
+		if apiModels.RespondWithServiceError(ctx, err) {
 			return
 		}
 		apiModels.InternalError(ctx, err.Error())
@@ -548,7 +570,7 @@ func (ctrl *UsersController) UpdateCurrentPassword(ctx *gin.Context) {
 func (ctrl *UsersController) ForgotPassword(ctx *gin.Context) {
 	var req models.ForgotPasswordRequest
 	if err := ctx.ShouldBindJSON(&req); err != nil {
-		apiModels.Error(ctx, http.StatusBadRequest, err.Error())
+		apiModels.RespondWithBindError(ctx, err)
 		return
 	}
 
@@ -574,11 +596,14 @@ func (ctrl *UsersController) ForgotPassword(ctx *gin.Context) {
 func (ctrl *UsersController) SetNewPassword(ctx *gin.Context) {
 	var req models.SetNewPasswordRequest
 	if err := ctx.ShouldBindJSON(&req); err != nil {
-		apiModels.Error(ctx, http.StatusBadRequest, err.Error())
+		apiModels.RespondWithBindError(ctx, err)
 		return
 	}
 
 	if err := ctrl.userService.ResetPassword(ctx, req.Token, req.NewPassword); err != nil {
+		if apiModels.RespondWithServiceError(ctx, err) {
+			return
+		}
 		apiModels.InternalError(ctx, err.Error())
 		return
 	}
@@ -608,12 +633,15 @@ func (ctrl *UsersController) DeleteCurrentUser(ctx *gin.Context) {
 
 	var req models.DeleteAccountRequest
 	if err := ctx.ShouldBindJSON(&req); err != nil {
-		apiModels.Error(ctx, http.StatusBadRequest, err.Error())
+		apiModels.RespondWithBindError(ctx, err)
 		return
 	}
 
 	if err := ctrl.userService.VerifyPassword(ctx, userID, req.CurrentPassword); err != nil {
-		apiModels.Error(ctx, http.StatusBadRequest, err.Error())
+		if apiModels.RespondWithServiceError(ctx, err) {
+			return
+		}
+		apiModels.InternalError(ctx, err.Error())
 		return
 	}
 
