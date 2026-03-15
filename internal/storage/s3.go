@@ -12,7 +12,8 @@ import (
 )
 
 const (
-	AvatarPrefix = "avatars/%s/%s"
+	AvatarPrefix    = "avatars/%s/%s"
+	WishImagePrefix = "wishes/%s/%s"
 )
 
 type MinioServiceImpl struct {

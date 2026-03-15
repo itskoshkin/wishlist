@@ -15,11 +15,11 @@ import (
 type ListStorage interface {
 	CreateList(ctx context.Context, list models.List) error
 	GetListByID(ctx context.Context, id uuid.UUID) (models.List, error)
-	GetListBySharedLink(ctx context.Context, token string) (models.List, error)
+	GetListBySharedLink(ctx context.Context, slug string) (models.List, error)
 	GetListsByUserID(ctx context.Context, userID uuid.UUID) ([]models.List, error)
 	GetPublicListsByUserID(ctx context.Context, userID uuid.UUID) ([]models.List, error)
 	UpdateListByID(ctx context.Context, id uuid.UUID, req models.UpdateListRequest) error
-	RotateSharedLink(ctx context.Context, id uuid.UUID, token string) error
+	RotateSharedLink(ctx context.Context, id uuid.UUID, slug string) error
 	DeleteListByID(ctx context.Context, id uuid.UUID) error
 }
 
@@ -33,20 +33,20 @@ func NewListService(ls ListStorage, ws WishStorage) *ListServiceImpl {
 }
 
 func (svc *ListServiceImpl) CreateList(ctx context.Context, userID uuid.UUID, req models.CreateListRequest) (models.List, error) {
-	token, err := str.GenerateRandomString(16)
+	slug, err := str.GenerateRandomString(16)
 	if err != nil {
-		return models.List{}, fmt.Errorf("failed to generate share token: %w", err)
+		return models.List{}, fmt.Errorf("failed to generate slug: %w", err)
 	}
 
 	list := models.List{
-		ID:         uuid.New(),
-		UserID:     userID,
-		Title:      req.Title,
-		Notes:      req.Notes,
-		IsPublic:   true, // default
-		ShareToken: token,
-		CreatedAt:  time.Now(),
-		UpdatedAt:  time.Now(),
+		ID:        uuid.New(),
+		UserID:    userID,
+		Title:     req.Title,
+		Notes:     req.Notes,
+		IsPublic:  true, // default
+		Slug:      slug,
+		CreatedAt: time.Now(),
+		UpdatedAt: time.Now(),
 	}
 
 	if err = svc.lists.CreateList(ctx, list); err != nil {
@@ -69,8 +69,8 @@ func (svc *ListServiceImpl) GetListByID(ctx context.Context, listID, requestedBy
 	return list, nil
 }
 
-func (svc *ListServiceImpl) GetListBySharedLink(ctx context.Context, token string) (models.List, error) {
-	return svc.lists.GetListBySharedLink(ctx, token)
+func (svc *ListServiceImpl) GetListBySharedLink(ctx context.Context, slug string) (models.List, error) {
+	return svc.lists.GetListBySharedLink(ctx, slug)
 }
 
 func (svc *ListServiceImpl) GetListWithWishes(ctx context.Context, listID, requestedByUserID uuid.UUID) (models.List, []models.Wish, error) {
@@ -87,8 +87,8 @@ func (svc *ListServiceImpl) GetListWithWishes(ctx context.Context, listID, reque
 	return list, wishes, nil
 }
 
-func (svc *ListServiceImpl) GetListWithWishesBySharedLink(ctx context.Context, token string) (models.List, []models.Wish, error) {
-	list, err := svc.lists.GetListBySharedLink(ctx, token)
+func (svc *ListServiceImpl) GetListWithWishesBySharedLink(ctx context.Context, slug string) (models.List, []models.Wish, error) {
+	list, err := svc.lists.GetListBySharedLink(ctx, slug)
 	if err != nil {
 		return models.List{}, nil, err
 	}
@@ -132,16 +132,16 @@ func (svc *ListServiceImpl) RotateSharedLink(ctx context.Context, listID, userID
 		return "", svcErr.ForbiddenError{Message: "you are not the owner of this wishlist"}
 	}
 
-	token, err := str.GenerateRandomString(16)
+	slug, err := str.GenerateRandomString(16)
 	if err != nil {
-		return "", fmt.Errorf("failed to generate share token: %w", err)
+		return "", fmt.Errorf("failed to generate slug: %w", err)
 	}
 
-	if err = svc.lists.RotateSharedLink(ctx, listID, token); err != nil {
+	if err = svc.lists.RotateSharedLink(ctx, listID, slug); err != nil {
 		return "", err
 	}
 
-	return token, nil
+	return slug, nil
 }
 
 func (svc *ListServiceImpl) DeleteList(ctx context.Context, listID, userID uuid.UUID) error {

@@ -1,0 +1,21 @@
+{{define "head"}}
+    <!-- Page metadata -->
+    <meta charset="UTF-8"> <!-- Character encoding -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"> <!-- Responsive viewport -->
+    <meta name="theme-color" content="{{if .domain}}{{if eq .domain.Theme "light"}}#ffffff{{else}}#000000{{end}}{{else}}#000000{{end}}"> <!-- Browser theme color -->
+    <meta name="apple-mobile-web-app-status-bar-style" content="{{if .domain}}{{if eq .domain.Theme "light"}}default{{else}}black-translucent{{end}}{{else}}black-translucent{{end}}"> <!-- iOS Safari status bar -->
+    <!-- Favicons -->
+    <link rel="icon" type="image/png" sizes="32x32" href="/static/assets/images/wishlist.png"> <!-- Favicon -->
+    <link rel="shortcut icon" type="image/png" href="/static/assets/images/wishlist.png"> <!-- Legacy favicon -->
+    <link rel="apple-touch-icon" sizes="180x180" href="/static/assets/images/wishlist.png"> <!-- Apple touch icon -->
+    <!-- Stylesheets -->
+    <link rel="stylesheet" href="/static/styles/main.css"> <!-- Main CSS -->
+    <!-- JavaScript -->
+    <script src="/static/scripts/api.js"></script> <!-- API client -->
+    <script src="/static/scripts/surface-glow.js"></script> <!-- Shared pointer glow surfaces -->
+    <script src="/static/scripts/theme.js"></script> <!-- Theme management -->
+    <script src="/static/scripts/i18n.js"></script> <!-- Internationalization -->
+    <script src="/static/scripts/modal.js"></script> <!-- Modal management -->
+    <script src="/static/scripts/dialogs.js"></script> <!-- Custom dialogs -->
+    <script src="/static/scripts/forms.js"></script> <!-- Form utilities -->
+{{end}}

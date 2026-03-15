@@ -1,0 +1,2648 @@
+{{define "list-detail"}}
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <title>My wishlist</title>
+        {{template "head"}}
+    </head>
+    <body class="page-list-detail">
+        <!-- Gradient blob for liquid glass effect -->
+        <div class="gradient-blob"></div>
+
+        <!-- FAB: Language toggle (left) -->
+        <button class="fab fab-left" onclick="toggleLanguageMenu(event)" title="Toggle Language">
+            <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path d="M12.87 15.07l-2.54-2.51.03-.03c1.74-1.94 2.98-4.17 3.71-6.53H17V4h-7V2H8v2H1v1.99h11.17C11.5 7.92 10.44 9.75 9 11.35 8.07 10.32 7.3 9.19 6.69 8h-2c.73 1.63 1.73 3.17 2.98 4.56l-5.09 5.02L4 19l5-5 3.11 3.11.76-2.04zM18.5 10h-2L12 22h2l1.12-3h4.75L21 22h2l-4.5-12zm-2.62 7l1.62-4.33L19.12 17h-3.24z"/>
+            </svg>
+            <!-- Language popup menu -->
+            <div class="popup-menu" id="langMenu">
+                <div class="popup-menu-item selected" onclick="selectLanguage('ru', event)">
+                    <span>Русский</span>
+                    <svg class="checkmark" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
+                    </svg>
+                </div>
+                <div class="popup-menu-item" onclick="selectLanguage('en', event)">
+                    <span>English</span>
+                    <svg class="checkmark" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
+                    </svg>
+                </div>
+            </div>
+        </button>
+
+        <!-- Header -->
+        <header class="header">
+            <!-- Left side: Logo and title -->
+            <a href="/" class="header-left">
+                <img src="/static/assets/images/wishlist.png" alt="Wishlist Logo" class="header-logo">
+                <span class="header-title" data-i18n="home.title">Wishlist</span>
+            </a>
+
+            <!-- Right side: Profile and Logout buttons -->
+            <div class="header-right">
+                <button class="fab-small" title="Find user" onclick="openFindUserModal()">
+                    <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0 0 16 9.5 6.5 6.5 0 1 0 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79L19 20.49 20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/>
+                    </svg>
+                </button>
+                <button class="fab-small profile-btn" title="Profile" onclick="openProfileModal()">
+                    <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
+                    </svg>
+                </button>
+                <button class="fab-small logout-btn" title="Logout" onclick="logout()">
+                    <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M17 7l-1.41 1.41L18.17 11H8v2h10.17l-2.58 2.58L17 17l5-5zM4 5h8V3H4c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h8v-2H4V5z"/>
+                    </svg>
+                </button>
+            </div>
+        </header>
+
+        <!-- FAB: Theme toggle (right) -->
+        <button class="fab fab-right" onclick="toggleThemeMenu(event)" title="Toggle Theme">
+            <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path d="M12 3c-4.97 0-9 4.03-9 9s4.03 9 9 9 9-4.03 9-9c0-.46-.04-.92-.1-1.36-.98 1.37-2.58 2.26-4.4 2.26-2.98 0-5.4-2.42-5.4-5.4 0-1.81.89-3.42 2.26-4.4-.44-.06-.9-.1-1.36-.1z"/>
+            </svg>
+            <!-- Theme popup menu -->
+            <div class="popup-menu" id="themeMenu">
+                <div class="popup-menu-item" onclick="selectTheme('light', event)">
+                    <span data-i18n="theme.light">Светлая</span>
+                    <svg class="checkmark" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
+                    </svg>
+                </div>
+                <div class="popup-menu-item selected" onclick="selectTheme('system', event)">
+                    <span data-i18n="theme.system">Системная</span>
+                    <svg class="checkmark" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
+                    </svg>
+                </div>
+                <div class="popup-menu-item" onclick="selectTheme('dark', event)">
+                    <span data-i18n="theme.dark">Тёмная</span>
+                    <svg class="checkmark" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
+                    </svg>
+                </div>
+            </div>
+        </button>
+
+        <!-- Main content -->
+        <div class="container">
+            <!-- Back button -->
+            <div class="page-header">
+                <a href="/wishlists" class="back-button">
+                    <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/>
+                    </svg>
+                    <span data-i18n="lists.back">Назад</span>
+                </a>
+
+                <!-- Editable title -->
+                <div class="editable-title">
+                    <input type="text" id="listTitle" value="" readonly oninput="adjustTitleWidth()" onclick="toggleTitleEdit()">
+                    <button type="button" class="edit-button hidden" id="cancelTitleBtn" onclick="cancelTitleEdit()">
+                        <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>
+                        </svg>
+                    </button>
+                    <button type="button" class="edit-button hidden" id="saveTitleBtn" onclick="saveTitleEdit()">
+                        <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
+                        </svg>
+                    </button>
+                </div>
+                <p class="list-privacy-note" id="listPrivacyNote" data-i18n="list.privateNotice" hidden>
+                    Доступ к этому списку предоставляется только по ссылке, не делитесь ей с посторонними!
+                </p>
+            </div>
+
+            <!-- List actions -->
+            <div class="list-actions">
+                <button class="btn-secondary" onclick="copyLink()">
+                    <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/>
+                    </svg>
+                    <span data-i18n="list.copyLink">Скопировать ссылку</span>
+                </button>
+                <button class="btn-secondary btn-action-generate" onclick="generateNewLink()">
+                    <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M17.65 6.35C16.2 4.9 14.21 4 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08c-.82 2.33-3.04 4-5.65 4-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/>
+                    </svg>
+                    <span data-i18n="list.generateLink">Сгенерировать новую ссылку</span>
+                </button>
+                <button class="btn-secondary btn-action-privacy" id="privacyToggleBtn" onclick="togglePrivacy()">
+                    <svg id="privacyIcon" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M2.1 3.51 1 4.61l3.05 3.05C2.78 8.75 1.78 10.26 1 12c1.73 4.39 6 7.5 11 7.5 1.55 0 3.03-.3 4.38-.84l3.01 3.01 1.1-1.1L2.1 3.51zm7 11.99c-1.66 0-3-1.34-3-3 0-.44.1-.86.27-1.23l1.56 1.56a1.5 1.5 0 0 0 2.04 2.04l1.56 1.56c-.37.17-.79.27-1.23.27zm2.9-9c2.76 0 5 2.24 5 5 0 .51-.1 1-.26 1.46l2.92 2.92C21.06 14.67 22 13.38 22 12c-1.73-4.39-6-7.5-11-7.5-1.4 0-2.74.25-3.98.7l2.16 2.16c.55-.22 1.16-.34 1.82-.34z"/>
+                    </svg>
+                    <span id="privacyText" data-i18n="list.makePrivate">Сделать приватным</span>
+                </button>
+                <button class="btn-secondary btn-danger btn-action-delete" onclick="handleDeleteList()">
+                    <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/>
+                    </svg>
+                    <span data-i18n="list.delete">Удалить список</span>
+                </button>
+            </div>
+
+            <!-- Controls: Sort / Filter wishes -->
+            <div class="controls">
+                <div class="controls-actions">
+                    <div class="controls-menu-anchor">
+                        <button id="sortMenuButton" class="fab-small" title="Sort" onclick="toggleSortMenu(event)">
+                            <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M3 18h6v-2H3v2zM3 6v2h18V6H3zm0 7h12v-2H3v2z"/>
+                            </svg>
+                        </button>
+                        <div class="popup-menu glow-popup-menu" id="sortMenu">
+                            <div class="popup-menu-item selected" onclick="applySort('date-desc', event)">
+                                <span data-i18n="wish.sort.newFirst">Сначала новые</span>
+                                <svg class="checkmark" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                    <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
+                                </svg>
+                            </div>
+                            <div class="popup-menu-item" onclick="applySort('date-asc', event)">
+                                <span data-i18n="wish.sort.oldFirst">Сначала старые</span>
+                                <svg class="checkmark" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                    <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
+                                </svg>
+                            </div>
+                            <div class="popup-menu-item" onclick="applySort('name-asc', event)">
+                                <span data-i18n="wish.sort.nameAsc">По имени (А-Я)</span>
+                                <svg class="checkmark" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                    <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
+                                </svg>
+                            </div>
+                            <div class="popup-menu-item" onclick="applySort('name-desc', event)">
+                                <span data-i18n="wish.sort.nameDesc">По имени (Я-А)</span>
+                                <svg class="checkmark" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                    <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
+                                </svg>
+                            </div>
+                            <div class="popup-menu-item" onclick="applySort('updated-desc', event)">
+                                <span data-i18n="wish.sort.updatedDesc">По обновлению (новые)</span>
+                                <svg class="checkmark" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                    <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
+                                </svg>
+                            </div>
+                            <div class="popup-menu-item" onclick="applySort('updated-asc', event)">
+                                <span data-i18n="wish.sort.updatedAsc">По обновлению (старые)</span>
+                                <svg class="checkmark" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                    <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
+                                </svg>
+                            </div>
+                            <div class="popup-menu-item" onclick="applySort('price-desc', event)">
+                                <span data-i18n="wish.sort.priceDesc">По цене (дороже)</span>
+                                <svg class="checkmark" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                    <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
+                                </svg>
+                            </div>
+                            <div class="popup-menu-item" onclick="applySort('price-asc', event)">
+                                <span data-i18n="wish.sort.priceAsc">По цене (дешевле)</span>
+                                <svg class="checkmark" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                    <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
+                                </svg>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="controls-menu-anchor">
+                        <button id="filterMenuButton" class="fab-small" title="Filter" onclick="toggleFilterMenu(event)">
+                            <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M10 18h4v-2h-4v2zM3 6v2h18V6H3zm3 7h12v-2H6v2z"/>
+                            </svg>
+                        </button>
+                        <div class="popup-menu glow-popup-menu" id="filterMenu">
+                            <div class="popup-menu-item selected" onclick="applyFilter('all', event)">
+                                <span data-i18n="wish.filter.all">Все желания</span>
+                                <svg class="checkmark" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                    <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
+                                </svg>
+                            </div>
+                            <div class="popup-menu-item" onclick="applyFilter('with-image', event)">
+                                <span data-i18n="wish.filter.withImage">С картинкой</span>
+                                <svg class="checkmark" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                    <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
+                                </svg>
+                            </div>
+                            <div class="popup-menu-item" onclick="applyFilter('without-image', event)">
+                                <span data-i18n="wish.filter.withoutImage">Без картинки</span>
+                                <svg class="checkmark" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                    <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
+                                </svg>
+                            </div>
+                            <div class="popup-menu-item" onclick="applyFilter('with-notes', event)">
+                                <span data-i18n="wish.filter.withNotes">С заметками</span>
+                                <svg class="checkmark" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                    <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
+                                </svg>
+                            </div>
+                            <div class="popup-menu-item" onclick="applyFilter('without-notes', event)">
+                                <span data-i18n="wish.filter.withoutNotes">Без заметок</span>
+                                <svg class="checkmark" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                    <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
+                                </svg>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Add wish button -->
+            <button class="fab-create" onclick="openModal('addWishModal')">
+                <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/>
+                </svg>
+            </button>
+
+            <!-- Wishes grid -->
+            <div class="wishes-grid" id="wishesGrid">
+                <!-- Wishes will be populated dynamically -->
+            </div>
+        </div>
+
+        <!-- Add Wish Modal -->
+        <div class="modal-overlay" id="addWishModal">
+            <div class="modal">
+                <div class="modal-header">
+                    <h2 class="modal-title" data-i18n="list.addWish">Добавить желание</h2>
+                    <button class="modal-close" onclick="closeModal('addWishModal')">
+                        <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>
+                        </svg>
+                    </button>
+                </div>
+
+                <form id="addWishForm" onsubmit="handleCreateWish(event)">
+                    <div class="form-group">
+                        <div class="file-input-wrapper">
+                            <input type="file" id="addWishImageInput" accept="image/*" onchange="handleFileInput(this, 'wishImagePreview')">
+                            <div class="file-input-placeholder">
+                                <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" fill="currentColor">
+                                    <path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/>
+                                </svg>
+                                <span data-i18n="wish.selectImage">Нажмите для выбора изображения</span>
+                            </div>
+                            <img id="wishImagePreview" class="file-input-preview" style="display: none;">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <input type="text" name="title" class="form-input" data-i18n-placeholder="wish.title" required>
+                    </div>
+                    <div class="form-group">
+                        <textarea name="note" class="form-input" rows="3" data-i18n-placeholder="wish.note"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <div class="price-group">
+                            <input type="number" name="price" class="form-input" data-i18n-placeholder="wish.price" step="0.01">
+                            <div class="custom-select" id="currencySelect" data-value="RUB">
+                                <div class="custom-select-trigger" onclick="toggleCustomSelect('currencySelect')">
+                                    <span>₽</span>
+                                    <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                        <path d="M7 10l5 5 5-5z"/>
+                                    </svg>
+                                </div>
+                                <div class="custom-select-options">
+                                    <div class="custom-select-option selected" onclick="selectCustomOption('currencySelect', 'RUB', '₽')">₽</div>
+                                    <div class="custom-select-option" onclick="selectCustomOption('currencySelect', 'USD', '$')">$</div>
+                                    <div class="custom-select-option" onclick="selectCustomOption('currencySelect', 'EUR', '€')">€</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <input type="url" name="link" class="form-input" data-i18n-placeholder="wish.link">
+                    </div>
+                    <button type="submit" class="btn form-submit" data-i18n="common.save">Сохранить</button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Wish Detail Modal -->
+        <div class="modal-overlay" id="wishDetailModal">
+            <div class="modal">
+                <div class="modal-header">
+                    <h2 class="modal-title" data-i18n="wish.modal.title">Детали желания</h2>
+                    <button class="modal-close" onclick="closeModal('wishDetailModal')">
+                        <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>
+                        </svg>
+                    </button>
+                </div>
+
+                <div class="wish-detail">
+                    <div class="wish-detail-image-picker" onclick="handleWishDetailImagePickerClick(event)">
+                        <div class="wish-detail-image-backdrop" aria-hidden="true"></div>
+                        <img src="/static/assets/icons/placeholder.svg" alt="Wish" class="wish-detail-image" onerror="this.src='/static/assets/icons/placeholder.svg'">
+                        <button type="button" class="wish-detail-image-edit-btn" onclick="handleWishDetailImageEditClick(event)" aria-label="Change image">
+                            <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/>
+                            </svg>
+                        </button>
+                        <button type="button" class="wish-detail-image-delete-btn hidden" id="wishDetailImageDeleteBtn" onclick="handleWishImageDelete(event)" aria-label="Delete image">
+                            <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>
+                            </svg>
+                        </button>
+                    </div>
+                    <input type="file" id="wishDetailImageInput" accept="image/*" style="display: none;" onchange="handleWishImageChange(event)">
+
+                    <!-- Title field -->
+                    <div class="wish-field">
+                        <div class="wish-field-content">
+                            <div class="wish-field-value" id="wishTitle">MacBook Pro 16"</div>
+                        </div>
+                        <div class="wish-field-actions">
+                            <button class="icon-button" id="editWishTitle" onclick="startInlineEdit('title')">
+                                <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                    <path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/>
+                                </svg>
+                            </button>
+                            <button class="icon-button success hidden" id="saveWishTitle" onclick="saveInlineEdit('title')">
+                                <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                    <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
+                                </svg>
+                            </button>
+                            <button class="icon-button danger hidden" id="cancelWishTitle" onclick="cancelInlineEdit('title')">
+                                <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                    <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Note field -->
+                    <div class="wish-field">
+                        <div class="wish-field-content">
+                            <div class="wish-field-value" id="wishNote">No notes</div>
+                        </div>
+                        <div class="wish-field-actions">
+                            <button class="icon-button" id="editWishNote" onclick="startInlineEdit('note')">
+                                <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                    <path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/>
+                                </svg>
+                            </button>
+                            <button class="icon-button success hidden" id="saveWishNote" onclick="saveInlineEdit('note')">
+                                <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                    <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
+                                </svg>
+                            </button>
+                            <button class="icon-button danger hidden" id="cancelWishNote" onclick="cancelInlineEdit('note')">
+                                <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                    <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Price field -->
+                    <div class="wish-field">
+                        <div class="wish-field-content">
+                            <div class="wish-field-value" id="wishPrice">$2,499</div>
+                        </div>
+                        <div class="wish-field-actions">
+                            <button class="icon-button" id="editWishPrice" onclick="startInlineEdit('price')">
+                                <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                    <path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/>
+                                </svg>
+                            </button>
+                            <button class="icon-button success hidden" id="saveWishPrice" onclick="saveInlineEdit('price')">
+                                <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                    <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
+                                </svg>
+                            </button>
+                            <button class="icon-button danger hidden" id="cancelWishPrice" onclick="cancelInlineEdit('price')">
+                                <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                    <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Link field -->
+                    <div class="wish-field">
+                        <div class="wish-field-content">
+                            <div class="wish-field-value" id="wishLink">
+                                <a href="https://apple.com" target="_blank">https://apple.com</a>
+                            </div>
+                        </div>
+                        <div class="wish-field-actions">
+                            <button class="icon-button" id="editWishLink" onclick="startInlineEdit('link')">
+                                <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                    <path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/>
+                                </svg>
+                            </button>
+                            <button class="icon-button success hidden" id="saveWishLink" onclick="saveInlineEdit('link')">
+                                <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                    <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
+                                </svg>
+                            </button>
+                            <button class="icon-button danger hidden" id="cancelWishLink" onclick="cancelInlineEdit('link')">
+                                <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                    <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Delete button -->
+                    <div class="wish-meta-block">
+                        <div class="wish-meta-row">
+                            <span class="wish-meta-label" data-i18n="wish.createdAt">Создано</span>
+                            <span class="wish-meta-value" id="wishCreatedAt">-</span>
+                        </div>
+                        <div class="wish-meta-row">
+                            <span class="wish-meta-label" data-i18n="wish.updatedAt">Обновлено</span>
+                            <span class="wish-meta-value" id="wishUpdatedAt">-</span>
+                        </div>
+                    </div>
+
+                    <button class="btn btn-danger" id="wishDeleteBtn" onclick="handleDeleteWish()" style="width: 100%;">
+                        <span data-i18n="wish.delete">Удалить</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Profile Modal -->
+        <div class="modal-overlay" id="profileModal">
+            <div class="modal">
+                <div class="modal-header">
+                    <h2 class="modal-title" data-i18n="header.profile">Профиль</h2>
+                    <button class="modal-close" onclick="closeModal('profileModal')">
+                        <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>
+                        </svg>
+                    </button>
+                </div>
+
+                <div class="wish-detail">
+                    <div class="profile-avatar-wrap" id="profileAvatarWrap">
+                        <div class="profile-avatar" id="profileAvatar" role="button" tabindex="0" aria-label="Change avatar" onclick="triggerAvatarUpload()" onkeydown="handleProfileAvatarKeydown(event)">
+                            <span id="profileInitials">U</span>
+                            <div class="profile-avatar-edit-indicator">
+                                <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                    <path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/>
+                                </svg>
+                            </div>
+                        </div>
+                        <button type="button" class="profile-avatar-delete-btn" id="removeAvatarBtn" onclick="handleAvatarDelete(event)" aria-label="Delete avatar" hidden>
+                            <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>
+                            </svg>
+                        </button>
+                    </div>
+                    <input type="file" id="avatarInput" accept="image/*" style="display: none;" onchange="handleAvatarChange(event)">
+
+                    <div class="wish-field profile-edit-row" id="profileRowName" role="button" tabindex="0" onclick="startProfileInlineEdit('name', event)" onkeydown="handleProfileFieldKeydown(event, 'name')">
+                        <div class="wish-field-content">
+                            <div class="wish-field-label" data-i18n="profile.label.name">Имя</div>
+                            <div class="wish-field-value" id="profileName" data-i18n="common.loading">Загрузка...</div>
+                        </div>
+                        <div class="wish-field-actions profile-inline-actions" id="profileActionsName">
+                            <button type="button" class="icon-button profile-inline-edit" id="editProfileName" onclick="startProfileInlineEdit('name', event)" aria-label="Edit">
+                                <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                    <path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/>
+                                </svg>
+                            </button>
+                            <button type="button" class="icon-button success profile-inline-save hidden" id="saveProfileName" onclick="saveProfileInlineEdit('name', event)" aria-label="Save">
+                                <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                    <path d="M9 16.17l-3.88-3.88L3.7 13.7 9 19l12-12-1.41-1.41z"/>
+                                </svg>
+                            </button>
+                            <button type="button" class="icon-button danger profile-inline-cancel hidden" id="cancelProfileName" onclick="cancelProfileInlineEdit('name', event)" aria-label="Cancel">
+                                <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                    <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="wish-field profile-edit-row" id="profileRowUsername" role="button" tabindex="0" onclick="startProfileInlineEdit('username', event)" onkeydown="handleProfileFieldKeydown(event, 'username')">
+                        <div class="wish-field-content">
+                            <div class="wish-field-label" data-i18n="profile.label.username">Username</div>
+                            <div class="wish-field-value" id="profileUsername" data-i18n="common.loading">Загрузка...</div>
+                        </div>
+                        <div class="wish-field-actions profile-inline-actions" id="profileActionsUsername">
+                            <button type="button" class="icon-button profile-inline-edit" id="editProfileUsername" onclick="startProfileInlineEdit('username', event)" aria-label="Edit">
+                                <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                    <path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/>
+                                </svg>
+                            </button>
+                            <button type="button" class="icon-button success profile-inline-save hidden" id="saveProfileUsername" onclick="saveProfileInlineEdit('username', event)" aria-label="Save">
+                                <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                    <path d="M9 16.17l-3.88-3.88L3.7 13.7 9 19l12-12-1.41-1.41z"/>
+                                </svg>
+                            </button>
+                            <button type="button" class="icon-button danger profile-inline-cancel hidden" id="cancelProfileUsername" onclick="cancelProfileInlineEdit('username', event)" aria-label="Cancel">
+                                <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                    <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="wish-field profile-edit-row" id="profileRowEmail" role="button" tabindex="0" onclick="startProfileInlineEdit('email', event)" onkeydown="handleProfileFieldKeydown(event, 'email')">
+                        <div class="wish-field-content">
+                            <div class="wish-field-label" data-i18n="profile.label.email">Email</div>
+                            <div class="wish-field-value" id="profileEmail" data-i18n="common.loading">Загрузка...</div>
+                        </div>
+                        <div class="wish-field-actions profile-inline-actions" id="profileActionsEmail">
+                            <button type="button" class="icon-button profile-inline-edit" id="editProfileEmail" onclick="startProfileInlineEdit('email', event)" aria-label="Edit">
+                                <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                    <path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/>
+                                </svg>
+                            </button>
+                            <button type="button" class="icon-button success profile-inline-save hidden" id="saveProfileEmail" onclick="saveProfileInlineEdit('email', event)" aria-label="Save">
+                                <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                    <path d="M9 16.17l-3.88-3.88L3.7 13.7 9 19l12-12-1.41-1.41z"/>
+                                </svg>
+                            </button>
+                            <button type="button" class="icon-button danger profile-inline-cancel hidden" id="cancelProfileEmail" onclick="cancelProfileInlineEdit('email', event)" aria-label="Cancel">
+                                <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                    <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+
+                    <button class="btn profile-password-btn" onclick="openModal('changePasswordModal')" style="width: 100%;" data-i18n="profile.changePassword">
+                        Изменить пароль
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div class="modal-overlay" id="findUserModal">
+            <div class="modal">
+                <div class="modal-header">
+                    <h2 class="modal-title" data-i18n="users.find.title">Найти пользователя</h2>
+                    <button class="modal-close" onclick="closeModal('findUserModal')">
+                        <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>
+                        </svg>
+                    </button>
+                </div>
+
+                <form id="findUserForm" onsubmit="handleFindUser(event)">
+                    <div class="form-group">
+                        <input type="text" id="findUserInput" name="username" class="form-input" data-i18n-placeholder="users.find.placeholder" oninput="handleFindUserInput(event)" required>
+                    </div>
+                    <button type="submit" class="btn form-submit" data-i18n="users.find.submit">Открыть публичные списки</button>
+                </form>
+                <div class="find-user-results" id="findUserResults" hidden></div>
+            </div>
+        </div>
+
+        <!-- Change Password Modal -->
+        <div class="modal-overlay" id="changePasswordModal">
+            <div class="modal change-password-modal">
+                <div class="modal-header">
+                    <h2 class="modal-title" data-i18n="profile.passwordModalTitle">Изменить пароль</h2>
+                    <button class="modal-close" onclick="closeModal('changePasswordModal')">
+                        <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>
+                        </svg>
+                    </button>
+                </div>
+
+                <form id="changePasswordForm" class="change-password-form" onsubmit="handlePasswordChange(event)">
+                    <div class="form-group">
+                        <input type="password" name="old_password" class="form-input" data-i18n-placeholder="profile.password.oldPlaceholder" placeholder="Старый пароль" autocomplete="current-password" required>
+                    </div>
+                    <div class="form-group">
+                        <input type="password" name="new_password" class="form-input" data-i18n-placeholder="profile.password.newPlaceholder" placeholder="Новый пароль" autocomplete="new-password" required>
+                    </div>
+                    <button type="submit" class="btn form-submit profile-password-btn" data-i18n="common.save">Сохранить</button>
+                </form>
+            </div>
+        </div>
+
+        <script>
+            let originalTitle = '';
+            let currentWish = null;
+            let currentList = null;
+            let currentUser = null;
+            let allWishes = [];
+            let activeWishSort = 'date-desc';
+            let activeWishFilter = 'all';
+            const profileInlineInitialValues = {};
+            const inlineEditInitialValues = {};
+            const isSharedListView = window.location.pathname.startsWith('/shared/');
+            const wishImageBackgroundModeCache = new Map();
+            let findUserSearchTimer = null;
+            let findUserSearchRequestId = 0;
+            let findUserSearchResults = [];
+            const PRIVACY_ICON_PATHS = {
+                makePrivate: 'M2.1 3.51 1 4.61l3.05 3.05C2.78 8.75 1.78 10.26 1 12c1.73 4.39 6 7.5 11 7.5 1.55 0 3.03-.3 4.38-.84l3.01 3.01 1.1-1.1L2.1 3.51zm7 11.99c-1.66 0-3-1.34-3-3 0-.44.1-.86.27-1.23l1.56 1.56a1.5 1.5 0 0 0 2.04 2.04l1.56 1.56c-.37.17-.79.27-1.23.27zm2.9-9c2.76 0 5 2.24 5 5 0 .51-.1 1-.26 1.46l2.92 2.92C21.06 14.67 22 13.38 22 12c-1.73-4.39-6-7.5-11-7.5-1.4 0-2.74.25-3.98.7l2.16 2.16c.55-.22 1.16-.34 1.82-.34z',
+                makePublic: 'M12 4.5c-5 0-9.27 3.11-11 7.5 1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zm0 12c-2.48 0-4.5-2.02-4.5-4.5S9.52 7.5 12 7.5s4.5 2.02 4.5 4.5-2.02 4.5-4.5 4.5zm0-7c-1.38 0-2.5 1.12-2.5 2.5s1.12 2.5 2.5 2.5 2.5-1.12 2.5-2.5S13.38 9.5 12 9.5z'
+            };
+
+            function sanitizeUsername(value) {
+                return (value || '').trim().replace(/^@+/, '');
+            }
+
+            function isUserNotFoundError(error) {
+                const message = (error?.message || '').toString().trim().toLowerCase();
+                return message === 'user not found' || message.includes('user not found');
+            }
+
+            function getFindUserResultsContainer() {
+                return document.getElementById('findUserResults');
+            }
+
+            function resetFindUserResults() {
+                findUserSearchResults = [];
+                findUserSearchRequestId += 1;
+                if (findUserSearchTimer) {
+                    window.clearTimeout(findUserSearchTimer);
+                    findUserSearchTimer = null;
+                }
+
+                const container = getFindUserResultsContainer();
+                if (!container) return;
+                container.hidden = true;
+                container.innerHTML = '';
+            }
+
+            async function navigateToFoundUser(user) {
+                if (!user) return;
+
+                if (!currentUser) {
+                    currentUser = await getCurrentUser();
+                }
+
+                closeModal('findUserModal');
+                document.getElementById('findUserForm')?.reset();
+                resetFindUserResults();
+
+                if (currentUser?.id === user.id) {
+                    window.location.href = '/wishlists';
+                    return;
+                }
+
+                window.location.href = `/users/${encodeURIComponent(user.username)}`;
+            }
+
+            function renderFindUserResults(query, users) {
+                const container = getFindUserResultsContainer();
+                if (!container) return;
+
+                container.innerHTML = '';
+                const normalizedQuery = sanitizeUsername(query);
+                if (!normalizedQuery) {
+                    container.hidden = false;
+                    const empty = document.createElement('div');
+                    empty.className = 'find-user-result-empty';
+                    empty.textContent = t('users.find.searchEmpty');
+                    container.appendChild(empty);
+                    return;
+                }
+
+                container.hidden = false;
+                if (!users.length) {
+                    const empty = document.createElement('div');
+                    empty.className = 'find-user-result-empty';
+                    empty.textContent = t('users.find.searchNoResults');
+                    container.appendChild(empty);
+                    return;
+                }
+
+                users.forEach((user) => {
+                    const button = document.createElement('button');
+                    button.type = 'button';
+                    button.className = 'find-user-result-item';
+
+                    const primary = document.createElement('span');
+                    primary.className = 'find-user-result-primary';
+                    primary.textContent = `@${user.username}`;
+
+                    const secondary = document.createElement('span');
+                    secondary.className = 'find-user-result-secondary';
+                    secondary.textContent = user.name?.trim() || t('profile.label.username');
+
+                    button.appendChild(primary);
+                    button.appendChild(secondary);
+                    button.addEventListener('click', () => {
+                        navigateToFoundUser(user).catch((error) => {
+                            console.error('Find user navigation error:', error);
+                            showToast(error.message || t('users.find.failed'), 'error');
+                        });
+                    });
+
+                    container.appendChild(button);
+                });
+            }
+
+            async function runFindUserSearch(query) {
+                const normalizedQuery = sanitizeUsername(query);
+                const requestId = ++findUserSearchRequestId;
+
+                if (!normalizedQuery) {
+                    renderFindUserResults('', []);
+                    return;
+                }
+
+                if (normalizedQuery.length < 2) {
+                    findUserSearchResults = [];
+                    renderFindUserResults(normalizedQuery, []);
+                    return;
+                }
+
+                try {
+                    const users = await searchUsers(normalizedQuery) || [];
+                    if (requestId !== findUserSearchRequestId) return;
+                    findUserSearchResults = users;
+                    renderFindUserResults(normalizedQuery, users);
+                } catch (error) {
+                    if (requestId !== findUserSearchRequestId) return;
+                    console.error('Find user search error:', error);
+                    findUserSearchResults = [];
+                    renderFindUserResults(normalizedQuery, []);
+                }
+            }
+
+            function handleFindUserInput(event) {
+                const query = event?.target?.value || '';
+                if (findUserSearchTimer) {
+                    window.clearTimeout(findUserSearchTimer);
+                }
+                findUserSearchTimer = window.setTimeout(() => {
+                    runFindUserSearch(query);
+                }, 180);
+            }
+
+            function isCurrentListOwner() {
+                return Boolean((currentList?.slug || '').toString().trim());
+            }
+
+            function syncOwnerControls() {
+                const isOwner = isCurrentListOwner();
+                const listActions = document.querySelector('.list-actions');
+                const listActionButtons = listActions ? Array.from(listActions.querySelectorAll('button')) : [];
+                const addWishFab = document.querySelector('.fab-create');
+                const titleInput = document.getElementById('listTitle');
+                const wishImageEditButton = document.querySelector('#wishDetailModal .wish-detail-image-edit-btn');
+                const wishImageDeleteButton = document.getElementById('wishDetailImageDeleteBtn');
+                const wishDeleteButton = document.getElementById('wishDeleteBtn');
+
+                if (listActions) {
+                    listActions.hidden = false;
+                }
+                listActionButtons.forEach((button, index) => {
+                    button.hidden = !isOwner && index > 0;
+                    button.style.display = !isOwner && index > 0 ? 'none' : '';
+                });
+                if (listActions) {
+                    listActions.style.justifyContent = isOwner ? '' : 'flex-start';
+                }
+                if (addWishFab) {
+                    addWishFab.hidden = !isOwner;
+                }
+                if (titleInput) {
+                    titleInput.style.cursor = isOwner ? '' : 'default';
+                }
+                document.querySelectorAll('#wishDetailModal .wish-field-actions').forEach((actions) => {
+                    actions.style.display = isOwner ? '' : 'none';
+                });
+                if (wishImageEditButton) {
+                    wishImageEditButton.hidden = !isOwner;
+                    wishImageEditButton.style.display = isOwner ? '' : 'none';
+                }
+                if (wishImageDeleteButton) {
+                    wishImageDeleteButton.hidden = !isOwner;
+                    wishImageDeleteButton.style.display = isOwner ? '' : 'none';
+                    wishImageDeleteButton.setAttribute('aria-hidden', String(!isOwner));
+                }
+                if (wishDeleteButton) {
+                    wishDeleteButton.hidden = !isOwner;
+                    wishDeleteButton.style.display = isOwner ? '' : 'none';
+                }
+
+                if (!isOwner) {
+                    Object.keys(inlineEditInitialValues).forEach((fieldName) => {
+                        delete inlineEditInitialValues[fieldName];
+                        renderWishField(fieldName);
+                        setWishFieldActionsEditing(fieldName, false);
+                    });
+                    setTitleEditingState(false);
+                }
+            }
+
+            function openFindUserModal() {
+                resetFindUserResults();
+                openModal('findUserModal');
+                window.requestAnimationFrame(() => {
+                    const input = document.getElementById('findUserInput');
+                    input.value = '';
+                    input?.focus();
+                    input?.select?.();
+                    renderFindUserResults('', []);
+                });
+            }
+
+            async function handleFindUser(event) {
+                event.preventDefault();
+
+                const form = event.target;
+                const formData = new FormData(form);
+                const username = sanitizeUsername(formData.get('username'));
+                if (!username) return;
+
+                try {
+                    let user = null;
+
+                    if (username.length < 2) {
+                        user = await getUserByUsername(username);
+                    } else {
+                        const users = findUserSearchResults.length ? findUserSearchResults : (await searchUsers(username) || []);
+                        findUserSearchResults = users;
+                        renderFindUserResults(username, users);
+                        user = users.find((item) => sanitizeUsername(item.username).toLowerCase() === username.toLowerCase()) || null;
+
+                        if (!user && users.length === 1) {
+                            user = users[0];
+                        } else if (!user && users.length > 1) {
+                            showToast(t('users.find.searchChoose'), 'error');
+                            return;
+                        }
+                    }
+
+                    if (!user) {
+                        showToast(t('users.find.notFound'), 'error');
+                        return;
+                    }
+
+                    await navigateToFoundUser(user);
+                } catch (error) {
+                    console.error('Find user error:', error);
+                    showToast(isUserNotFoundError(error) ? t('users.find.notFound') : (error.message || t('users.find.failed')), 'error');
+                }
+            }
+
+            function getCurrentListIdentifier() {
+                return window.location.pathname.split('/').pop();
+            }
+
+            function getEnglishOrdinal(dayNumber) {
+                const mod100 = dayNumber % 100;
+                if (mod100 >= 11 && mod100 <= 13) return `${dayNumber}th`;
+                const mod10 = dayNumber % 10;
+                if (mod10 === 1) return `${dayNumber}st`;
+                if (mod10 === 2) return `${dayNumber}nd`;
+                if (mod10 === 3) return `${dayNumber}rd`;
+                return `${dayNumber}th`;
+            }
+
+            function formatDisplayDate(value) {
+                const date = new Date(value);
+                if (Number.isNaN(date.getTime())) return '';
+
+                if (currentLang === 'en') {
+                    const day = getEnglishOrdinal(date.getDate());
+                    const month = date.toLocaleString('en-US', { month: 'long' });
+                    return `${day} ${month} ${date.getFullYear()}`;
+                }
+
+                return date.toLocaleDateString('ru-RU', {
+                    year: 'numeric',
+                    month: 'short',
+                    day: 'numeric',
+                });
+            }
+
+            async function fetchCurrentList() {
+                const identifier = getCurrentListIdentifier();
+                if (isSharedListView) {
+                    return await getListBySlug(identifier);
+                }
+                return await getListById(identifier);
+            }
+
+            function triggerAvatarUpload() {
+                const avatarInput = document.getElementById('avatarInput');
+                if (avatarInput) {
+                    avatarInput.click();
+                }
+            }
+
+            function handleProfileAvatarKeydown(event) {
+                if (event.key === 'Enter' || event.key === ' ') {
+                    event.preventDefault();
+                    triggerAvatarUpload();
+                }
+            }
+
+            function handleProfileAvatarImageError() {
+                if (!currentUser) return;
+                currentUser = { ...currentUser, avatar: null };
+                renderProfileAvatar();
+            }
+
+            function renderProfileAvatar() {
+                const avatar = document.getElementById('profileAvatar');
+                const avatarWrap = document.getElementById('profileAvatarWrap');
+                const removeAvatarBtn = document.getElementById('removeAvatarBtn');
+                if (!avatar) return;
+
+                const hasAvatar = Boolean(currentUser?.avatar);
+                avatar.classList.toggle('has-image', hasAvatar);
+                if (avatarWrap) {
+                    avatarWrap.classList.toggle('has-avatar', hasAvatar);
+                }
+                if (removeAvatarBtn) {
+                    removeAvatarBtn.hidden = !hasAvatar;
+                    removeAvatarBtn.setAttribute('aria-hidden', String(!hasAvatar));
+                }
+
+                const editIcon = `
+                    <div class="profile-avatar-edit-indicator">
+                        <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/>
+                        </svg>
+                    </div>
+                `;
+
+                if (hasAvatar) {
+                    const avatarUrl = `${currentUser.avatar}${currentUser.avatar.includes('?') ? '&' : '?'}t=${Date.now()}`;
+                    avatar.innerHTML = `<img src="${avatarUrl}" alt="Avatar" onerror="handleProfileAvatarImageError()">${editIcon}`;
+                    return;
+                }
+
+                const initial = (currentUser?.name || currentUser?.username || 'U')[0].toUpperCase();
+                avatar.innerHTML = `<span id="profileInitials">${initial}</span>${editIcon}`;
+            }
+
+            async function handleAvatarDelete(event) {
+                event?.stopPropagation();
+                if (!currentUser?.avatar) return;
+
+                const confirmed = await showConfirm(
+                    t('profile.avatar.removeConfirm'),
+                    t('profile.avatar.removeTitle')
+                );
+                if (!confirmed) return;
+
+                try {
+                    const result = await deleteUserAvatar();
+                    if (!result) {
+                        showToast(t('profile.avatar.removeFailed'), 'error');
+                        return;
+                    }
+
+                    currentUser = { ...currentUser, avatar: null };
+                    renderProfileAvatar();
+                    showToast(t('profile.avatar.removed'), 'success');
+                } catch (error) {
+                    console.error('Avatar delete error:', error);
+                    showToast(error.message || t('profile.avatar.removeFailed'), 'error');
+                }
+            }
+
+            function getProfileFieldSuffix(fieldName) {
+                const suffixes = { name: 'Name', username: 'Username', email: 'Email' };
+                return suffixes[fieldName];
+            }
+
+            function setProfileFieldActionsEditing(fieldName, isEditing) {
+                const suffix = getProfileFieldSuffix(fieldName);
+                if (!suffix) return;
+
+                const row = document.getElementById(`profileRow${suffix}`);
+                const editButton = document.getElementById(`editProfile${suffix}`);
+                const saveButton = document.getElementById(`saveProfile${suffix}`);
+                const cancelButton = document.getElementById(`cancelProfile${suffix}`);
+
+                if (row) row.classList.toggle('editing', isEditing);
+                if (editButton) editButton.classList.toggle('hidden', isEditing);
+                if (saveButton) saveButton.classList.toggle('hidden', !isEditing);
+                if (cancelButton) cancelButton.classList.toggle('hidden', !isEditing);
+            }
+
+            function getProfileEmptyText() {
+                return t('common.notSpecified');
+            }
+
+            function getProfileFieldDisplayValue(fieldName) {
+                const rawValue = (currentUser?.[fieldName] ?? '').toString().trim();
+                return rawValue || getProfileEmptyText();
+            }
+
+            function renderProfileField(fieldName) {
+                const suffix = getProfileFieldSuffix(fieldName);
+                if (!suffix) return;
+
+                const fieldEl = document.getElementById(`profile${suffix}`);
+                if (!fieldEl) return;
+                fieldEl.textContent = getProfileFieldDisplayValue(fieldName);
+            }
+
+            function resetProfileInlineState() {
+                ['name', 'username', 'email'].forEach((fieldName) => {
+                    delete profileInlineInitialValues[fieldName];
+                    setProfileFieldActionsEditing(fieldName, false);
+                });
+            }
+
+            function renderProfileFields() {
+                ['name', 'username', 'email'].forEach(renderProfileField);
+            }
+
+            function handleProfileFieldKeydown(event, fieldName) {
+                if (event.key === 'Enter' || event.key === ' ') {
+                    event.preventDefault();
+                    startProfileInlineEdit(fieldName, event);
+                }
+            }
+
+            function buildProfileInlineInput(fieldName, value) {
+                const input = document.createElement('input');
+                input.className = 'wish-inline-input profile-inline-input';
+                input.type = fieldName === 'email' ? 'email' : 'text';
+                input.value = value;
+
+                input.addEventListener('click', (event) => event.stopPropagation());
+                input.addEventListener('keydown', (event) => {
+                    if (event.key === 'Escape') {
+                        event.preventDefault();
+                        cancelProfileInlineEdit(fieldName, event);
+                    }
+
+                    if (event.key === 'Enter') {
+                        event.preventDefault();
+                        saveProfileInlineEdit(fieldName, event);
+                    }
+                });
+
+                return input;
+            }
+
+            function startProfileInlineEdit(fieldName, event) {
+                event?.stopPropagation();
+                if (!currentUser) return;
+                if (profileInlineInitialValues[fieldName] !== undefined) return;
+
+                Object.keys(profileInlineInitialValues).forEach((openedField) => {
+                    if (openedField !== fieldName) {
+                        cancelProfileInlineEdit(openedField);
+                    }
+                });
+
+                const suffix = getProfileFieldSuffix(fieldName);
+                const fieldEl = document.getElementById(`profile${suffix}`);
+                if (!fieldEl) return;
+
+                const initialValue = (currentUser[fieldName] ?? '').toString();
+                profileInlineInitialValues[fieldName] = initialValue;
+
+                const input = buildProfileInlineInput(fieldName, initialValue);
+                fieldEl.innerHTML = '';
+                fieldEl.appendChild(input);
+
+                setProfileFieldActionsEditing(fieldName, true);
+                input.focus();
+                input.select();
+            }
+
+            function cancelProfileInlineEdit(fieldName, event) {
+                event?.stopPropagation();
+                if (profileInlineInitialValues[fieldName] === undefined) return;
+
+                delete profileInlineInitialValues[fieldName];
+                setProfileFieldActionsEditing(fieldName, false);
+
+                renderProfileField(fieldName);
+            }
+
+            async function saveProfileInlineEdit(fieldName, event) {
+                event?.stopPropagation();
+                if (!currentUser) return;
+                if (profileInlineInitialValues[fieldName] === undefined) return;
+
+                const suffix = getProfileFieldSuffix(fieldName);
+                const fieldEl = document.getElementById(`profile${suffix}`);
+                const input = fieldEl ? fieldEl.querySelector('input') : null;
+                if (!input) {
+                    cancelProfileInlineEdit(fieldName);
+                    return;
+                }
+
+                const initialValue = (profileInlineInitialValues[fieldName] ?? '').toString().trim();
+                const newValue = input.value.trim();
+                if (newValue === initialValue) {
+                    cancelProfileInlineEdit(fieldName);
+                    return;
+                }
+
+                try {
+                    const updateData = {};
+                    updateData[fieldName] = newValue;
+
+                    await updateCurrentUser(updateData);
+                    currentUser[fieldName] = newValue;
+                    delete profileInlineInitialValues[fieldName];
+                    setProfileFieldActionsEditing(fieldName, false);
+
+                    renderProfileField(fieldName);
+                    if (fieldName === 'name') {
+                        renderProfileAvatar();
+                    }
+
+                    showToast(t('profile.updated'), 'success');
+                } catch (error) {
+                    console.error('Update profile error:', error);
+                    showToast(t('profile.updateFailed'), 'error');
+                }
+            }
+
+            async function openProfileModal() {
+                openModal('profileModal');
+
+                try {
+                    currentUser = await getCurrentUser();
+                    if (!currentUser) return;
+
+                    resetProfileInlineState();
+                    renderProfileFields();
+                    renderProfileAvatar();
+                } catch (error) {
+                    console.error('Failed to load profile:', error);
+                    showToast(t('profile.loadFailed'), 'error');
+                }
+            }
+
+            async function handleAvatarChange(event) {
+                const file = event.target.files[0];
+                if (!file) return;
+
+                try {
+                    const result = await uploadAvatar(file);
+                    if (result) {
+                        currentUser = result;
+                        renderProfileAvatar();
+                        showToast(t('profile.avatar.updateSuccess'), 'success');
+                    }
+                } catch (error) {
+                    console.error('Avatar upload error:', error);
+                    showToast(error.message || t('profile.avatar.uploadFailed'), 'error');
+                } finally {
+                    event.target.value = '';
+                }
+            }
+
+            async function handlePasswordChange(event) {
+                event.preventDefault();
+
+                const form = event.target;
+                const formData = new FormData(form);
+                const oldPassword = formData.get('old_password');
+                const newPassword = formData.get('new_password');
+
+                try {
+                    await updatePassword(oldPassword, newPassword);
+                    showToast(t('profile.password.changeSuccess'), 'success');
+                    closeModal('changePasswordModal');
+                    form.reset();
+                } catch (error) {
+                    console.error('Password change error:', error);
+                    showToast(error.message || t('profile.password.changeFailed'), 'error');
+                }
+            }
+
+            function getFieldSuffix(fieldName) {
+                const suffixes = { title: 'Title', note: 'Note', price: 'Price', link: 'Link' };
+                return suffixes[fieldName];
+            }
+
+            function getWishFieldValue(fieldName) {
+                if (!currentWish) return '';
+                if (fieldName === 'note') return currentWish.notes || '';
+                if (fieldName === 'price') return currentWish.price != null ? String(currentWish.price) : '';
+                if (fieldName === 'link') return currentWish.link || '';
+                return currentWish.title || '';
+            }
+
+            function updatePrivacyButtonState(isPublic) {
+                const privacyText = document.getElementById('privacyText');
+                const privacyIcon = document.getElementById('privacyIcon');
+                if (!privacyText || !privacyIcon) return;
+
+                if (isPublic) {
+                    privacyText.setAttribute('data-i18n', 'list.makePrivate');
+                    privacyText.textContent = t('list.makePrivate');
+                    privacyIcon.innerHTML = `<path d="${PRIVACY_ICON_PATHS.makePrivate}"/>`;
+                } else {
+                    privacyText.setAttribute('data-i18n', 'list.makePublic');
+                    privacyText.textContent = t('list.makePublic');
+                    privacyIcon.innerHTML = `<path d="${PRIVACY_ICON_PATHS.makePublic}"/>`;
+                }
+
+                syncOwnerControls();
+                syncPrivateListNotice();
+            }
+
+            function syncPrivateListNotice() {
+                const notice = document.getElementById('listPrivacyNote');
+                if (!notice) return;
+
+                const shouldShow = !isCurrentListOwner() && currentList && !currentList.is_public;
+                notice.hidden = !shouldShow;
+            }
+
+            function setWishFieldActionsEditing(fieldName, isEditing) {
+                const suffix = getFieldSuffix(fieldName);
+                if (!suffix) return;
+
+                const editButton = document.getElementById(`editWish${suffix}`);
+                const saveButton = document.getElementById(`saveWish${suffix}`);
+                const cancelButton = document.getElementById(`cancelWish${suffix}`);
+                const fieldEl = document.getElementById(`wish${suffix}`);
+                const fieldContainer = fieldEl ? fieldEl.closest('.wish-field') : null;
+
+                if (editButton) editButton.classList.toggle('hidden', isEditing);
+                if (saveButton) saveButton.classList.toggle('hidden', !isEditing);
+                if (cancelButton) cancelButton.classList.toggle('hidden', !isEditing);
+                if (fieldContainer) fieldContainer.classList.toggle('editing', isEditing);
+            }
+
+            function renderWishField(fieldName) {
+                if (!currentWish) return;
+
+                const fieldEl = document.getElementById(`wish${getFieldSuffix(fieldName)}`);
+                if (!fieldEl) return;
+
+                if (fieldName === 'link') {
+                    if (currentWish.link) {
+                        fieldEl.innerHTML = `<a href="${currentWish.link}" target="_blank" rel="noopener noreferrer">${currentWish.link}</a>`;
+                    } else {
+                        fieldEl.textContent = t('wish.placeholder.link');
+                    }
+                    return;
+                }
+
+                if (fieldName === 'note') {
+                    fieldEl.textContent = currentWish.notes || t('wish.placeholder.note');
+                    return;
+                }
+
+                if (fieldName === 'price') {
+                    const priceText = formatWishPrice(currentWish.price, currentWish.currency) || t('wish.placeholder.price');
+                    fieldEl.textContent = priceText;
+                    return;
+                }
+
+                fieldEl.textContent = currentWish.title || t('wish.placeholder.title');
+            }
+
+            function renderWishMeta() {
+                const metaBlock = document.querySelector('#wishDetailModal .wish-meta-block');
+                const createdEl = document.getElementById('wishCreatedAt');
+                const updatedEl = document.getElementById('wishUpdatedAt');
+                if (!createdEl || !updatedEl || !metaBlock) return;
+
+                const shouldShowMeta = isCurrentListOwner();
+                metaBlock.hidden = !shouldShowMeta;
+                metaBlock.style.display = shouldShowMeta ? '' : 'none';
+                if (!shouldShowMeta) return;
+
+                if (!currentWish) {
+                    createdEl.textContent = '-';
+                    updatedEl.textContent = '-';
+                    return;
+                }
+
+                createdEl.textContent = formatDisplayDate(currentWish.created_at) || '-';
+                updatedEl.textContent = formatDisplayDate(currentWish.updated_at || currentWish.created_at) || '-';
+            }
+
+            function normalizeWishImageURL(value) {
+                const raw = (value ?? '').toString().trim();
+                if (!raw) return '/static/assets/icons/placeholder.svg';
+                const lowered = raw.toLowerCase();
+                if (lowered === 'null' || lowered === 'undefined' || lowered === 'nan') {
+                    return '/static/assets/icons/placeholder.svg';
+                }
+                return raw;
+            }
+
+            function handleWishDetailImagePickerClick(event) {
+                if (!isCurrentListOwner()) {
+                    return;
+                }
+                if (event?.target?.closest('.wish-detail-image-edit-btn, .wish-detail-image-delete-btn')) {
+                    return;
+                }
+                const input = document.getElementById('wishDetailImageInput');
+                if (input) {
+                    input.click();
+                }
+            }
+
+            function handleWishDetailImageEditClick(event) {
+                event?.preventDefault();
+                event?.stopPropagation();
+                event?.stopImmediatePropagation?.();
+                if (!isCurrentListOwner()) {
+                    return;
+                }
+                const input = document.getElementById('wishDetailImageInput');
+                if (input) {
+                    input.click();
+                }
+            }
+
+            function hasWishImage(value = currentWish?.image) {
+                const raw = (value ?? '').toString().trim();
+                if (!raw) return false;
+                const lowered = raw.toLowerCase();
+                return lowered !== 'null' && lowered !== 'undefined' && lowered !== 'nan';
+            }
+
+            function escapeCssUrl(url) {
+                return (url || '').replace(/\\/g, '\\\\').replace(/"/g, '\\"');
+            }
+
+            async function shouldExtendWishImageBackground(imageURL) {
+                if (!hasWishImage(imageURL)) return false;
+
+                const canCache = !imageURL.startsWith('data:');
+                if (canCache && wishImageBackgroundModeCache.has(imageURL)) {
+                    return wishImageBackgroundModeCache.get(imageURL);
+                }
+
+                let shouldExtend = false;
+                try {
+                    const img = await new Promise((resolve, reject) => {
+                        const source = new Image();
+                        source.onload = () => resolve(source);
+                        source.onerror = reject;
+                        source.src = imageURL;
+                    });
+
+                    const sampleSize = 48;
+                    const canvas = document.createElement('canvas');
+                    canvas.width = sampleSize;
+                    canvas.height = sampleSize;
+                    const ctx = canvas.getContext('2d', { willReadFrequently: true });
+                    if (!ctx) {
+                        throw new Error('2d context unavailable');
+                    }
+
+                    ctx.drawImage(img, 0, 0, sampleSize, sampleSize);
+                    const pixels = ctx.getImageData(0, 0, sampleSize, sampleSize).data;
+                    let opaqueCount = 0;
+                    let edgeOpaqueCount = 0;
+                    let edgeCount = 0;
+
+                    for (let y = 0; y < sampleSize; y += 1) {
+                        for (let x = 0; x < sampleSize; x += 1) {
+                            const alpha = pixels[((y * sampleSize + x) * 4) + 3];
+                            const isOpaque = alpha >= 248;
+                            if (isOpaque) {
+                                opaqueCount += 1;
+                            }
+
+                            if (x === 0 || y === 0 || x === sampleSize - 1 || y === sampleSize - 1) {
+                                edgeCount += 1;
+                                if (isOpaque) {
+                                    edgeOpaqueCount += 1;
+                                }
+                            }
+                        }
+                    }
+
+                    const opaqueRatio = opaqueCount / (sampleSize * sampleSize);
+                    const edgeOpaqueRatio = edgeCount ? (edgeOpaqueCount / edgeCount) : 0;
+                    shouldExtend = opaqueRatio > 0.985 && edgeOpaqueRatio > 0.99;
+                } catch (error) {
+                    shouldExtend = false;
+                }
+
+                if (canCache) {
+                    wishImageBackgroundModeCache.set(imageURL, shouldExtend);
+                }
+
+                return shouldExtend;
+            }
+
+            function syncWishImageBackdrop(containerEl, imageURL, hasImage) {
+                if (!containerEl) return;
+                const backdropEl = containerEl.querySelector('.wish-detail-image-backdrop, .wish-card-image-backdrop');
+                containerEl.classList.toggle('has-image', hasImage);
+                containerEl.classList.remove('has-bg-extend');
+                delete containerEl.dataset.backdropToken;
+
+                if (backdropEl) {
+                    backdropEl.style.backgroundImage = '';
+                }
+                if (!hasImage || !backdropEl) return;
+
+                const token = `${Date.now()}-${Math.random()}`;
+                containerEl.dataset.backdropToken = token;
+
+                shouldExtendWishImageBackground(imageURL).then((shouldExtend) => {
+                    if (!containerEl.isConnected) return;
+                    if (containerEl.dataset.backdropToken !== token) return;
+
+                    if (!shouldExtend) {
+                        containerEl.classList.remove('has-bg-extend');
+                        backdropEl.style.backgroundImage = '';
+                        return;
+                    }
+
+                    containerEl.classList.add('has-bg-extend');
+                    backdropEl.style.backgroundImage = `url("${escapeCssUrl(imageURL)}")`;
+                }).catch(() => {
+                    if (!containerEl.isConnected) return;
+                    if (containerEl.dataset.backdropToken !== token) return;
+                    containerEl.classList.remove('has-bg-extend');
+                    backdropEl.style.backgroundImage = '';
+                });
+            }
+
+            function setWishDetailImageSource(value) {
+                const imageEl = document.querySelector('#wishDetailModal .wish-detail-image');
+                const pickerEl = document.querySelector('#wishDetailModal .wish-detail-image-picker');
+                const backdropEl = document.querySelector('#wishDetailModal .wish-detail-image-backdrop');
+                if (!imageEl || !pickerEl) return;
+
+                const hasImage = hasWishImage(value);
+                const imageURL = normalizeWishImageURL(value);
+                imageEl.classList.toggle('has-image', hasImage);
+                syncWishImageBackdrop(pickerEl, imageURL, hasImage);
+
+                imageEl.src = imageURL;
+                imageEl.onerror = function() {
+                    this.classList.remove('has-image');
+                    pickerEl.classList.remove('has-image');
+                    pickerEl.classList.remove('has-bg-extend');
+                    if (backdropEl) {
+                        backdropEl.style.backgroundImage = '';
+                    }
+                    this.src = '/static/assets/icons/placeholder.svg';
+                };
+            }
+
+            function syncWishImageDeleteButton() {
+                const deleteBtn = document.getElementById('wishDetailImageDeleteBtn');
+                if (!deleteBtn) return;
+
+                const visible = hasWishImage();
+                deleteBtn.classList.toggle('hidden', !visible);
+                deleteBtn.setAttribute('aria-hidden', String(!visible));
+            }
+
+            function buildInlineInput(fieldName, value) {
+                if (fieldName === 'price') {
+                    const wrapper = document.createElement('div');
+                    wrapper.className = 'price-group wish-inline-price-group';
+
+                    const input = document.createElement('input');
+                    input.className = 'wish-inline-input';
+                    input.type = 'number';
+                    input.min = '0';
+                    input.step = '1';
+                    input.value = value;
+                    input.addEventListener('keydown', (event) => {
+                        if (event.key === 'Escape') {
+                            event.preventDefault();
+                            cancelInlineEdit(fieldName);
+                        }
+
+                        if (event.key === 'Enter') {
+                            event.preventDefault();
+                            saveInlineEdit(fieldName);
+                        }
+                    });
+
+                    const currencySelectId = 'wishInlineCurrencySelect';
+                    const currentCurrency = currentWish?.currency || 'RUB';
+                    const currentSymbol = getCurrencySymbol(currentCurrency);
+                    const select = document.createElement('div');
+                    select.className = 'custom-select';
+                    select.id = currencySelectId;
+                    select.setAttribute('data-value', currentCurrency);
+                    select.innerHTML = `
+                        <div class="custom-select-trigger" onclick="toggleCustomSelect('${currencySelectId}')">
+                            <span>${currentSymbol}</span>
+                            <svg viewBox="0 0 24 24">
+                                <path d="M7 10l5 5 5-5z"/>
+                            </svg>
+                        </div>
+                        <div class="custom-select-options">
+                            <div class="custom-select-option${currentCurrency === 'RUB' ? ' selected' : ''}" onclick="selectCustomOption('${currencySelectId}', 'RUB', '₽')">₽</div>
+                            <div class="custom-select-option${currentCurrency === 'USD' ? ' selected' : ''}" onclick="selectCustomOption('${currencySelectId}', 'USD', '$')">$</div>
+                            <div class="custom-select-option${currentCurrency === 'EUR' ? ' selected' : ''}" onclick="selectCustomOption('${currencySelectId}', 'EUR', '€')">€</div>
+                        </div>
+                    `;
+
+                    wrapper.appendChild(input);
+                    wrapper.appendChild(select);
+                    return wrapper;
+                }
+
+                const input = fieldName === 'note' ? document.createElement('textarea') : document.createElement('input');
+                input.className = 'wish-inline-input';
+                input.value = value;
+
+                if (fieldName === 'note') {
+                    input.rows = 3;
+                    input.classList.add('wish-inline-input-note');
+                } else if (fieldName === 'link') {
+                    input.type = 'url';
+                } else {
+                    input.type = 'text';
+                }
+
+                input.addEventListener('keydown', (event) => {
+                    if (event.key === 'Escape') {
+                        event.preventDefault();
+                        cancelInlineEdit(fieldName);
+                    }
+
+                    if (event.key === 'Enter' && fieldName !== 'note') {
+                        event.preventDefault();
+                        saveInlineEdit(fieldName);
+                    }
+                });
+
+                return input;
+            }
+
+            function startInlineEdit(fieldName) {
+                if (!isCurrentListOwner()) return;
+                if (!currentWish || inlineEditInitialValues[fieldName] !== undefined) return;
+
+                Object.keys(inlineEditInitialValues).forEach((openedField) => {
+                    if (openedField !== fieldName) {
+                        cancelInlineEdit(openedField);
+                    }
+                });
+
+                const fieldEl = document.getElementById(`wish${getFieldSuffix(fieldName)}`);
+                if (!fieldEl) return;
+
+                inlineEditInitialValues[fieldName] = getWishFieldValue(fieldName);
+                const input = buildInlineInput(fieldName, inlineEditInitialValues[fieldName]);
+                fieldEl.innerHTML = '';
+                fieldEl.appendChild(input);
+
+                setWishFieldActionsEditing(fieldName, true);
+                const focusTarget = input.matches?.('input, textarea') ? input : input.querySelector('input, textarea');
+                focusTarget?.focus();
+                if (typeof focusTarget?.select === 'function' && fieldName !== 'note') {
+                    focusTarget.select();
+                }
+            }
+
+            function cancelInlineEdit(fieldName) {
+                if (!currentWish) return;
+
+                delete inlineEditInitialValues[fieldName];
+                renderWishField(fieldName);
+                setWishFieldActionsEditing(fieldName, false);
+            }
+
+            async function saveInlineEdit(fieldName) {
+                if (!currentWish) return;
+
+                const fieldEl = document.getElementById(`wish${getFieldSuffix(fieldName)}`);
+                const input = fieldEl ? fieldEl.querySelector('input, textarea') : null;
+                if (!input) return;
+
+                const rawValue = input.value.trim();
+                const updateData = {};
+
+                if (fieldName === 'title') {
+                    if (!rawValue) {
+                        showToast(t('list.title.empty'), 'error');
+                        return;
+                    }
+                    updateData.title = rawValue;
+                } else if (fieldName === 'note') {
+                    updateData.notes = rawValue || null;
+                } else if (fieldName === 'price') {
+                    const currencySelect = fieldEl.querySelector('.custom-select');
+                    const selectedCurrency = currencySelect?.getAttribute('data-value') || currentWish.currency || 'RUB';
+                    if (!rawValue) {
+                        updateData.price = null;
+                    } else {
+                        const parsedPrice = Number.parseInt(rawValue, 10);
+                        if (!Number.isFinite(parsedPrice) || parsedPrice < 0) {
+                            showToast(t('wish.validation.priceIntegerNonNegative'), 'error');
+                            return;
+                        }
+                        updateData.price = parsedPrice;
+                    }
+                    updateData.currency = selectedCurrency;
+                } else if (fieldName === 'link') {
+                    updateData.link = rawValue || null;
+                }
+
+                try {
+                    const listId = window.location.pathname.split('/').pop();
+                    await updateWish(listId, currentWish.id, updateData);
+
+                    if (fieldName === 'title') {
+                        currentWish.title = updateData.title;
+                    } else if (fieldName === 'note') {
+                        currentWish.notes = updateData.notes;
+                    } else if (fieldName === 'price') {
+                        currentWish.price = updateData.price;
+                        currentWish.currency = updateData.currency;
+                    } else if (fieldName === 'link') {
+                        currentWish.link = updateData.link;
+                    }
+
+                    delete inlineEditInitialValues[fieldName];
+                    renderWishField(fieldName);
+                    setWishFieldActionsEditing(fieldName, false);
+                    showToast(t('wish.updated'), 'success');
+
+                    const list = await fetchCurrentList();
+                    if (list && list.wishes) {
+                        currentList = list;
+                        allWishes = list.wishes;
+                        currentWish = allWishes.find((wish) => wish.id === currentWish.id) || currentWish;
+                        applyWishesView();
+                        renderWishMeta();
+                    }
+                } catch (error) {
+                    console.error('Failed to update wish:', error);
+                    showToast(t('wish.updateFieldFailed'), 'error');
+                }
+            }
+
+            // Adjust title input width to fit text
+            function adjustTitleWidth() {
+                const input = document.getElementById('listTitle');
+                const wrapper = input ? input.closest('.editable-title') : null;
+                if (!input || !wrapper) return;
+
+                const visibleActionButtons = wrapper.querySelectorAll('.edit-button:not(.hidden)');
+                const actionButtonsWidth = Array.from(visibleActionButtons).reduce((sum, button) => sum + button.getBoundingClientRect().width, 0);
+                const actionsGap = visibleActionButtons.length > 0 ? 12 : 0;
+                const reservedWidth = Math.ceil(actionButtonsWidth + actionsGap + 12);
+                const stableWidth = Math.max(40, Math.floor(wrapper.clientWidth - reservedWidth));
+                input.style.width = `${stableWidth}px`;
+            }
+
+            function setTitleEditingState(isEditing) {
+                const input = document.getElementById('listTitle');
+                const wrapper = input ? input.closest('.editable-title') : null;
+                const saveBtn = document.getElementById('saveTitleBtn');
+                const cancelBtn = document.getElementById('cancelTitleBtn');
+                if (!input || !saveBtn || !cancelBtn) return;
+
+                input.readOnly = !isEditing;
+                if (wrapper) {
+                    wrapper.classList.toggle('is-editing', isEditing);
+                }
+                saveBtn.classList.toggle('hidden', !isEditing);
+                cancelBtn.classList.toggle('hidden', !isEditing);
+                adjustTitleWidth();
+            }
+
+            // Toggle title edit mode
+            function toggleTitleEdit() {
+                if (!isCurrentListOwner()) return;
+                const input = document.getElementById('listTitle');
+                if (!input || !input.readOnly) return;
+
+                originalTitle = input.value;
+                setTitleEditingState(true);
+                input.focus();
+                input.select();
+            }
+
+            // Save title edit
+            async function saveTitleEdit() {
+                if (!isCurrentListOwner()) return;
+                const input = document.getElementById('listTitle');
+                if (!input) return;
+
+                try {
+                    const listId = window.location.pathname.split('/').pop();
+                    const newTitle = input.value.trim();
+
+                    if (!newTitle) {
+                        await showAlert(t('list.title.empty'), t('common.error'));
+                        return;
+                    }
+
+                    await updateList(listId, { title: newTitle });
+                    originalTitle = newTitle;
+
+                    setTitleEditingState(false);
+                    input.blur();
+                } catch (error) {
+                    console.error('Save title error:', error);
+                    await showAlert(t('list.title.saveFailed'), t('common.error'));
+                }
+            }
+
+            // Cancel title edit
+            function cancelTitleEdit() {
+                const input = document.getElementById('listTitle');
+                if (!input) return;
+
+                input.value = originalTitle;
+                setTitleEditingState(false);
+                input.blur();
+            }
+
+            async function copyTextToClipboard(text) {
+                if (navigator.clipboard && window.isSecureContext) {
+                    try {
+                        await navigator.clipboard.writeText(text);
+                        return true;
+                    } catch (error) {
+                        console.warn('Clipboard API failed, fallback to execCommand:', error);
+                    }
+                }
+
+                const textarea = document.createElement('textarea');
+                textarea.value = text;
+                textarea.style.position = 'fixed';
+                textarea.style.opacity = '0';
+                textarea.style.pointerEvents = 'none';
+                document.body.appendChild(textarea);
+                textarea.focus();
+                textarea.select();
+
+                let copied = false;
+                try {
+                    copied = document.execCommand('copy');
+                } finally {
+                    document.body.removeChild(textarea);
+                }
+
+                return copied;
+            }
+
+            // Copy share link
+            async function copyLink() {
+                if (!isCurrentListOwner()) {
+                    const copied = await copyTextToClipboard(window.location.href);
+                    if (!copied) {
+                        showToast(t('list.share.copyFailed'), 'error');
+                        return;
+                    }
+                    showToast(t('list.share.copied'), 'success');
+                    return;
+                }
+                try {
+                    const listId = window.location.pathname.split('/').pop();
+                    let slug = (currentList?.slug || '').toString().trim();
+
+                    if (!slug) {
+                        const list = await fetchCurrentList();
+                        if (list) {
+                            currentList = list;
+                            slug = (list.slug || '').toString().trim();
+                        }
+                    }
+
+                    if (!slug) {
+                        const rotated = await rotateSharedLink(listId);
+                        const newSlug = (rotated?.slug || '').toString().trim();
+                        if (newSlug) {
+                            slug = newSlug;
+                            currentList = { ...(currentList || {}), slug };
+                        }
+                    }
+
+                    if (!slug) {
+                        showToast(t('list.share.missing'), 'error');
+                        return;
+                    }
+
+                    const shareUrl = `${window.location.origin}/shared/${slug}`;
+                    const copied = await copyTextToClipboard(shareUrl);
+                    if (!copied) {
+                        throw new Error('copy failed');
+                    }
+                    showToast(t('list.share.copied'), 'success');
+                } catch (error) {
+                    console.error('Copy link error:', error);
+                    showToast(t('list.share.copyFailed'), 'error');
+                }
+            }
+
+            // Generate new share link
+            async function generateNewLink() {
+                if (!isCurrentListOwner()) return;
+                const confirmed = await showConfirm(t('list.share.rotateConfirmMessage'), t('list.share.rotateConfirmTitle'));
+                if (!confirmed) return;
+
+                try {
+                    const listId = window.location.pathname.split('/').pop();
+                    const result = await rotateSharedLink(listId);
+
+                    if (result) {
+                        if (result.slug) {
+                            currentList = { ...(currentList || {}), slug: result.slug };
+                        }
+                        showToast(t('list.share.rotated'), 'success');
+                    }
+                } catch (error) {
+                    console.error('Generate link error:', error);
+                    showToast(t('list.share.rotateFailed'), 'error');
+                }
+            }
+
+            // Toggle privacy
+            async function togglePrivacy() {
+                if (!isCurrentListOwner()) return;
+                try {
+                    const listId = window.location.pathname.split('/').pop();
+                    const list = await fetchCurrentList();
+
+                    if (!list) {
+                        showToast(t('list.loadFailed'), 'error');
+                        return;
+                    }
+                    currentList = list;
+
+                    const newIsPublic = !list.is_public;
+                    const result = await updateList(listId, { is_public: newIsPublic });
+
+                    if (result) {
+                        currentList = { ...(currentList || {}), is_public: newIsPublic };
+                        updatePrivacyButtonState(newIsPublic);
+                        showToast(t('list.privacy.changed'), 'success');
+                    }
+                } catch (error) {
+                    console.error('Toggle privacy error:', error);
+                    showToast(t('list.privacy.changeFailed'), 'error');
+                }
+            }
+
+            // Delete list
+            async function handleDeleteList() {
+                if (!isCurrentListOwner()) return;
+                const confirmed = await showConfirm(t('list.delete.confirmMessage'), t('list.delete.confirmTitle'));
+                if (!confirmed) return;
+
+                try {
+                    const listId = window.location.pathname.split('/').pop();
+                    await deleteList(listId);
+                    if (typeof scheduleFlashToast === 'function') {
+                        scheduleFlashToast(t('list.deleted'), 'success');
+                    }
+                    window.location.href = '/wishlists';
+                } catch (error) {
+                    console.error('Delete list error:', error);
+                    showToast(t('list.deleteFailed'), 'error');
+                }
+            }
+
+            // Open wish detail modal
+            async function openWishDetail(wishId) {
+                try {
+                    const listId = window.location.pathname.split('/').pop();
+                    const list = await fetchCurrentList();
+
+                    if (!list || !list.wishes) return;
+                    currentList = list;
+                    allWishes = list.wishes;
+
+                    currentWish = allWishes.find(w => w.id === wishId);
+                    if (!currentWish) return;
+
+                    setWishDetailImageSource(currentWish.image);
+                    syncWishImageDeleteButton();
+
+                    ['title', 'note', 'price', 'link'].forEach((fieldName) => {
+                        delete inlineEditInitialValues[fieldName];
+                        renderWishField(fieldName);
+                        setWishFieldActionsEditing(fieldName, false);
+                    });
+                    syncOwnerControls();
+                    renderWishMeta();
+
+                    openModal('wishDetailModal');
+                } catch (error) {
+                    console.error('Failed to load wish:', error);
+                    showToast(t('wish.loadFailed'), 'error');
+                }
+            }
+
+            function getWishReservationState(wish) {
+                const isReservedByCurrentUser = Boolean(
+                    wish?.reserved &&
+                    wish?.reserved_by &&
+                    currentUser?.id &&
+                    wish.reserved_by === currentUser.id
+                );
+
+                if (wish?.reserved) {
+                    return {
+                        label: isReservedByCurrentUser ? t('wish.reserve.release') : t('wish.reserve.taken'),
+                        disabled: !isReservedByCurrentUser,
+                        className: isReservedByCurrentUser ? 'is-release' : 'is-taken',
+                        action: isReservedByCurrentUser ? 'release' : 'taken'
+                    };
+                }
+
+                return {
+                    label: t('wish.reserve.action'),
+                    disabled: false,
+                    className: 'is-reserve',
+                    action: 'reserve'
+                };
+            }
+
+            async function handleReserveWish(wishId, event) {
+                event?.preventDefault();
+                event?.stopPropagation();
+                event?.stopImmediatePropagation?.();
+
+                if (isCurrentListOwner()) return;
+
+                const reserveTarget = allWishes.find((wish) => wish.id === wishId);
+                const reservationState = getWishReservationState(reserveTarget);
+                if (!reserveTarget || reservationState.action === 'taken') return;
+
+                const listId = currentList?.id;
+                if (!listId) {
+                    showToast(t('wish.reserve.failed'), 'error');
+                    return;
+                }
+
+                try {
+                    const button = event?.currentTarget;
+                    if (button) {
+                        button.disabled = true;
+                    }
+
+                    if (reservationState.action === 'release') {
+                        await releaseWish(listId, wishId);
+                        showToast(t('wish.reserve.released'), 'success');
+                    } else {
+                        await reserveWish(listId, wishId);
+                        showToast(t('wish.reserve.success'), 'success');
+                    }
+
+                    const list = await fetchCurrentList();
+                    if (list && list.wishes) {
+                        currentList = list;
+                        allWishes = list.wishes;
+                        if (currentWish?.id === wishId) {
+                            currentWish = allWishes.find((wish) => wish.id === wishId) || currentWish;
+                            renderWishMeta();
+                        }
+                        applyWishesView();
+                    }
+                } catch (error) {
+                    console.error('Reserve wish error:', error);
+                    const fallbackMessage = reservationState.action === 'release'
+                        ? t('wish.reserve.releaseFailed')
+                        : t('wish.reserve.failed');
+                    showToast(error.message || fallbackMessage, 'error');
+                    applyWishesView();
+                }
+            }
+
+            // Delete wish
+            async function handleDeleteWish() {
+                if (!isCurrentListOwner()) return;
+                if (!currentWish) return;
+
+                const confirmed = await showConfirm(t('wish.delete.confirmMessage'), t('wish.delete.confirmTitle'));
+                if (!confirmed) return;
+
+                try {
+                    const listId = window.location.pathname.split('/').pop();
+                    await deleteWish(listId, currentWish.id);
+
+                    closeModal('wishDetailModal');
+
+                    // Reload wishes grid
+                    const list = await fetchCurrentList();
+                    if (list && list.wishes) {
+                        currentList = list;
+                        allWishes = list.wishes;
+                        applyWishesView();
+                    }
+                } catch (error) {
+                    console.error('Delete wish error:', error);
+                    await showAlert(t('wish.deleteFailed'), t('common.error'));
+                }
+            }
+
+            // Logout function
+            async function logout() {
+                const confirmed = await showConfirm(t('auth.logoutConfirm'), t('auth.logoutTitle'));
+                if (!confirmed) return;
+
+                try {
+                    const refreshToken = localStorage.getItem('refresh_token');
+                    const accessToken = localStorage.getItem('access_token');
+
+                    if (!refreshToken || !accessToken) {
+                        window.location.href = '/';
+                        return;
+                    }
+
+                    // Call logout API
+                    await fetch('/api/v1/auth/logout', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${accessToken}`
+                        },
+                        body: JSON.stringify({ refresh_token: refreshToken })
+                    });
+
+                    // Clear tokens
+                    localStorage.removeItem('access_token');
+                    localStorage.removeItem('refresh_token');
+
+                    // Redirect to home
+                    window.location.href = '/';
+                } catch (error) {
+                    console.error('Logout error:', error);
+                    await showAlert(t('auth.logoutFailed'), t('common.error'));
+                }
+            }
+
+            // Toggle language menu
+            function toggleLanguageMenu(event) {
+                event.stopPropagation();
+                const menu = document.getElementById('langMenu');
+                menu.classList.toggle('active');
+                closeOtherMenus('langMenu');
+            }
+
+            // Select language
+            function selectLanguage(lang, event) {
+                event?.stopPropagation();
+                const menu = document.getElementById('langMenu');
+                menu.classList.remove('active');
+                setLanguage(lang);
+                if (currentUser) {
+                    renderProfileFields();
+                }
+
+                if (currentList) {
+                    updatePrivacyButtonState(Boolean(currentList.is_public));
+                    allWishes = Array.isArray(currentList.wishes) ? currentList.wishes : [];
+                    applyWishesView();
+                }
+
+                if (currentWish) {
+                    ['title', 'note', 'price', 'link'].forEach(renderWishField);
+                    renderWishMeta();
+                }
+
+                // Update selected item
+                menu.querySelectorAll('.popup-menu-item').forEach(item => {
+                    item.classList.remove('selected');
+                });
+                const selectedItem = event?.target?.closest('.popup-menu-item');
+                if (selectedItem) {
+                    selectedItem.classList.add('selected');
+                }
+            }
+
+            // Toggle theme menu
+            function toggleThemeMenu(event) {
+                event.stopPropagation();
+                const menu = document.getElementById('themeMenu');
+                menu.classList.toggle('active');
+                closeOtherMenus('themeMenu');
+            }
+
+            // Select theme
+            function selectTheme(theme, event) {
+                event?.stopPropagation();
+                const menu = document.getElementById('themeMenu');
+                menu.classList.remove('active');
+                setTheme(theme);
+
+                // Update selected item
+                menu.querySelectorAll('.popup-menu-item').forEach(item => {
+                    item.classList.remove('selected');
+                });
+                const selectedItem = event?.target?.closest('.popup-menu-item');
+                if (selectedItem) {
+                    selectedItem.classList.add('selected');
+                }
+            }
+
+            function detachControlsMenus() {
+                ['sortMenu', 'filterMenu'].forEach((menuId) => {
+                    const menu = document.getElementById(menuId);
+                    if (!menu || menu.dataset.detached === 'true') return;
+                    document.body.appendChild(menu);
+                    menu.dataset.detached = 'true';
+                });
+            }
+
+            function positionControlsMenu(menuId, buttonId) {
+                const menu = document.getElementById(menuId);
+                const button = document.getElementById(buttonId);
+                if (!menu || !button) return;
+
+                const rect = button.getBoundingClientRect();
+                menu.style.position = 'fixed';
+                menu.style.top = `${Math.round(rect.bottom + 8)}px`;
+                menu.style.left = `${Math.round(rect.left)}px`;
+            }
+
+            function syncControlsMenuPositions() {
+                const sortMenu = document.getElementById('sortMenu');
+                const filterMenu = document.getElementById('filterMenu');
+                if (sortMenu?.classList.contains('active')) {
+                    positionControlsMenu('sortMenu', 'sortMenuButton');
+                }
+                if (filterMenu?.classList.contains('active')) {
+                    positionControlsMenu('filterMenu', 'filterMenuButton');
+                }
+            }
+
+            function toggleSortMenu(event) {
+                event?.stopPropagation();
+                const menu = document.getElementById('sortMenu');
+                if (!menu) return;
+                menu.classList.toggle('active');
+                closeOtherMenus('sortMenu');
+                if (menu.classList.contains('active')) {
+                    positionControlsMenu('sortMenu', 'sortMenuButton');
+                }
+            }
+
+            function applySort(sortType, event) {
+                event?.stopPropagation();
+                const menu = document.getElementById('sortMenu');
+                if (!menu) return;
+
+                activeWishSort = sortType;
+                menu.querySelectorAll('.popup-menu-item').forEach((item) => item.classList.remove('selected'));
+                const selectedItem = event?.target?.closest('.popup-menu-item');
+                if (selectedItem) {
+                    selectedItem.classList.add('selected');
+                }
+                menu.classList.remove('active');
+                applyWishesView();
+            }
+
+            function toggleFilterMenu(event) {
+                event?.stopPropagation();
+                const menu = document.getElementById('filterMenu');
+                if (!menu) return;
+                menu.classList.toggle('active');
+                closeOtherMenus('filterMenu');
+                if (menu.classList.contains('active')) {
+                    positionControlsMenu('filterMenu', 'filterMenuButton');
+                }
+            }
+
+            function applyFilter(filterType, event) {
+                event?.stopPropagation();
+                const menu = document.getElementById('filterMenu');
+                if (!menu) return;
+
+                activeWishFilter = filterType;
+                menu.querySelectorAll('.popup-menu-item').forEach((item) => item.classList.remove('selected'));
+                const selectedItem = event?.target?.closest('.popup-menu-item');
+                if (selectedItem) {
+                    selectedItem.classList.add('selected');
+                }
+                menu.classList.remove('active');
+                applyWishesView();
+            }
+
+            // Close other menus
+            function closeOtherMenus(exceptId) {
+                const menus = ['langMenu', 'themeMenu', 'sortMenu', 'filterMenu'];
+                menus.forEach(menuId => {
+                    const menu = document.getElementById(menuId);
+                    if (menu && menuId !== exceptId) {
+                        menu.classList.remove('active');
+                    }
+                });
+            }
+
+            // Close all menus on outside click
+            document.addEventListener('click', () => {
+                closeOtherMenus(null);
+            });
+
+            function resetWishCreateForm(form) {
+                form.reset();
+
+                const imageInput = document.getElementById('addWishImageInput');
+                if (imageInput) {
+                    imageInput.value = '';
+                }
+
+                const preview = document.getElementById('wishImagePreview');
+                if (preview) {
+                    preview.src = '';
+                    preview.style.display = 'none';
+                    const placeholder = preview.parentElement.querySelector('.file-input-placeholder');
+                    if (placeholder) {
+                        placeholder.style.display = 'flex';
+                    }
+                }
+            }
+
+            // Handle create wish
+            async function handleCreateWish(event) {
+                event.preventDefault();
+                if (!isCurrentListOwner()) return;
+
+                const form = event.target;
+                const formData = new FormData(form);
+
+                const listId = window.location.pathname.split('/').pop();
+                const title = (formData.get('title') || '').toString().trim();
+                const notes = (formData.get('note') || '').toString().trim();
+                const link = (formData.get('link') || '').toString().trim();
+                const rawPrice = (formData.get('price') || '').toString().trim();
+
+                if (!title) {
+                    showToast(t('wish.validation.titleRequired'), 'error');
+                    return;
+                }
+
+                const wishData = {
+                    title,
+                    currency: document.getElementById('currencySelect').getAttribute('data-value') || 'RUB'
+                };
+
+                if (notes) {
+                    wishData.notes = notes;
+                }
+
+                if (link) {
+                    wishData.link = link;
+                }
+
+                if (rawPrice) {
+                    const parsedPrice = Number.parseInt(rawPrice, 10);
+                    if (!Number.isFinite(parsedPrice) || parsedPrice < 0) {
+                        showToast(t('wish.validation.priceIntegerNonNegative'), 'error');
+                        return;
+                    }
+                    wishData.price = parsedPrice;
+                }
+
+                try {
+                    const result = await createWish(listId, wishData);
+                    if (result) {
+                        const imageFileInput = document.getElementById('addWishImageInput');
+                        const imageFile = imageFileInput ? imageFileInput.files[0] : null;
+                        if (imageFile) {
+                            try {
+                                await uploadWishImage(listId, result.id, imageFile);
+                            } catch (uploadError) {
+                                console.error('Create wish image upload error:', uploadError);
+                                showToast(t('wish.createdImageUploadFailed'), 'error');
+                            }
+                        }
+
+                        modalHasChanges = false;
+                        closeModal('addWishModal');
+                        resetWishCreateForm(form);
+                        showToast(t('wish.created'), 'success');
+
+                        const list = await fetchCurrentList();
+                        if (list && list.wishes) {
+                            currentList = list;
+                            allWishes = list.wishes;
+                            applyWishesView();
+                        }
+                    }
+                } catch (error) {
+                    console.error('Create wish error:', error);
+                    showToast(error.message || t('wish.createFailed'), 'error');
+                }
+            }
+
+            // Handle wish image change
+            async function handleWishImageChange(event) {
+                if (!isCurrentListOwner()) return;
+                if (!currentWish) return;
+
+                const file = event.target.files[0];
+                if (!file) return;
+
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    setWishDetailImageSource(e.target.result);
+                };
+                reader.readAsDataURL(file);
+
+                try {
+                    const listId = window.location.pathname.split('/').pop();
+                    const result = await uploadWishImage(listId, currentWish.id, file);
+                    if (result && result.image) {
+                        currentWish.image = result.image;
+                        setWishDetailImageSource(currentWish.image);
+                        syncWishImageDeleteButton();
+                        showToast(t('wish.image.updated'), 'success');
+
+                        const list = await fetchCurrentList();
+                        if (list && list.wishes) {
+                            currentList = list;
+                            allWishes = list.wishes;
+                            currentWish = allWishes.find((wish) => wish.id === currentWish.id) || currentWish;
+                            applyWishesView();
+                            renderWishMeta();
+                        }
+                    }
+                } catch (error) {
+                    console.error('Image upload error:', error);
+                    showToast(error.message || t('wish.image.updateFailed'), 'error');
+                } finally {
+                    event.target.value = '';
+                }
+            }
+
+            async function handleWishImageDelete(event) {
+                event?.preventDefault();
+                event?.stopPropagation();
+                event?.stopImmediatePropagation?.();
+                if (!isCurrentListOwner()) return;
+                if (!currentWish || !hasWishImage()) return;
+
+                const confirmed = await showConfirm(t('wish.image.deleteConfirm'), t('wish.image.deleteTitle'));
+                if (!confirmed) return;
+
+                try {
+                    const listId = window.location.pathname.split('/').pop();
+                    await updateWish(listId, currentWish.id, { image: '' });
+
+                    currentWish.image = '';
+                    setWishDetailImageSource('');
+                    syncWishImageDeleteButton();
+                    showToast(t('wish.image.deleted'), 'success');
+
+                    const list = await fetchCurrentList();
+                    if (list && list.wishes) {
+                        currentList = list;
+                        allWishes = list.wishes;
+                        currentWish = allWishes.find((wish) => wish.id === currentWish.id) || currentWish;
+                        applyWishesView();
+                        renderWishMeta();
+                    }
+                } catch (error) {
+                    console.error('Image delete error:', error);
+                    showToast(error.message || t('wish.image.deleteFailed'), 'error');
+                }
+            }
+
+            // Track modal changes
+            function initDynamicCardGlow(containerSelector, cardSelector) {
+                if (window.__surfaceGlowUnified) return;
+                if (window.matchMedia('(pointer: coarse)').matches) return;
+
+                const container = document.querySelector(containerSelector);
+                if (!container) return;
+
+                const MAX_DISTANCE = 240;
+                const BORDER_GLOW_DISTANCE = 48;
+                let cards = [];
+                let mouseX = -9999;
+                let mouseY = -9999;
+                let rafScheduled = false;
+
+                function refreshCards() {
+                    cards = Array.from(container.querySelectorAll(cardSelector));
+                }
+
+                function distanceToRect(x, y, rect) {
+                    const dx = Math.max(rect.left - x, 0, x - rect.right);
+                    const dy = Math.max(rect.top - y, 0, y - rect.bottom);
+                    return Math.sqrt(dx * dx + dy * dy);
+                }
+
+                function distanceToRectSurface(x, y, rect) {
+                    if (x >= rect.left && x <= rect.right && y >= rect.top && y <= rect.bottom) {
+                        const distToLeft = x - rect.left;
+                        const distToRight = rect.right - x;
+                        const distToTop = y - rect.top;
+                        const distToBottom = rect.bottom - y;
+                        return Math.min(distToLeft, distToRight, distToTop, distToBottom);
+                    }
+
+                    const dx = Math.max(rect.left - x, 0, x - rect.right);
+                    const dy = Math.max(rect.top - y, 0, y - rect.bottom);
+                    return Math.sqrt(dx * dx + dy * dy);
+                }
+
+                function resetGlow() {
+                    cards.forEach((card) => {
+                        card.style.setProperty('--glow-opacity', '0');
+                        card.style.setProperty('--border-glow-intensity', '0');
+                    });
+                }
+
+                function updateGlow() {
+                    rafScheduled = false;
+                    if (!cards.length) return;
+
+                    cards.forEach((card) => {
+                        const rect = card.getBoundingClientRect();
+                        const relativeX = mouseX - rect.left;
+                        const relativeY = mouseY - rect.top;
+                        const distance = distanceToRect(mouseX, mouseY, rect);
+                        const surfaceDistance = distanceToRectSurface(mouseX, mouseY, rect);
+                        const glowOpacity = Math.max(0, 1 - (distance / MAX_DISTANCE));
+                        const borderGlow = surfaceDistance <= BORDER_GLOW_DISTANCE
+                            ? Math.max(0, 1 - (surfaceDistance / BORDER_GLOW_DISTANCE))
+                            : 0;
+
+                        card.style.setProperty('--mouse-x', `${relativeX}px`);
+                        card.style.setProperty('--mouse-y', `${relativeY}px`);
+                        card.style.setProperty('--glow-opacity', glowOpacity.toFixed(3));
+                        card.style.setProperty('--border-glow-intensity', borderGlow.toFixed(3));
+                    });
+                }
+
+                refreshCards();
+                const observer = new MutationObserver(refreshCards);
+                observer.observe(container, { childList: true, subtree: true });
+
+                document.addEventListener('mousemove', (event) => {
+                    mouseX = event.clientX;
+                    mouseY = event.clientY;
+
+                    if (!rafScheduled) {
+                        rafScheduled = true;
+                        window.requestAnimationFrame(updateGlow);
+                    }
+                });
+
+                document.addEventListener('mouseleave', resetGlow);
+            }
+
+            document.addEventListener('DOMContentLoaded', async () => {
+                trackModalChanges('addWishModal');
+                initDynamicCardGlow('#wishesGrid', '.wish-card');
+                detachControlsMenus();
+                window.addEventListener('resize', syncControlsMenuPositions);
+                window.addEventListener('scroll', syncControlsMenuPositions, true);
+
+                // Adjust title width on load
+                adjustTitleWidth();
+                window.addEventListener('resize', adjustTitleWidth);
+                if (document.fonts && document.fonts.ready) {
+                    document.fonts.ready.then(adjustTitleWidth).catch(() => {});
+                }
+
+                // Load list data
+                try {
+                    currentUser = await getCurrentUser();
+                } catch (error) {
+                    console.warn('Failed to load current user:', error);
+                }
+
+                try {
+                    const list = await fetchCurrentList();
+
+                    if (list) {
+                        currentList = list;
+                        allWishes = Array.isArray(list.wishes) ? list.wishes : [];
+                        // Update title
+                        document.getElementById('listTitle').value = list.title;
+                        adjustTitleWidth();
+
+                        // Update privacy button text
+                        updatePrivacyButtonState(list.is_public);
+
+                        applyWishesView();
+                    }
+                } catch (error) {
+                    console.error('Failed to load list:', error);
+                    await showAlert(t('list.loadFailed'), t('common.error'));
+                }
+            });
+
+            function applyWishesView() {
+                let visible = [...allWishes];
+
+                if (activeWishFilter === 'with-image') {
+                    visible = visible.filter((wish) => hasWishImage(wish.image));
+                } else if (activeWishFilter === 'without-image') {
+                    visible = visible.filter((wish) => !hasWishImage(wish.image));
+                } else if (activeWishFilter === 'with-notes') {
+                    visible = visible.filter((wish) => Boolean((wish.notes || '').toString().trim()));
+                } else if (activeWishFilter === 'without-notes') {
+                    visible = visible.filter((wish) => !(wish.notes || '').toString().trim());
+                }
+
+                if (activeWishSort === 'date-desc') {
+                    visible.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+                } else if (activeWishSort === 'date-asc') {
+                    visible.sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
+                } else if (activeWishSort === 'name-asc') {
+                    visible.sort((a, b) => (a.title || '').localeCompare(b.title || ''));
+                } else if (activeWishSort === 'name-desc') {
+                    visible.sort((a, b) => (b.title || '').localeCompare(a.title || ''));
+                } else if (activeWishSort === 'updated-desc') {
+                    visible.sort((a, b) => new Date(b.updated_at || b.created_at) - new Date(a.updated_at || a.created_at));
+                } else if (activeWishSort === 'updated-asc') {
+                    visible.sort((a, b) => new Date(a.updated_at || a.created_at) - new Date(b.updated_at || b.created_at));
+                } else if (activeWishSort === 'price-desc') {
+                    visible.sort((a, b) => (Number(b.price) || 0) - (Number(a.price) || 0));
+                } else if (activeWishSort === 'price-asc') {
+                    visible.sort((a, b) => (Number(a.price) || 0) - (Number(b.price) || 0));
+                }
+
+                renderWishes(visible);
+            }
+
+            // Render wishes grid
+            function renderWishes(wishes) {
+                const grid = document.getElementById('wishesGrid');
+                grid.innerHTML = '';
+                const safeWishes = Array.isArray(wishes) ? wishes : [];
+
+                if (safeWishes.length === 0) {
+                    const emptyState = document.createElement('div');
+                    emptyState.className = 'empty-state wishes-empty-state';
+                    emptyState.innerHTML = `
+                        <p data-i18n="list.emptyAction">${t('list.emptyAction')}</p>
+                    `;
+                    grid.appendChild(emptyState);
+                    return;
+                }
+
+                safeWishes.forEach(wish => {
+                    const card = document.createElement('div');
+                    card.className = 'wish-card';
+                    card.onclick = () => openWishDetail(wish.id);
+
+                    const price = formatWishPrice(wish.price, wish.currency);
+                    const reservationState = getWishReservationState(wish);
+                    const reserveButton = !isCurrentListOwner()
+                        ? `
+                            <button
+                                type="button"
+                                class="wish-card-reserve-btn ${reservationState.className}"
+                                onclick="handleReserveWish('${wish.id}', event)"
+                                ${reservationState.disabled ? 'disabled' : ''}
+                            >
+                                ${reservationState.label}
+                            </button>
+                        `
+                        : '';
+
+                    card.innerHTML = `
+                        <div class="wish-card-image-wrap">
+                            <div class="wish-card-image-backdrop" aria-hidden="true"></div>
+                            <img alt="${wish.title}" class="wish-card-image">
+                        </div>
+                        <div class="wish-card-content">
+                            <h3 class="wish-card-title">${wish.title}</h3>
+                            ${wish.notes ? `<p class="wish-card-note">${wish.notes}</p>` : ''}
+                            ${price ? `<div class="wish-card-price">${price}</div>` : ''}
+                            ${reserveButton}
+                        </div>
+                    `;
+
+                    const imageWrapEl = card.querySelector('.wish-card-image-wrap');
+                    const imageEl = card.querySelector('.wish-card-image');
+                    if (imageWrapEl && imageEl) {
+                        const hasImage = hasWishImage(wish.image);
+                        const imageURL = normalizeWishImageURL(wish.image);
+                        imageEl.classList.toggle('has-image', hasImage);
+                        syncWishImageBackdrop(imageWrapEl, imageURL, hasImage);
+                        imageEl.src = imageURL;
+                        imageEl.onerror = function() {
+                            this.classList.remove('has-image');
+                            imageWrapEl.classList.remove('has-image');
+                            imageWrapEl.classList.remove('has-bg-extend');
+                            const backdropEl = imageWrapEl.querySelector('.wish-card-image-backdrop');
+                            if (backdropEl) {
+                                backdropEl.style.backgroundImage = '';
+                            }
+                            this.src = '/static/assets/icons/placeholder.svg';
+                        };
+                    }
+
+                    grid.appendChild(card);
+                });
+            }
+
+            // Get currency symbol
+            function formatWishPrice(price, currency) {
+                if (price == null || price === '' || !currency) return '';
+                return `${price} ${getCurrencySymbol(currency)}`;
+            }
+
+            function getCurrencySymbol(currency) {
+                const symbols = {
+                    'RUB': '₽',
+                    'USD': '$',
+                    'EUR': '€'
+                };
+                return symbols[currency] || currency;
+            }
+        </script>
+    </body>
+</html>
+{{end}}

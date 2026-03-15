@@ -1,0 +1,1503 @@
+{{define "wishes"}}
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <title>My wishlists</title>
+        {{template "head"}}
+    </head>
+    <body class="page-wishlists" data-viewed-username="{{with .viewed_username}}{{.}}{{end}}">
+        <!-- Gradient blob for liquid glass effect -->
+        <div class="gradient-blob"></div>
+
+        <!-- FAB: Language toggle (left) -->
+        <button class="fab fab-left" onclick="toggleLanguageMenu(event)" title="Toggle Language">
+            <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path d="M12.87 15.07l-2.54-2.51.03-.03c1.74-1.94 2.98-4.17 3.71-6.53H17V4h-7V2H8v2H1v1.99h11.17C11.5 7.92 10.44 9.75 9 11.35 8.07 10.32 7.3 9.19 6.69 8h-2c.73 1.63 1.73 3.17 2.98 4.56l-5.09 5.02L4 19l5-5 3.11 3.11.76-2.04zM18.5 10h-2L12 22h2l1.12-3h4.75L21 22h2l-4.5-12zm-2.62 7l1.62-4.33L19.12 17h-3.24z"/>
+            </svg>
+            <!-- Language popup menu -->
+            <div class="popup-menu" id="langMenu">
+                <div class="popup-menu-item selected" onclick="selectLanguage('ru', event)">
+                    <span>Русский</span>
+                    <svg class="checkmark" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
+                    </svg>
+                </div>
+                <div class="popup-menu-item" onclick="selectLanguage('en', event)">
+                    <span>English</span>
+                    <svg class="checkmark" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
+                    </svg>
+                </div>
+            </div>
+        </button>
+
+        <!-- Header -->
+        <header class="header">
+            <!-- Left side: Logo and title -->
+            <a href="/" class="header-left">
+                <img src="/static/assets/images/wishlist.png" alt="Wishlist Logo" class="header-logo">
+                <span class="header-title" data-i18n="home.title">Wishlist</span>
+            </a>
+
+            <!-- Right side: Profile and Logout buttons -->
+            <div class="header-right">
+                <button class="fab-small" title="Find user" onclick="openFindUserModal()">
+                    <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0 0 16 9.5 6.5 6.5 0 1 0 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79L19 20.49 20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/>
+                    </svg>
+                </button>
+                <button class="fab-small profile-btn" title="Profile" onclick="openProfileModal()">
+                    <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
+                    </svg>
+                </button>
+                <button class="fab-small logout-btn" title="Logout" onclick="logout()">
+                    <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M17 7l-1.41 1.41L18.17 11H8v2h10.17l-2.58 2.58L17 17l5-5zM4 5h8V3H4c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h8v-2H4V5z"/>
+                    </svg>
+                </button>
+            </div>
+        </header>
+
+        <!-- FAB: Theme toggle (right) -->
+        <button class="fab fab-right" onclick="toggleThemeMenu(event)" title="Toggle Theme">
+            <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path d="M12 3c-4.97 0-9 4.03-9 9s4.03 9 9 9 9-4.03 9-9c0-.46-.04-.92-.1-1.36-.98 1.37-2.58 2.26-4.4 2.26-2.98 0-5.4-2.42-5.4-5.4 0-1.81.89-3.42 2.26-4.4-.44-.06-.9-.1-1.36-.1z"/>
+            </svg>
+            <!-- Theme popup menu -->
+            <div class="popup-menu" id="themeMenu">
+                <div class="popup-menu-item" onclick="selectTheme('light', event)">
+                    <span data-i18n="theme.light">Светлая</span>
+                    <svg class="checkmark" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
+                    </svg>
+                </div>
+                <div class="popup-menu-item selected" onclick="selectTheme('system', event)">
+                    <span data-i18n="theme.system">Системная</span>
+                    <svg class="checkmark" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
+                    </svg>
+                </div>
+                <div class="popup-menu-item" onclick="selectTheme('dark', event)">
+                    <span data-i18n="theme.dark">Тёмная</span>
+                    <svg class="checkmark" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
+                    </svg>
+                </div>
+            </div>
+        </button>
+
+        <!-- Main content -->
+        <div class="container">
+            <!-- Page title -->
+            <div class="page-header">
+                <a href="/wishlists" class="back-button" id="publicListsBackLink" hidden>
+                    <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M20 11H7.83l5.58-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20z"/>
+                    </svg>
+                    <span data-i18n="users.publicLists.back">К моим вишлистам</span>
+                </a>
+                <h1 class="page-title" id="listsPageTitle" data-i18n="lists.title">Мои вишлисты</h1>
+            </div>
+
+            <!-- Controls: Sort, Filter, Search -->
+            <div class="controls">
+                <div class="controls-actions">
+                    <div class="controls-menu-anchor">
+                        <button id="sortMenuButton" class="fab-small" title="Sort" onclick="toggleSortMenu(event)">
+                            <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M3 18h6v-2H3v2zM3 6v2h18V6H3zm0 7h12v-2H3v2z"/>
+                            </svg>
+                        </button>
+                        <!-- Sort popup menu -->
+                        <div class="popup-menu glow-popup-menu" id="sortMenu">
+                            <div class="popup-menu-item selected" onclick="applySort('date-desc', event)">
+                                <span data-i18n="lists.sort.newFirst">Сначала новые</span>
+                                <svg class="checkmark" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                    <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
+                                </svg>
+                            </div>
+                            <div class="popup-menu-item" onclick="applySort('date-asc', event)">
+                                <span data-i18n="lists.sort.oldFirst">Сначала старые</span>
+                                <svg class="checkmark" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                    <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
+                                </svg>
+                            </div>
+                            <div class="popup-menu-item" onclick="applySort('name-asc', event)">
+                                <span data-i18n="lists.sort.nameAsc">По имени (А-Я)</span>
+                                <svg class="checkmark" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                    <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
+                                </svg>
+                            </div>
+                            <div class="popup-menu-item" onclick="applySort('name-desc', event)">
+                                <span data-i18n="lists.sort.nameDesc">По имени (Я-А)</span>
+                                <svg class="checkmark" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                    <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
+                                </svg>
+                            </div>
+                            <div class="popup-menu-item" onclick="applySort('updated-desc', event)">
+                                <span data-i18n="lists.sort.updatedDesc">По обновлению (новые)</span>
+                                <svg class="checkmark" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                    <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
+                                </svg>
+                            </div>
+                            <div class="popup-menu-item" onclick="applySort('updated-asc', event)">
+                                <span data-i18n="lists.sort.updatedAsc">По обновлению (старые)</span>
+                                <svg class="checkmark" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                    <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
+                                </svg>
+                            </div>
+                            <div class="popup-menu-item" onclick="applySort('wishes-desc', event)">
+                                <span data-i18n="lists.sort.wishesDesc">По количеству желаний (убыв.)</span>
+                                <svg class="checkmark" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                    <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
+                                </svg>
+                            </div>
+                            <div class="popup-menu-item" onclick="applySort('wishes-asc', event)">
+                                <span data-i18n="lists.sort.wishesAsc">По количеству желаний (возр.)</span>
+                                <svg class="checkmark" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                    <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
+                                </svg>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="controls-menu-anchor">
+                        <button id="filterMenuButton" class="fab-small" title="Filter" onclick="toggleFilterMenu(event)">
+                            <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M10 18h4v-2h-4v2zM3 6v2h18V6H3zm3 7h12v-2H6v2z"/>
+                            </svg>
+                        </button>
+                        <!-- Filter popup menu -->
+                        <div class="popup-menu glow-popup-menu" id="filterMenu">
+                            <div class="popup-menu-item selected" onclick="applyFilter('all', event)">
+                                <span data-i18n="lists.filter.all">Все списки</span>
+                                <svg class="checkmark" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                    <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
+                                </svg>
+                            </div>
+                            <div class="popup-menu-item" id="filterPublicItem" onclick="applyFilter('public', event)">
+                                <span data-i18n="lists.filter.public">Публичные</span>
+                                <svg class="checkmark" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                    <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
+                                </svg>
+                            </div>
+                            <div class="popup-menu-item" id="filterPrivateItem" onclick="applyFilter('private', event)">
+                                <span data-i18n="lists.filter.private">Приватные</span>
+                                <svg class="checkmark" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                    <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
+                                </svg>
+                            </div>
+                            <div class="popup-menu-item" onclick="applyFilter('empty', event)">
+                                <span data-i18n="lists.filter.empty">Пустые</span>
+                                <svg class="checkmark" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                    <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
+                                </svg>
+                            </div>
+                            <div class="popup-menu-item" onclick="applyFilter('not-empty', event)">
+                                <span data-i18n="lists.filter.notEmpty">Непустые</span>
+                                <svg class="checkmark" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                    <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
+                                </svg>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="search-container">
+                    <input id="listsSearchInput" type="text" class="search-input" data-i18n-placeholder="lists.search" placeholder="Поиск..." oninput="handleSearch(event)">
+                    <svg class="search-icon" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/>
+                    </svg>
+                    <button id="clearSearchBtn" class="search-clear-btn" title="Clear search" aria-label="Clear search" onclick="clearSearch(event)">
+                        <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Lists grid -->
+            <div class="lists-grid" id="listsGrid">
+                <!-- Lists will be populated dynamically -->
+            </div>
+        </div>
+
+        <button class="fab-create" id="createListButton" title="Create list" onclick="openModal('createListModal')">
+            <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/>
+            </svg>
+        </button>
+
+        <!-- Create List Modal -->
+        <div class="modal-overlay" id="createListModal">
+            <div class="modal">
+                <div class="modal-header">
+                    <h2 class="modal-title" data-i18n="lists.create">Создать список</h2>
+                    <button class="modal-close" onclick="closeModal('createListModal')">
+                        <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>
+                        </svg>
+                    </button>
+                </div>
+
+                <form id="createListForm" onsubmit="handleCreateList(event)">
+                    <div class="form-group">
+                        <input type="text" name="name" class="form-input" data-i18n-placeholder="wish.title" required>
+                    </div>
+                    <button type="submit" class="btn form-submit" data-i18n="common.save">Сохранить</button>
+                </form>
+            </div>
+        </div>
+
+        <div class="modal-overlay" id="findUserModal">
+            <div class="modal">
+                <div class="modal-header">
+                    <h2 class="modal-title" data-i18n="users.find.title">Найти пользователя</h2>
+                    <button class="modal-close" onclick="closeModal('findUserModal')">
+                        <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>
+                        </svg>
+                    </button>
+                </div>
+
+                <form id="findUserForm" onsubmit="handleFindUser(event)">
+                    <div class="form-group">
+                        <input type="text" id="findUserInput" name="username" class="form-input" data-i18n-placeholder="users.find.placeholder" oninput="handleFindUserInput(event)" required>
+                    </div>
+                    <button type="submit" class="btn form-submit" data-i18n="users.find.submit">Открыть публичные списки</button>
+                </form>
+                <div class="find-user-results" id="findUserResults" hidden></div>
+            </div>
+        </div>
+
+        <!-- Profile Modal -->
+        <div class="modal-overlay" id="profileModal">
+            <div class="modal">
+                <div class="modal-header">
+                    <h2 class="modal-title" data-i18n="header.profile">Профиль</h2>
+                    <button class="modal-close" onclick="closeModal('profileModal')">
+                        <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>
+                        </svg>
+                    </button>
+                </div>
+
+                <div class="wish-detail">
+                    <!-- Avatar -->
+                    <div class="profile-avatar-wrap" id="profileAvatarWrap">
+                        <div class="profile-avatar" id="profileAvatar" role="button" tabindex="0" aria-label="Change avatar" onclick="triggerAvatarUpload()" onkeydown="handleProfileAvatarKeydown(event)">
+                            <span id="profileInitials">U</span>
+                            <div class="profile-avatar-edit-indicator">
+                                <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                    <path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/>
+                                </svg>
+                            </div>
+                        </div>
+                        <button type="button" class="profile-avatar-delete-btn" id="removeAvatarBtn" onclick="handleAvatarDelete(event)" aria-label="Delete avatar" hidden>
+                            <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>
+                            </svg>
+                        </button>
+                    </div>
+                    <input type="file" id="avatarInput" accept="image/*" style="display: none;" onchange="handleAvatarChange(event)">
+
+                    <!-- Name -->
+                    <div class="wish-field profile-edit-row" id="profileRowName" role="button" tabindex="0" onclick="startProfileInlineEdit('name', event)" onkeydown="handleProfileFieldKeydown(event, 'name')">
+                        <div class="wish-field-content">
+                            <div class="wish-field-label" data-i18n="profile.label.name">Имя</div>
+                            <div class="wish-field-value" id="profileName" data-i18n="common.loading">Загрузка...</div>
+                        </div>
+                        <div class="wish-field-actions profile-inline-actions" id="profileActionsName">
+                            <button type="button" class="icon-button profile-inline-edit" id="editProfileName" onclick="startProfileInlineEdit('name', event)" aria-label="Edit">
+                                <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                    <path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/>
+                                </svg>
+                            </button>
+                            <button type="button" class="icon-button success profile-inline-save hidden" id="saveProfileName" onclick="saveProfileInlineEdit('name', event)" aria-label="Save">
+                                <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                    <path d="M9 16.17l-3.88-3.88L3.7 13.7 9 19l12-12-1.41-1.41z"/>
+                                </svg>
+                            </button>
+                            <button type="button" class="icon-button danger profile-inline-cancel hidden" id="cancelProfileName" onclick="cancelProfileInlineEdit('name', event)" aria-label="Cancel">
+                                <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                    <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Username -->
+                    <div class="wish-field profile-edit-row" id="profileRowUsername" role="button" tabindex="0" onclick="startProfileInlineEdit('username', event)" onkeydown="handleProfileFieldKeydown(event, 'username')">
+                        <div class="wish-field-content">
+                            <div class="wish-field-label" data-i18n="profile.label.username">Username</div>
+                            <div class="wish-field-value" id="profileUsername" data-i18n="common.loading">Загрузка...</div>
+                        </div>
+                        <div class="wish-field-actions profile-inline-actions" id="profileActionsUsername">
+                            <button type="button" class="icon-button profile-inline-edit" id="editProfileUsername" onclick="startProfileInlineEdit('username', event)" aria-label="Edit">
+                                <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                    <path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/>
+                                </svg>
+                            </button>
+                            <button type="button" class="icon-button success profile-inline-save hidden" id="saveProfileUsername" onclick="saveProfileInlineEdit('username', event)" aria-label="Save">
+                                <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                    <path d="M9 16.17l-3.88-3.88L3.7 13.7 9 19l12-12-1.41-1.41z"/>
+                                </svg>
+                            </button>
+                            <button type="button" class="icon-button danger profile-inline-cancel hidden" id="cancelProfileUsername" onclick="cancelProfileInlineEdit('username', event)" aria-label="Cancel">
+                                <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                    <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Email -->
+                    <div class="wish-field profile-edit-row" id="profileRowEmail" role="button" tabindex="0" onclick="startProfileInlineEdit('email', event)" onkeydown="handleProfileFieldKeydown(event, 'email')">
+                        <div class="wish-field-content">
+                            <div class="wish-field-label" data-i18n="profile.label.email">Email</div>
+                            <div class="wish-field-value" id="profileEmail" data-i18n="common.loading">Загрузка...</div>
+                        </div>
+                        <div class="wish-field-actions profile-inline-actions" id="profileActionsEmail">
+                            <button type="button" class="icon-button profile-inline-edit" id="editProfileEmail" onclick="startProfileInlineEdit('email', event)" aria-label="Edit">
+                                <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                    <path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/>
+                                </svg>
+                            </button>
+                            <button type="button" class="icon-button success profile-inline-save hidden" id="saveProfileEmail" onclick="saveProfileInlineEdit('email', event)" aria-label="Save">
+                                <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                    <path d="M9 16.17l-3.88-3.88L3.7 13.7 9 19l12-12-1.41-1.41z"/>
+                                </svg>
+                            </button>
+                            <button type="button" class="icon-button danger profile-inline-cancel hidden" id="cancelProfileEmail" onclick="cancelProfileInlineEdit('email', event)" aria-label="Cancel">
+                                <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                    <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Change password button -->
+                    <button class="btn profile-password-btn" onclick="openModal('changePasswordModal')" style="width: 100%;" data-i18n="profile.changePassword">
+                        Изменить пароль
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Change Password Modal -->
+        <div class="modal-overlay" id="changePasswordModal">
+            <div class="modal change-password-modal">
+                <div class="modal-header">
+                    <h2 class="modal-title" data-i18n="profile.passwordModalTitle">Изменить пароль</h2>
+                    <button class="modal-close" onclick="closeModal('changePasswordModal')">
+                        <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>
+                        </svg>
+                    </button>
+                </div>
+
+                <form id="changePasswordForm" class="change-password-form" onsubmit="handlePasswordChange(event)">
+                    <div class="form-group">
+                        <input type="password" name="old_password" class="form-input" data-i18n-placeholder="profile.password.oldPlaceholder" placeholder="Старый пароль" autocomplete="current-password" required>
+                    </div>
+                    <div class="form-group">
+                        <input type="password" name="new_password" class="form-input" data-i18n-placeholder="profile.password.newPlaceholder" placeholder="Новый пароль" autocomplete="new-password" required>
+                    </div>
+                    <button type="submit" class="btn form-submit profile-password-btn" data-i18n="common.save">Сохранить</button>
+                </form>
+            </div>
+        </div>
+
+        <script>
+            // Open list detail page
+            function openList(listId) {
+                window.location.href = `/wishlist/${listId}`; // Navigate to list detail
+            }
+
+            // Open profile modal
+            let currentUser = null;
+            let viewedUser = null;
+            const viewedUsername = (document.body.dataset.viewedUsername || '').trim();
+            const isPublicUserView = viewedUsername.length > 0;
+            const profileInlineInitialValues = {};
+            let findUserSearchTimer = null;
+            let findUserSearchRequestId = 0;
+            let findUserSearchResults = [];
+
+            function sanitizeUsername(value) {
+                return (value || '').trim().replace(/^@+/, '');
+            }
+
+            function escapeHtml(value) {
+                return (value || '').toString()
+                    .replace(/&/g, '&amp;')
+                    .replace(/</g, '&lt;')
+                    .replace(/>/g, '&gt;')
+                    .replace(/"/g, '&quot;')
+                    .replace(/'/g, '&#39;');
+            }
+
+            function isUserNotFoundError(error) {
+                const message = (error?.message || '').toString().trim().toLowerCase();
+                return message === 'user not found' || message.includes('user not found');
+            }
+
+            function getFindUserResultsContainer() {
+                return document.getElementById('findUserResults');
+            }
+
+            function resetFindUserResults() {
+                findUserSearchResults = [];
+                findUserSearchRequestId += 1;
+                if (findUserSearchTimer) {
+                    window.clearTimeout(findUserSearchTimer);
+                    findUserSearchTimer = null;
+                }
+
+                const container = getFindUserResultsContainer();
+                if (!container) return;
+                container.hidden = true;
+                container.innerHTML = '';
+            }
+
+            async function navigateToFoundUser(user) {
+                if (!user) return;
+
+                if (!currentUser) {
+                    currentUser = await getCurrentUser();
+                }
+
+                closeModal('findUserModal');
+                document.getElementById('findUserForm')?.reset();
+                resetFindUserResults();
+
+                if (currentUser?.id === user.id) {
+                    window.location.href = '/wishlists';
+                    return;
+                }
+
+                window.location.href = `/users/${encodeURIComponent(user.username)}`;
+            }
+
+            function renderFindUserResults(query, users) {
+                const container = getFindUserResultsContainer();
+                if (!container) return;
+
+                container.innerHTML = '';
+                const normalizedQuery = sanitizeUsername(query);
+                if (!normalizedQuery) {
+                    container.hidden = false;
+                    const empty = document.createElement('div');
+                    empty.className = 'find-user-result-empty';
+                    empty.textContent = t('users.find.searchEmpty');
+                    container.appendChild(empty);
+                    return;
+                }
+
+                container.hidden = false;
+                if (!users.length) {
+                    const empty = document.createElement('div');
+                    empty.className = 'find-user-result-empty';
+                    empty.textContent = t('users.find.searchNoResults');
+                    container.appendChild(empty);
+                    return;
+                }
+
+                users.forEach((user) => {
+                    const button = document.createElement('button');
+                    button.type = 'button';
+                    button.className = 'find-user-result-item';
+
+                    const primary = document.createElement('span');
+                    primary.className = 'find-user-result-primary';
+                    primary.textContent = `@${user.username}`;
+
+                    const secondary = document.createElement('span');
+                    secondary.className = 'find-user-result-secondary';
+                    secondary.textContent = user.name?.trim() || t('profile.label.username');
+
+                    button.appendChild(primary);
+                    button.appendChild(secondary);
+                    button.addEventListener('click', () => {
+                        navigateToFoundUser(user).catch((error) => {
+                            console.error('Find user navigation error:', error);
+                            showToast(error.message || t('users.find.failed'), 'error');
+                        });
+                    });
+
+                    container.appendChild(button);
+                });
+            }
+
+            async function runFindUserSearch(query) {
+                const normalizedQuery = sanitizeUsername(query);
+                const requestId = ++findUserSearchRequestId;
+
+                if (!normalizedQuery) {
+                    renderFindUserResults('', []);
+                    return;
+                }
+
+                if (normalizedQuery.length < 2) {
+                    findUserSearchResults = [];
+                    renderFindUserResults(normalizedQuery, []);
+                    return;
+                }
+
+                try {
+                    const users = await searchUsers(normalizedQuery) || [];
+                    if (requestId !== findUserSearchRequestId) return;
+                    findUserSearchResults = users;
+                    renderFindUserResults(normalizedQuery, users);
+                } catch (error) {
+                    if (requestId !== findUserSearchRequestId) return;
+                    console.error('Find user search error:', error);
+                    findUserSearchResults = [];
+                    renderFindUserResults(normalizedQuery, []);
+                }
+            }
+
+            function handleFindUserInput(event) {
+                const query = event?.target?.value || '';
+                if (findUserSearchTimer) {
+                    window.clearTimeout(findUserSearchTimer);
+                }
+                findUserSearchTimer = window.setTimeout(() => {
+                    runFindUserSearch(query);
+                }, 180);
+            }
+
+            function buildPublicListsTitle(username) {
+                return currentLang === 'ru'
+                    ? `Желания @${username}`
+                    : `@${username}'s wishes`;
+            }
+
+            function buildPublicListsTitleMarkup(username) {
+                const safeUsername = escapeHtml(username);
+                return currentLang === 'ru'
+                    ? `Желания <span class="public-user-accent">@${safeUsername}</span>`
+                    : `<span class="public-user-accent">@${safeUsername}</span>'s wishes`;
+            }
+
+            function syncListsPageModeUI() {
+                const backLink = document.getElementById('publicListsBackLink');
+                const title = document.getElementById('listsPageTitle');
+                const createButton = document.getElementById('createListButton');
+                const createModal = document.getElementById('createListModal');
+                const publicItem = document.getElementById('filterPublicItem');
+                const privateItem = document.getElementById('filterPrivateItem');
+
+                if (!isPublicUserView) {
+                    if (backLink) backLink.hidden = true;
+                    if (title) title.textContent = t('lists.title');
+                    if (createButton) createButton.hidden = false;
+                    if (publicItem) publicItem.hidden = false;
+                    if (privateItem) privateItem.hidden = false;
+                    document.title = `${t('lists.title')} - Wishlist`;
+                    return;
+                }
+
+                if (backLink) backLink.hidden = false;
+                if (title) {
+                    title.removeAttribute('data-i18n');
+                    title.innerHTML = buildPublicListsTitleMarkup(viewedUser?.username || viewedUsername);
+                }
+                if (createButton) createButton.hidden = true;
+                if (createModal) closeModal('createListModal');
+                if (publicItem) publicItem.hidden = true;
+                if (privateItem) privateItem.hidden = true;
+                document.title = `${buildPublicListsTitle(viewedUser?.username || viewedUsername)} - Wishlist`;
+            }
+
+            function openFindUserModal() {
+                resetFindUserResults();
+                openModal('findUserModal');
+                window.requestAnimationFrame(() => {
+                    const input = document.getElementById('findUserInput');
+                    input.value = '';
+                    input?.focus();
+                    input?.select?.();
+                    renderFindUserResults('', []);
+                });
+            }
+
+            async function handleFindUser(event) {
+                event.preventDefault();
+
+                const form = event.target;
+                const formData = new FormData(form);
+                const username = sanitizeUsername(formData.get('username'));
+                if (!username) return;
+
+                try {
+                    let user = null;
+
+                    if (username.length < 2) {
+                        user = await getUserByUsername(username);
+                    } else {
+                        const users = findUserSearchResults.length ? findUserSearchResults : (await searchUsers(username) || []);
+                        findUserSearchResults = users;
+                        renderFindUserResults(username, users);
+                        user = users.find((item) => sanitizeUsername(item.username).toLowerCase() === username.toLowerCase()) || null;
+
+                        if (!user && users.length === 1) {
+                            user = users[0];
+                        } else if (!user && users.length > 1) {
+                            showToast(t('users.find.searchChoose'), 'error');
+                            return;
+                        }
+                    }
+
+                    if (!user) {
+                        showToast(t('users.find.notFound'), 'error');
+                        return;
+                    }
+
+                    await navigateToFoundUser(user);
+                } catch (error) {
+                    console.error('Find user error:', error);
+                    showToast(isUserNotFoundError(error) ? t('users.find.notFound') : (error.message || t('users.find.failed')), 'error');
+                }
+            }
+
+            function triggerAvatarUpload() {
+                const avatarInput = document.getElementById('avatarInput');
+                if (avatarInput) {
+                    avatarInput.click();
+                }
+            }
+
+            function handleProfileAvatarKeydown(event) {
+                if (event.key === 'Enter' || event.key === ' ') {
+                    event.preventDefault();
+                    triggerAvatarUpload();
+                }
+            }
+
+            function handleProfileAvatarImageError() {
+                if (!currentUser) return;
+                currentUser = { ...currentUser, avatar: null };
+                renderProfileAvatar();
+            }
+
+            function renderProfileAvatar() {
+                const avatar = document.getElementById('profileAvatar');
+                const avatarWrap = document.getElementById('profileAvatarWrap');
+                const removeAvatarBtn = document.getElementById('removeAvatarBtn');
+                if (!avatar) return;
+
+                const hasAvatar = Boolean(currentUser?.avatar);
+                avatar.classList.toggle('has-image', hasAvatar);
+                if (avatarWrap) {
+                    avatarWrap.classList.toggle('has-avatar', hasAvatar);
+                }
+                if (removeAvatarBtn) {
+                    removeAvatarBtn.hidden = !hasAvatar;
+                    removeAvatarBtn.setAttribute('aria-hidden', String(!hasAvatar));
+                }
+
+                const editIcon = `
+                    <div class="profile-avatar-edit-indicator">
+                        <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/>
+                        </svg>
+                    </div>
+                `;
+
+                if (hasAvatar) {
+                    const avatarUrl = `${currentUser.avatar}${currentUser.avatar.includes('?') ? '&' : '?'}t=${Date.now()}`;
+                    avatar.innerHTML = `<img src="${avatarUrl}" alt="Avatar" onerror="handleProfileAvatarImageError()">${editIcon}`;
+                    return;
+                }
+
+                const initial = (currentUser?.name || currentUser?.username || 'U')[0].toUpperCase();
+                avatar.innerHTML = `<span id="profileInitials">${initial}</span>${editIcon}`;
+            }
+
+            async function handleAvatarDelete(event) {
+                event?.stopPropagation();
+                if (!currentUser?.avatar) return;
+
+                const confirmed = await showConfirm(
+                    t('profile.avatar.removeConfirm'),
+                    t('profile.avatar.removeTitle')
+                );
+                if (!confirmed) return;
+
+                try {
+                    const result = await deleteUserAvatar();
+                    if (!result) {
+                        showToast(t('profile.avatar.removeFailed'), 'error');
+                        return;
+                    }
+
+                    currentUser = { ...currentUser, avatar: null };
+                    renderProfileAvatar();
+                    showToast(t('profile.avatar.removed'), 'success');
+                } catch (error) {
+                    console.error('Avatar delete error:', error);
+                    showToast(error.message || t('profile.avatar.removeFailed'), 'error');
+                }
+            }
+
+            function getProfileFieldSuffix(fieldName) {
+                const suffixes = { name: 'Name', username: 'Username', email: 'Email' };
+                return suffixes[fieldName];
+            }
+
+            function setProfileFieldActionsEditing(fieldName, isEditing) {
+                const suffix = getProfileFieldSuffix(fieldName);
+                if (!suffix) return;
+
+                const row = document.getElementById(`profileRow${suffix}`);
+                const editButton = document.getElementById(`editProfile${suffix}`);
+                const saveButton = document.getElementById(`saveProfile${suffix}`);
+                const cancelButton = document.getElementById(`cancelProfile${suffix}`);
+
+                if (row) row.classList.toggle('editing', isEditing);
+                if (editButton) editButton.classList.toggle('hidden', isEditing);
+                if (saveButton) saveButton.classList.toggle('hidden', !isEditing);
+                if (cancelButton) cancelButton.classList.toggle('hidden', !isEditing);
+            }
+
+            function getProfileEmptyText() {
+                return t('common.notSpecified');
+            }
+
+            function getProfileFieldDisplayValue(fieldName) {
+                const rawValue = (currentUser?.[fieldName] ?? '').toString().trim();
+                return rawValue || getProfileEmptyText();
+            }
+
+            function renderProfileField(fieldName) {
+                const suffix = getProfileFieldSuffix(fieldName);
+                if (!suffix) return;
+
+                const fieldEl = document.getElementById(`profile${suffix}`);
+                if (!fieldEl) return;
+                fieldEl.textContent = getProfileFieldDisplayValue(fieldName);
+            }
+
+            function resetProfileInlineState() {
+                ['name', 'username', 'email'].forEach((fieldName) => {
+                    delete profileInlineInitialValues[fieldName];
+                    setProfileFieldActionsEditing(fieldName, false);
+                });
+            }
+
+            function renderProfileFields() {
+                ['name', 'username', 'email'].forEach(renderProfileField);
+            }
+
+            function handleProfileFieldKeydown(event, fieldName) {
+                if (event.key === 'Enter' || event.key === ' ') {
+                    event.preventDefault();
+                    startProfileInlineEdit(fieldName, event);
+                }
+            }
+
+            function buildProfileInlineInput(fieldName, value) {
+                const input = document.createElement('input');
+                input.className = 'wish-inline-input profile-inline-input';
+                input.type = fieldName === 'email' ? 'email' : 'text';
+                input.value = value;
+
+                input.addEventListener('click', (event) => event.stopPropagation());
+                input.addEventListener('keydown', (event) => {
+                    if (event.key === 'Escape') {
+                        event.preventDefault();
+                        cancelProfileInlineEdit(fieldName, event);
+                    }
+
+                    if (event.key === 'Enter') {
+                        event.preventDefault();
+                        saveProfileInlineEdit(fieldName, event);
+                    }
+                });
+
+                return input;
+            }
+
+            function startProfileInlineEdit(fieldName, event) {
+                event?.stopPropagation();
+                if (!currentUser) return;
+                if (profileInlineInitialValues[fieldName] !== undefined) return;
+
+                Object.keys(profileInlineInitialValues).forEach((openedField) => {
+                    if (openedField !== fieldName) {
+                        cancelProfileInlineEdit(openedField);
+                    }
+                });
+
+                const suffix = getProfileFieldSuffix(fieldName);
+                const fieldEl = document.getElementById(`profile${suffix}`);
+                if (!fieldEl) return;
+
+                const initialValue = (currentUser[fieldName] ?? '').toString();
+                profileInlineInitialValues[fieldName] = initialValue;
+
+                const input = buildProfileInlineInput(fieldName, initialValue);
+                fieldEl.innerHTML = '';
+                fieldEl.appendChild(input);
+
+                setProfileFieldActionsEditing(fieldName, true);
+                input.focus();
+                input.select();
+            }
+
+            function cancelProfileInlineEdit(fieldName, event) {
+                event?.stopPropagation();
+                if (profileInlineInitialValues[fieldName] === undefined) return;
+
+                delete profileInlineInitialValues[fieldName];
+                setProfileFieldActionsEditing(fieldName, false);
+
+                renderProfileField(fieldName);
+            }
+
+            async function saveProfileInlineEdit(fieldName, event) {
+                event?.stopPropagation();
+                if (!currentUser) return;
+                if (profileInlineInitialValues[fieldName] === undefined) return;
+
+                const suffix = getProfileFieldSuffix(fieldName);
+                const fieldEl = document.getElementById(`profile${suffix}`);
+                const input = fieldEl ? fieldEl.querySelector('input') : null;
+                if (!input) {
+                    cancelProfileInlineEdit(fieldName);
+                    return;
+                }
+
+                const initialValue = (profileInlineInitialValues[fieldName] ?? '').toString().trim();
+                const newValue = input.value.trim();
+                if (newValue === initialValue) {
+                    cancelProfileInlineEdit(fieldName);
+                    return;
+                }
+
+                try {
+                    const updateData = {};
+                    updateData[fieldName] = newValue;
+
+                    await updateCurrentUser(updateData);
+                    currentUser[fieldName] = newValue;
+                    delete profileInlineInitialValues[fieldName];
+                    setProfileFieldActionsEditing(fieldName, false);
+
+                    renderProfileField(fieldName);
+                    if (fieldName === 'name') {
+                        renderProfileAvatar();
+                    }
+
+                    showToast(t('profile.updated'), 'success');
+                } catch (error) {
+                    console.error('Update profile error:', error);
+                    showToast(t('profile.updateFailed'), 'error');
+                }
+            }
+
+            async function openProfileModal() {
+                openModal('profileModal');
+
+                try {
+                    currentUser = await getCurrentUser();
+                    if (!currentUser) return;
+
+                    resetProfileInlineState();
+                    renderProfileFields();
+                    renderProfileAvatar();
+                } catch (error) {
+                    console.error('Failed to load profile:', error);
+                    showToast(t('profile.loadFailed'), 'error');
+                }
+            }
+
+            // Handle avatar change
+            async function handleAvatarChange(event) {
+                const file = event.target.files[0];
+                if (!file) return;
+
+                try {
+                    const result = await uploadAvatar(file);
+                    if (result) {
+                        currentUser = result;
+                        renderProfileAvatar();
+                        showToast(t('profile.avatar.updateSuccess'), 'success');
+                    }
+                } catch (error) {
+                    console.error('Avatar upload error:', error);
+                    showToast(error.message || t('profile.avatar.uploadFailed'), 'error');
+                } finally {
+                    event.target.value = '';
+                }
+            }
+
+            // Handle password change
+            async function handlePasswordChange(event) {
+                event.preventDefault(); // Prevent form submission
+
+                const form = event.target;
+                const formData = new FormData(form);
+                const oldPassword = formData.get('old_password');
+                const newPassword = formData.get('new_password');
+
+                try {
+                    await updatePassword(oldPassword, newPassword);
+                    showToast(t('profile.password.changeSuccess'), 'success');
+                    closeModal('changePasswordModal');
+                    form.reset();
+                } catch (error) {
+                    console.error('Password change error:', error);
+                    showToast(error.message || t('profile.password.changeFailed'), 'error');
+                }
+            }
+
+            // Logout function
+            async function logout() {
+                const confirmed = await showConfirm(t('auth.logoutConfirm'), t('auth.logoutTitle')); // Confirm logout
+                if (!confirmed) return; // User cancelled
+
+                try {
+                    const refreshToken = localStorage.getItem('refresh_token'); // Get refresh token
+                    const accessToken = localStorage.getItem('access_token'); // Get access token
+
+                    if (!refreshToken || !accessToken) {
+                        window.location.href = '/'; // No tokens, just redirect
+                        return;
+                    }
+
+                    // Call logout API
+                    const response = await fetch('/api/v1/auth/logout', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${accessToken}`
+                        },
+                        body: JSON.stringify({ refresh_token: refreshToken })
+                    });
+
+                    // Clear tokens
+                    localStorage.removeItem('access_token');
+                    localStorage.removeItem('refresh_token');
+
+                    // Redirect to home
+                    window.location.href = '/';
+                } catch (error) {
+                    console.error('Logout error:', error);
+                    await showAlert(t('auth.logoutFailed'), t('common.error'));
+                }
+            }
+
+            // Toggle language menu
+            function toggleLanguageMenu(event) {
+                event.stopPropagation(); // Prevent event bubbling
+                const menu = document.getElementById('langMenu'); // Get menu element
+                menu.classList.toggle('active'); // Toggle menu visibility
+                closeOtherMenus('langMenu'); // Close other menus
+            }
+
+            // Select language
+            function selectLanguage(lang, event) {
+                event?.stopPropagation();
+                const menu = document.getElementById('langMenu');
+                menu.classList.remove('active'); // Close menu immediately
+                setLanguage(lang); // Apply language
+                if (currentUser) {
+                    renderProfileFields();
+                }
+                syncListsPageModeUI();
+                applyListsView();
+
+                // Update selected item
+                menu.querySelectorAll('.popup-menu-item').forEach(item => {
+                    item.classList.remove('selected');
+                });
+                const selectedItem = event?.target?.closest('.popup-menu-item');
+                if (selectedItem) {
+                    selectedItem.classList.add('selected');
+                }
+            }
+
+            // Toggle theme menu
+            function toggleThemeMenu(event) {
+                event.stopPropagation(); // Prevent event bubbling
+                const menu = document.getElementById('themeMenu'); // Get menu element
+                menu.classList.toggle('active'); // Toggle menu visibility
+                closeOtherMenus('themeMenu'); // Close other menus
+            }
+
+            // Select theme
+            function selectTheme(theme, event) {
+                event?.stopPropagation();
+                const menu = document.getElementById('themeMenu');
+                menu.classList.remove('active'); // Close menu immediately
+                setTheme(theme); // Apply theme
+
+                // Update selected item
+                menu.querySelectorAll('.popup-menu-item').forEach(item => {
+                    item.classList.remove('selected');
+                });
+                const selectedItem = event?.target?.closest('.popup-menu-item');
+                if (selectedItem) {
+                    selectedItem.classList.add('selected');
+                }
+            }
+
+            function detachControlsMenus() {
+                ['sortMenu', 'filterMenu'].forEach((menuId) => {
+                    const menu = document.getElementById(menuId);
+                    if (!menu || menu.dataset.detached === 'true') return;
+                    document.body.appendChild(menu);
+                    menu.dataset.detached = 'true';
+                });
+            }
+
+            function positionControlsMenu(menuId, buttonId) {
+                const menu = document.getElementById(menuId);
+                const button = document.getElementById(buttonId);
+                if (!menu || !button) return;
+
+                const rect = button.getBoundingClientRect();
+                menu.style.position = 'fixed';
+                menu.style.top = `${Math.round(rect.bottom + 8)}px`;
+                menu.style.left = `${Math.round(rect.left)}px`;
+            }
+
+            function syncControlsMenuPositions() {
+                const sortMenu = document.getElementById('sortMenu');
+                const filterMenu = document.getElementById('filterMenu');
+                if (sortMenu?.classList.contains('active')) {
+                    positionControlsMenu('sortMenu', 'sortMenuButton');
+                }
+                if (filterMenu?.classList.contains('active')) {
+                    positionControlsMenu('filterMenu', 'filterMenuButton');
+                }
+            }
+
+            // Toggle sort menu
+            function toggleSortMenu(event) {
+                event.stopPropagation(); // Prevent event bubbling
+                const menu = document.getElementById('sortMenu'); // Get menu element
+                const willOpen = !menu.classList.contains('active');
+                closeOtherMenus('sortMenu'); // Close other menus
+                if (willOpen) {
+                    positionControlsMenu('sortMenu', 'sortMenuButton');
+                }
+                menu.classList.toggle('active', willOpen);
+            }
+
+            // Apply sort
+            function applySort(sortType, event) {
+                event?.stopPropagation();
+                const menu = document.getElementById('sortMenu');
+                menu.classList.remove('active'); // Close menu immediately
+                menu.querySelectorAll('.popup-menu-item').forEach(item => {
+                    item.classList.remove('selected');
+                });
+                const selectedItem = event?.target?.closest('.popup-menu-item');
+                if (selectedItem) {
+                    selectedItem.classList.add('selected');
+                }
+
+                try {
+                    activeSort = sortType;
+                    applyListsView();
+                } catch (error) {
+                    console.error('Sort error:', error);
+                }
+            }
+
+            // Toggle filter menu
+            function toggleFilterMenu(event) {
+                event.stopPropagation(); // Prevent event bubbling
+                const menu = document.getElementById('filterMenu'); // Get menu element
+                const willOpen = !menu.classList.contains('active');
+                closeOtherMenus('filterMenu'); // Close other menus
+                if (willOpen) {
+                    positionControlsMenu('filterMenu', 'filterMenuButton');
+                }
+                menu.classList.toggle('active', willOpen);
+            }
+
+            // Apply filter
+            function applyFilter(filterType, event) {
+                event?.stopPropagation();
+                const menu = document.getElementById('filterMenu');
+                menu.classList.remove('active'); // Close menu immediately
+                menu.querySelectorAll('.popup-menu-item').forEach(item => {
+                    item.classList.remove('selected');
+                });
+                const selectedItem = event?.target?.closest('.popup-menu-item');
+                if (selectedItem) {
+                    selectedItem.classList.add('selected');
+                }
+
+                try {
+                    activeFilter = filterType;
+                    applyListsView();
+                } catch (error) {
+                    console.error('Filter error:', error);
+                }
+            }
+
+            // Close other menus
+            function closeOtherMenus(exceptId) {
+                const menus = ['langMenu', 'themeMenu', 'sortMenu', 'filterMenu']; // All menu IDs
+                menus.forEach(menuId => {
+                    if (menuId !== exceptId) {
+                        document.getElementById(menuId).classList.remove('active'); // Close menu
+                    }
+                });
+            }
+
+            // Close all menus on outside click
+            document.addEventListener('click', () => {
+                closeOtherMenus(null); // Close all menus
+            });
+
+            // Handle create list
+            async function handleCreateList(event) {
+                event.preventDefault();
+
+                const form = event.target;
+                const formData = new FormData(form);
+                const name = formData.get('name');
+
+                try {
+                    const result = await createList(name);
+                    if (!result) {
+                        showToast(t('list.createFailed'), 'error');
+                        return;
+                    }
+
+                    closeModal('createListModal');
+                    form.reset();
+                    allLists = await getUserLists();
+                    applyListsView();
+                    showToast(t('list.created'), 'success');
+                } catch (error) {
+                    console.error('Create list error:', error);
+                    showToast(error.message || t('list.createFailed'), 'error');
+                }
+            }
+
+            // Load lists on page load
+            let allLists = [];
+            let activeSort = 'date-desc';
+            let activeFilter = 'all';
+            let searchQuery = '';
+
+            async function loadListsPageData() {
+                if (!isPublicUserView) {
+                    viewedUser = null;
+                    syncListsPageModeUI();
+                    return await getUserLists() || [];
+                }
+
+                viewedUser = await getUserByUsername(viewedUsername);
+                if (!viewedUser) {
+                    throw new Error(t('users.find.notFound'));
+                }
+
+                syncListsPageModeUI();
+                return await getPublicListsByUserId(viewedUser.id) || [];
+            }
+
+            function getListWishCount(list) {
+                if (!list) return 0;
+                if (typeof list.wishes_count === 'number') return list.wishes_count;
+                if (Array.isArray(list.wishes)) return list.wishes.length;
+                return 0;
+            }
+
+            function applyListsView() {
+                let visible = [...allLists];
+
+                if (isPublicUserView && (activeFilter === 'public' || activeFilter === 'private')) {
+                    activeFilter = 'all';
+                }
+
+                if (activeFilter === 'public') {
+                    visible = visible.filter(list => list.is_public);
+                } else if (activeFilter === 'private') {
+                    visible = visible.filter(list => !list.is_public);
+                } else if (activeFilter === 'empty') {
+                    visible = visible.filter(list => getListWishCount(list) === 0);
+                } else if (activeFilter === 'not-empty') {
+                    visible = visible.filter(list => getListWishCount(list) > 0);
+                }
+
+                if (searchQuery) {
+                    visible = visible.filter(list =>
+                        list.title.toLowerCase().includes(searchQuery)
+                    );
+                }
+
+                if (activeSort === 'date-desc') {
+                    visible.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+                } else if (activeSort === 'date-asc') {
+                    visible.sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
+                } else if (activeSort === 'name-asc') {
+                    visible.sort((a, b) => a.title.localeCompare(b.title));
+                } else if (activeSort === 'name-desc') {
+                    visible.sort((a, b) => b.title.localeCompare(a.title));
+                } else if (activeSort === 'updated-desc') {
+                    visible.sort((a, b) => new Date(b.updated_at || b.created_at) - new Date(a.updated_at || a.created_at));
+                } else if (activeSort === 'updated-asc') {
+                    visible.sort((a, b) => new Date(a.updated_at || a.created_at) - new Date(b.updated_at || b.created_at));
+                } else if (activeSort === 'wishes-desc') {
+                    visible.sort((a, b) => getListWishCount(b) - getListWishCount(a));
+                } else if (activeSort === 'wishes-asc') {
+                    visible.sort((a, b) => getListWishCount(a) - getListWishCount(b));
+                }
+
+                if (visible.length > 0) {
+                    renderLists(visible);
+                } else {
+                    showEmptyState();
+                }
+            }
+
+            function initDynamicCardGlow(containerSelector, cardSelector) {
+                if (window.__surfaceGlowUnified) return;
+                if (window.matchMedia('(pointer: coarse)').matches) return;
+
+                const container = document.querySelector(containerSelector);
+                if (!container) return;
+
+                const MAX_DISTANCE = 240;
+                const BORDER_GLOW_DISTANCE = 48;
+                let cards = [];
+                let mouseX = -9999;
+                let mouseY = -9999;
+                let rafScheduled = false;
+
+                function refreshCards() {
+                    cards = Array.from(container.querySelectorAll(cardSelector));
+                }
+
+                function distanceToRect(x, y, rect) {
+                    const dx = Math.max(rect.left - x, 0, x - rect.right);
+                    const dy = Math.max(rect.top - y, 0, y - rect.bottom);
+                    return Math.sqrt(dx * dx + dy * dy);
+                }
+
+                function distanceToRectSurface(x, y, rect) {
+                    if (x >= rect.left && x <= rect.right && y >= rect.top && y <= rect.bottom) {
+                        const distToLeft = x - rect.left;
+                        const distToRight = rect.right - x;
+                        const distToTop = y - rect.top;
+                        const distToBottom = rect.bottom - y;
+                        return Math.min(distToLeft, distToRight, distToTop, distToBottom);
+                    }
+
+                    const dx = Math.max(rect.left - x, 0, x - rect.right);
+                    const dy = Math.max(rect.top - y, 0, y - rect.bottom);
+                    return Math.sqrt(dx * dx + dy * dy);
+                }
+
+                function resetGlow() {
+                    cards.forEach((card) => {
+                        card.style.setProperty('--glow-opacity', '0');
+                        card.style.setProperty('--border-glow-intensity', '0');
+                    });
+                }
+
+                function updateGlow() {
+                    rafScheduled = false;
+                    if (!cards.length) return;
+
+                    cards.forEach((card) => {
+                        const rect = card.getBoundingClientRect();
+                        const relativeX = mouseX - rect.left;
+                        const relativeY = mouseY - rect.top;
+                        const distance = distanceToRect(mouseX, mouseY, rect);
+                        const surfaceDistance = distanceToRectSurface(mouseX, mouseY, rect);
+                        const glowOpacity = Math.max(0, 1 - (distance / MAX_DISTANCE));
+                        const borderGlow = surfaceDistance <= BORDER_GLOW_DISTANCE
+                            ? Math.max(0, 1 - (surfaceDistance / BORDER_GLOW_DISTANCE))
+                            : 0;
+
+                        card.style.setProperty('--mouse-x', `${relativeX}px`);
+                        card.style.setProperty('--mouse-y', `${relativeY}px`);
+                        card.style.setProperty('--glow-opacity', glowOpacity.toFixed(3));
+                        card.style.setProperty('--border-glow-intensity', borderGlow.toFixed(3));
+                    });
+                }
+
+                refreshCards();
+                const observer = new MutationObserver(refreshCards);
+                observer.observe(container, { childList: true, subtree: true });
+
+                document.addEventListener('mousemove', (event) => {
+                    mouseX = event.clientX;
+                    mouseY = event.clientY;
+
+                    if (!rafScheduled) {
+                        rafScheduled = true;
+                        window.requestAnimationFrame(updateGlow);
+                    }
+                });
+
+                document.addEventListener('mouseleave', resetGlow);
+            }
+
+            document.addEventListener('DOMContentLoaded', async () => {
+                detachControlsMenus();
+                window.addEventListener('resize', syncControlsMenuPositions);
+                window.addEventListener('scroll', syncControlsMenuPositions, true);
+                initDynamicCardGlow('#listsGrid', '.list-card');
+                syncListsPageModeUI();
+
+                try {
+                    const searchInput = document.getElementById('listsSearchInput');
+                    searchQuery = (searchInput?.value || '').toLowerCase().trim();
+                    toggleSearchClearButton(Boolean(searchQuery));
+                    allLists = await loadListsPageData();
+                    applyListsView();
+                } catch (error) {
+                    console.error('Failed to load lists:', error);
+                    await showAlert(error.message || t('lists.loadFailed'), t('common.error'));
+                    if (isPublicUserView) {
+                        window.location.href = '/wishlists';
+                    }
+                }
+            });
+
+            // Handle search
+            function handleSearch(event) {
+                searchQuery = (event.target.value || '').toLowerCase().trim();
+                toggleSearchClearButton(searchQuery.length > 0);
+                applyListsView();
+            }
+
+            function toggleSearchClearButton(show) {
+                const clearButton = document.getElementById('clearSearchBtn');
+                if (!clearButton) return;
+                clearButton.style.display = show ? 'flex' : 'none';
+            }
+
+            function clearSearch(event) {
+                event?.stopPropagation();
+                const searchInput = document.getElementById('listsSearchInput');
+                if (!searchInput) return;
+
+                searchInput.value = '';
+                searchQuery = '';
+                toggleSearchClearButton(false);
+                applyListsView();
+                searchInput.focus();
+            }
+
+            // Render lists grid
+            function renderLists(lists) {
+                const grid = document.getElementById('listsGrid');
+                grid.innerHTML = ''; // Clear existing content
+
+                lists.forEach(list => {
+                    const card = document.createElement('div');
+                    card.className = 'list-card';
+                    card.onclick = () => openList(list.id);
+
+                    const wishCount = getListWishCount(list);
+                    const wishText = currentLang === 'ru' ?
+                        `${wishCount} ${getWishWord(wishCount)}` :
+                        `${wishCount} wish${wishCount !== 1 ? 'es' : ''}`;
+                    const badgeClass = wishCount === 0 ? 'list-card-badge empty' : 'list-card-badge';
+
+                    const statusClass = list.is_public ? 'public' : 'private';
+                    const statusText = list.is_public ?
+                        t('list.status.public') :
+                        t('list.status.private');
+
+                    const showMeta = !isPublicUserView;
+                    const createdDate = showMeta ? formatListDate(list.created_at) : '';
+                    const updatedDate = showMeta ? formatListDate(list.updated_at || list.created_at) : '';
+                    const metaMarkup = showMeta ? `
+                            <div class="list-card-meta-wrap">
+                                <p class="list-card-meta">${t('list.createdAt')} ${createdDate}</p>
+                                <p class="list-card-meta">${t('list.updatedAt')} ${updatedDate}</p>
+                            </div>
+                    ` : '';
+
+                    card.innerHTML = `
+                        <div class="list-card-header">
+                            <h3 class="list-card-title">${list.title}</h3>
+                            <span class="${badgeClass}">${wishText}</span>
+                        </div>
+                        <div class="list-card-footer">
+                            ${metaMarkup}
+                            <span class="list-card-status ${statusClass}">${statusText}</span>
+                        </div>
+                    `;
+
+                    grid.appendChild(card);
+                });
+            }
+
+            // Get correct Russian word form for wishes
+            function getWishWord(count) {
+                const lastDigit = count % 10;
+                const lastTwoDigits = count % 100;
+
+                if (lastTwoDigits >= 11 && lastTwoDigits <= 19) {
+                    return 'желаний';
+                }
+
+                if (lastDigit === 1) {
+                    return 'желание';
+                }
+
+                if (lastDigit >= 2 && lastDigit <= 4) {
+                    return 'желания';
+                }
+
+                return 'желаний';
+            }
+
+            function getEnglishOrdinal(dayNumber) {
+                const mod100 = dayNumber % 100;
+                if (mod100 >= 11 && mod100 <= 13) return `${dayNumber}th`;
+                const mod10 = dayNumber % 10;
+                if (mod10 === 1) return `${dayNumber}st`;
+                if (mod10 === 2) return `${dayNumber}nd`;
+                if (mod10 === 3) return `${dayNumber}rd`;
+                return `${dayNumber}th`;
+            }
+
+            function formatListDate(value) {
+                const date = new Date(value);
+                if (Number.isNaN(date.getTime())) return '';
+
+                if (currentLang === 'en') {
+                    const day = getEnglishOrdinal(date.getDate());
+                    const month = date.toLocaleString('en-US', { month: 'long' });
+                    return `${day} ${month} ${date.getFullYear()}`;
+                }
+
+                return date.toLocaleDateString('ru-RU', {
+                    year: 'numeric',
+                    month: 'short',
+                    day: 'numeric',
+                });
+            }
+
+            // Show empty state
+            function showEmptyState() {
+                const grid = document.getElementById('listsGrid');
+                const title = isPublicUserView ? t('users.publicLists.emptyTitle') : t('lists.emptyTitle');
+                const subtitle = isPublicUserView ? t('users.publicLists.emptySubtitle') : t('lists.emptySubtitle');
+                grid.innerHTML = `
+                    <div class="empty-state">
+                        <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" fill="currentColor">
+                            <path d="M19 3h-4.18C14.4 1.84 13.3 1 12 1c-1.3 0-2.4.84-2.82 2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-7 0c.55 0 1 .45 1 1s-.45 1-1 1-1-.45-1-1 .45-1 1-1zm2 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"/>
+                        </svg>
+                        <h3>${title}</h3>
+                        <p>${subtitle}</p>
+                    </div>
+                `;
+            }
+        </script>
+    </body>
+</html>
+{{end}}

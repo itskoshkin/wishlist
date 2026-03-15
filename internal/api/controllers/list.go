@@ -163,6 +163,7 @@ func (ctrl *ListsController) GetListByID(ctx *gin.Context) {
 // @Param slug path string true "Shared slug (32 chars)"
 // @Success 200 {object} models.ListResponse
 // @Failure 400 {object} apiModels.APIError
+// @Failure 404 {object} apiModels.APIError
 // @Failure 500 {object} apiModels.APIError
 // @Router /lists/shared/{slug} [get]
 func (ctrl *ListsController) GetListBySharedLink(ctx *gin.Context) {
@@ -360,7 +361,7 @@ func (ctrl *ListsController) RotateSharedLink(ctx *gin.Context) {
 		return
 	}
 
-	ctx.JSON(http.StatusOK, gin.H{"share_token": token})
+	ctx.JSON(http.StatusOK, gin.H{"slug": token})
 }
 
 // DeleteList GoDoc

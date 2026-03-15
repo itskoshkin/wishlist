@@ -27,14 +27,16 @@ import (
 
 type API struct {
 	engine   *gin.Engine
+	webCtrl  *controllers.WebController
 	userCtrl *controllers.UsersController
 	listCtrl *controllers.ListsController
 	wishCtrl *controllers.WishesController
 }
 
-func NewAPI(e *gin.Engine, uc *controllers.UsersController, lc *controllers.ListsController, wc *controllers.WishesController) *API {
+func NewAPI(e *gin.Engine, web *controllers.WebController, uc *controllers.UsersController, lc *controllers.ListsController, wc *controllers.WishesController) *API {
 	return &API{
 		engine:   e,
+		webCtrl:  web,
 		userCtrl: uc,
 		listCtrl: lc,
 		wishCtrl: wc,
@@ -45,8 +47,13 @@ func NewEngine() *gin.Engine {
 	if viper.GetBool(config.GinReleaseMode) {
 		gin.SetMode(gin.ReleaseMode)
 	}
+
 	engine := gin.New()
 	_ = engine.SetTrustedProxies(nil) // Can nil produce an error? Or can a robot write a symphony?
+
+	engine.LoadHTMLGlob("./static/templates/*.gohtml")
+	engine.Static("/static", "./static")
+
 	return engine
 }
 
@@ -58,17 +65,18 @@ func (api *API) RegisterMiddlewares() {
 }
 
 func (api *API) RegisterRoutes() {
+	// Web
+	api.webCtrl.RegisterRoutes()
+
+	// API
 	api.userCtrl.RegisterRoutes()
 	api.listCtrl.RegisterRoutes()
 	api.wishCtrl.RegisterRoutes()
+
 	// Swagger
-	{
-		{
-			docs.SwaggerInfo.Host = fmt.Sprintf("%s", viper.GetString(config.WebAppDomain))
-			docs.SwaggerInfo.BasePath = viper.GetString(config.ApiBasePath)
-		}
-		api.engine.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
-	}
+	docs.SwaggerInfo.Host = fmt.Sprintf("%s", viper.GetString(config.WebAppDomain))
+	docs.SwaggerInfo.BasePath = viper.GetString(config.ApiBasePath)
+	api.engine.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 }
 
 func (api *API) Run() {

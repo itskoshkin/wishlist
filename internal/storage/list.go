@@ -11,6 +11,7 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 
 	"wishlist/internal/models"
+	"wishlist/internal/services/errors"
 )
 
 type ListStorageImpl struct{ pool *pgxpool.Pool }
@@ -19,8 +20,8 @@ func NewListStorage(pool *pgxpool.Pool) *ListStorageImpl { return &ListStorageIm
 
 func (s *ListStorageImpl) CreateList(ctx context.Context, list models.List) error {
 	if _, err := s.pool.Exec(ctx,
-		`INSERT INTO lists (id, user_id, image, title, notes, is_public, share_token, created_at, updated_at) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)`,
-		list.ID, list.UserID, list.Image, list.Title, list.Notes, list.IsPublic, list.ShareToken, list.CreatedAt, list.UpdatedAt,
+		`INSERT INTO lists (id, user_id, image, title, notes, is_public, slug, created_at, updated_at) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)`,
+		list.ID, list.UserID, list.Image, list.Title, list.Notes, list.IsPublic, list.Slug, list.CreatedAt, list.UpdatedAt,
 	); err != nil {
 		return fmt.Errorf("failed to create list: %w", err)
 	}
@@ -31,11 +32,11 @@ func (s *ListStorageImpl) CreateList(ctx context.Context, list models.List) erro
 func (s *ListStorageImpl) GetListByID(ctx context.Context, id uuid.UUID) (models.List, error) {
 	var list models.List
 
-	if err := s.pool.QueryRow(ctx, `SELECT id, user_id, image, title, notes, is_public, share_token, created_at, updated_at FROM lists WHERE id = $1`, id).Scan(
-		&list.ID, &list.UserID, &list.Image, &list.Title, &list.Notes, &list.IsPublic, &list.ShareToken, &list.CreatedAt, &list.UpdatedAt,
+	if err := s.pool.QueryRow(ctx, `SELECT id, user_id, image, title, notes, is_public, slug, created_at, updated_at FROM lists WHERE id = $1`, id).Scan(
+		&list.ID, &list.UserID, &list.Image, &list.Title, &list.Notes, &list.IsPublic, &list.Slug, &list.CreatedAt, &list.UpdatedAt,
 	); err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
-			return models.List{}, fmt.Errorf("failed to get list with ID '%s': not found", id)
+			return models.List{}, svcErr.NotFoundError{Entity: "list", Field: "id", Value: id.String()}
 		}
 		return models.List{}, fmt.Errorf("failed to get list with ID '%s': %w", id, err)
 	}
@@ -46,11 +47,11 @@ func (s *ListStorageImpl) GetListByID(ctx context.Context, id uuid.UUID) (models
 func (s *ListStorageImpl) GetListBySharedLink(ctx context.Context, slug string) (models.List, error) {
 	var list models.List
 
-	if err := s.pool.QueryRow(ctx, `SELECT id, user_id, image, title, notes, is_public, share_token, created_at, updated_at FROM lists WHERE share_token = $1`, slug).Scan(
-		&list.ID, &list.UserID, &list.Image, &list.Title, &list.Notes, &list.IsPublic, &list.ShareToken, &list.CreatedAt, &list.UpdatedAt,
+	if err := s.pool.QueryRow(ctx, `SELECT id, user_id, image, title, notes, is_public, slug, created_at, updated_at FROM lists WHERE slug = $1`, slug).Scan(
+		&list.ID, &list.UserID, &list.Image, &list.Title, &list.Notes, &list.IsPublic, &list.Slug, &list.CreatedAt, &list.UpdatedAt,
 	); err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
-			return models.List{}, fmt.Errorf("failed to get list with slug '%s': not found", slug)
+			return models.List{}, svcErr.NotFoundError{Entity: "list", Field: "slug", Value: slug}
 		}
 		return models.List{}, fmt.Errorf("failed to get list with slug '%s': %w", slug, err)
 	}
@@ -59,7 +60,17 @@ func (s *ListStorageImpl) GetListBySharedLink(ctx context.Context, slug string) 
 }
 
 func (s *ListStorageImpl) GetListsByUserID(ctx context.Context, userID uuid.UUID) ([]models.List, error) {
-	rows, err := s.pool.Query(ctx, `SELECT id, user_id, image, title, notes, is_public, share_token, created_at, updated_at FROM lists WHERE user_id = $1 ORDER BY created_at DESC`, userID)
+	rows, err := s.pool.Query(ctx, `
+		SELECT l.id, l.user_id, l.image, l.title, l.notes, l.is_public, l.slug, l.created_at, l.updated_at, COALESCE(w.wishes_count, 0) AS wishes_count
+		FROM lists l
+		LEFT JOIN (
+			SELECT list_id, COUNT(*) AS wishes_count
+			FROM wishes
+			GROUP BY list_id
+		) w ON w.list_id = l.id
+		WHERE l.user_id = $1
+		ORDER BY l.created_at DESC
+	`, userID)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get all lists for user with ID '%s': %w", userID, err)
 	}
@@ -68,7 +79,7 @@ func (s *ListStorageImpl) GetListsByUserID(ctx context.Context, userID uuid.UUID
 	var lists []models.List
 	for rows.Next() {
 		var list models.List
-		if err = rows.Scan(&list.ID, &list.UserID, &list.Image, &list.Title, &list.Notes, &list.IsPublic, &list.ShareToken, &list.CreatedAt, &list.UpdatedAt); err != nil {
+		if err = rows.Scan(&list.ID, &list.UserID, &list.Image, &list.Title, &list.Notes, &list.IsPublic, &list.Slug, &list.CreatedAt, &list.UpdatedAt, &list.WishesCount); err != nil {
 			return nil, fmt.Errorf("failed to scan list: %w", err)
 		}
 		lists = append(lists, list)
@@ -78,7 +89,17 @@ func (s *ListStorageImpl) GetListsByUserID(ctx context.Context, userID uuid.UUID
 }
 
 func (s *ListStorageImpl) GetPublicListsByUserID(ctx context.Context, userID uuid.UUID) ([]models.List, error) {
-	rows, err := s.pool.Query(ctx, `SELECT id, user_id, image, title, notes, is_public, share_token, created_at, updated_at FROM lists WHERE user_id = $1 AND is_public = true ORDER BY created_at DESC`, userID)
+	rows, err := s.pool.Query(ctx, `
+		SELECT l.id, l.user_id, l.image, l.title, l.notes, l.is_public, l.slug, l.created_at, l.updated_at, COALESCE(w.wishes_count, 0) AS wishes_count
+		FROM lists l
+		LEFT JOIN (
+			SELECT list_id, COUNT(*) AS wishes_count
+			FROM wishes
+			GROUP BY list_id
+		) w ON w.list_id = l.id
+		WHERE l.user_id = $1 AND l.is_public = true
+		ORDER BY l.created_at DESC
+	`, userID)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get public lists for user with ID '%s': %w", userID, err)
 	}
@@ -87,7 +108,7 @@ func (s *ListStorageImpl) GetPublicListsByUserID(ctx context.Context, userID uui
 	var lists []models.List
 	for rows.Next() {
 		var list models.List
-		if err = rows.Scan(&list.ID, &list.UserID, &list.Image, &list.Title, &list.Notes, &list.IsPublic, &list.ShareToken, &list.CreatedAt, &list.UpdatedAt); err != nil {
+		if err = rows.Scan(&list.ID, &list.UserID, &list.Image, &list.Title, &list.Notes, &list.IsPublic, &list.Slug, &list.CreatedAt, &list.UpdatedAt, &list.WishesCount); err != nil {
 			return nil, fmt.Errorf("failed to scan list: %w", err)
 		}
 		lists = append(lists, list)
@@ -131,17 +152,17 @@ func (s *ListStorageImpl) UpdateListByID(ctx context.Context, listID uuid.UUID, 
 	if result, err := s.pool.Exec(ctx, fmt.Sprintf("UPDATE lists SET"+" %s WHERE id = $%d", strings.Join(clauses, ", "), index), args...); err != nil {
 		return fmt.Errorf("failed to update list with ID '%s': %w", listID, err)
 	} else if result.RowsAffected() == 0 {
-		return fmt.Errorf("failed to update list with ID '%s': not found", listID)
+		return svcErr.NotFoundError{Entity: "list", Field: "id", Value: listID.String()}
 	}
 
 	return nil
 }
 
-func (s *ListStorageImpl) RotateSharedLink(ctx context.Context, listID uuid.UUID, token string) error {
-	if result, err := s.pool.Exec(ctx, "UPDATE lists SET share_token = $1, updated_at = now() WHERE id = $2", token, listID); err != nil {
-		return fmt.Errorf("failed to update share token for list with ID '%s': %w", listID, err)
+func (s *ListStorageImpl) RotateSharedLink(ctx context.Context, listID uuid.UUID, slug string) error {
+	if result, err := s.pool.Exec(ctx, "UPDATE lists SET slug = $1, updated_at = now() WHERE id = $2", slug, listID); err != nil {
+		return fmt.Errorf("failed to update slug for list with ID '%s': %w", listID, err)
 	} else if result.RowsAffected() == 0 {
-		return fmt.Errorf("failed to update share token for list with ID '%s': not found", listID)
+		return svcErr.NotFoundError{Entity: "list", Field: "id", Value: listID.String()}
 	}
 
 	return nil
@@ -151,7 +172,7 @@ func (s *ListStorageImpl) DeleteListByID(ctx context.Context, listID uuid.UUID) 
 	if result, err := s.pool.Exec(ctx, "DELETE FROM lists WHERE id = $1", listID); err != nil {
 		return fmt.Errorf("failed to delete list with ID '%s': %w", listID, err)
 	} else if result.RowsAffected() == 0 {
-		return fmt.Errorf("failed to delete list with ID '%s': not found", listID)
+		return svcErr.NotFoundError{Entity: "list", Field: "id", Value: listID.String()}
 	}
 
 	return nil

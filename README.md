@@ -11,6 +11,7 @@
 - [x] Add Swagger documentation for API
 - [x] Add unit, integration and end-to-end tests
 - [x] Dockerize
+- [x] Ask Claude to conjure some UI
 - [ ] Set up CI/CD
 - [ ] Deploy
 - [ ] Add message broker for... Emails? Price change notifications?

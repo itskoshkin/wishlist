@@ -60,18 +60,20 @@ func (m *userControllerAuthMock) RevokeAuthTokens(ctx context.Context, accessTok
 }
 
 type userControllerServiceMock struct {
-	registerFn             func(ctx context.Context, req models.RegisterUserRequest) (models.User, error)
-	verifyEmailFn          func(ctx context.Context, token string) error
-	logInFn                func(ctx context.Context, req models.LogInUserRequest) (models.User, error)
-	getUserByIDFn          func(ctx context.Context, id uuid.UUID) (models.User, error)
-	updateUserByIDFn       func(ctx context.Context, id uuid.UUID, req models.UpdateUserRequest) error
-	updateAvatarFn         func(ctx context.Context, id uuid.UUID, reader io.Reader, size int64, contentType string) error
-	deleteAvatarFn         func(ctx context.Context, id uuid.UUID) error
-	verifyPasswordFn       func(ctx context.Context, id uuid.UUID, password string) error
-	changePasswordFn       func(ctx context.Context, id uuid.UUID, req models.ChangePasswordRequest) error
-	requestPasswordResetFn func(ctx context.Context, email string) error
-	resetPasswordFn        func(ctx context.Context, token, newPassword string) error
-	deleteFn               func(ctx context.Context, id uuid.UUID) error
+	registerFn              func(ctx context.Context, req models.RegisterUserRequest) (models.User, error)
+	verifyEmailFn           func(ctx context.Context, token string) error
+	logInFn                 func(ctx context.Context, req models.LogInUserRequest) (models.User, error)
+	getUserByIDFn           func(ctx context.Context, id uuid.UUID) (models.User, error)
+	getUserByUsernameFn     func(ctx context.Context, username string) (models.User, error)
+	searchUsersByUsernameFn func(ctx context.Context, query string, limit int) ([]models.User, error)
+	updateUserByIDFn        func(ctx context.Context, id uuid.UUID, req models.UpdateUserRequest) error
+	updateAvatarFn          func(ctx context.Context, id uuid.UUID, reader io.Reader, size int64, contentType string) error
+	deleteAvatarFn          func(ctx context.Context, id uuid.UUID) error
+	verifyPasswordFn        func(ctx context.Context, id uuid.UUID, password string) error
+	changePasswordFn        func(ctx context.Context, id uuid.UUID, req models.ChangePasswordRequest) error
+	requestPasswordResetFn  func(ctx context.Context, email string) error
+	resetPasswordFn         func(ctx context.Context, token, newPassword string) error
+	deleteFn                func(ctx context.Context, id uuid.UUID) error
 }
 
 func (m *userControllerServiceMock) Register(ctx context.Context, req models.RegisterUserRequest) (models.User, error) {
@@ -100,6 +102,20 @@ func (m *userControllerServiceMock) GetUserByID(ctx context.Context, id uuid.UUI
 		return m.getUserByIDFn(ctx, id)
 	}
 	return models.User{}, nil
+}
+
+func (m *userControllerServiceMock) GetUserByUsername(ctx context.Context, username string) (models.User, error) {
+	if m.getUserByUsernameFn != nil {
+		return m.getUserByUsernameFn(ctx, username)
+	}
+	return models.User{}, nil
+}
+
+func (m *userControllerServiceMock) SearchUsersByUsername(ctx context.Context, query string, limit int) ([]models.User, error) {
+	if m.searchUsersByUsernameFn != nil {
+		return m.searchUsersByUsernameFn(ctx, query, limit)
+	}
+	return nil, nil
 }
 
 func (m *userControllerServiceMock) UpdateUserByID(ctx context.Context, id uuid.UUID, req models.UpdateUserRequest) error {
@@ -542,6 +558,17 @@ func TestUsersController_GetCurrentUser(t *testing.T) {
 	userID := uuid.New()
 	as := &userControllerAuthMock{validateAccessTokenFn: func(ctx context.Context, token string) (uuid.UUID, error) { return userID, nil }}
 
+	t.Run("not found", func(t *testing.T) {
+		us := &userControllerServiceMock{getUserByIDFn: func(ctx context.Context, id uuid.UUID) (models.User, error) {
+			return models.User{}, svcErr.NotFoundError{Entity: "user", Field: "id", Value: id.String()}
+		}}
+		router := setupUserControllerForTest(as, us)
+		w := userJSONRequest(router, http.MethodGet, "/api/v1/users/me", "", "ok")
+		if w.Code != http.StatusNotFound {
+			t.Fatalf("status = %d, want %d", w.Code, http.StatusNotFound)
+		}
+	})
+
 	t.Run("internal", func(t *testing.T) {
 		us := &userControllerServiceMock{getUserByIDFn: func(ctx context.Context, id uuid.UUID) (models.User, error) {
 			return models.User{}, errors.New("db")
@@ -799,7 +826,7 @@ func TestUsersController_DeleteCurrentUser(t *testing.T) {
 
 	t.Run("wrong password", func(t *testing.T) {
 		us := &userControllerServiceMock{verifyPasswordFn: func(ctx context.Context, id uuid.UUID, password string) error {
-			return errors.New("wrong password")
+			return svcErr.ValidationError{Message: "wrong password"}
 		}}
 		router := setupUserControllerForTest(as, us)
 		w := userJSONRequest(router, http.MethodDelete, "/api/v1/users/me", `{"password":"bad"}`, "ok")
@@ -842,6 +869,17 @@ func TestUsersController_GetUserByID(t *testing.T) {
 		w := userJSONRequest(router, http.MethodGet, "/api/v1/users/not-uuid", "", "ok")
 		if w.Code != http.StatusBadRequest {
 			t.Fatalf("status = %d, want %d", w.Code, http.StatusBadRequest)
+		}
+	})
+
+	t.Run("not found", func(t *testing.T) {
+		us := &userControllerServiceMock{getUserByIDFn: func(ctx context.Context, id uuid.UUID) (models.User, error) {
+			return models.User{}, svcErr.NotFoundError{Entity: "user", Field: "id", Value: id.String()}
+		}}
+		router := setupUserControllerForTest(as, us)
+		w := userJSONRequest(router, http.MethodGet, "/api/v1/users/"+targetID.String(), "", "ok")
+		if w.Code != http.StatusNotFound {
+			t.Fatalf("status = %d, want %d", w.Code, http.StatusNotFound)
 		}
 	})
 
