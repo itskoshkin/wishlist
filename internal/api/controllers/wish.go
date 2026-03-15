@@ -66,6 +66,7 @@ func (ctrl *WishesController) RegisterRoutes() {
 // @Failure 403 {object} apiModels.APIError
 // @Failure 500 {object} apiModels.APIError
 // @Router /lists/{list_id}/wishes [post]
+// noinspection DuplicatedCode
 func (ctrl *WishesController) CreateWish(ctx *gin.Context) {
 	userID, ok := middlewares.GetUserID(ctx)
 	if !ok {
@@ -112,6 +113,7 @@ func (ctrl *WishesController) CreateWish(ctx *gin.Context) {
 // @Failure 403 {object} apiModels.APIError
 // @Failure 500 {object} apiModels.APIError
 // @Router /lists/{list_id}/wishes/{wish_id} [patch]
+// noinspection DuplicatedCode
 func (ctrl *WishesController) UpdateWish(ctx *gin.Context) {
 	userID, ok := middlewares.GetUserID(ctx)
 	if !ok {
@@ -164,6 +166,7 @@ func (ctrl *WishesController) UpdateWish(ctx *gin.Context) {
 // @Failure 403 {object} apiModels.APIError
 // @Failure 500 {object} apiModels.APIError
 // @Router /lists/{list_id}/wishes/{wish_id}/image [put]
+// noinspection DuplicatedCode
 func (ctrl *WishesController) UpdateWishImage(ctx *gin.Context) {
 	userID, ok := middlewares.GetUserID(ctx)
 	if !ok {
@@ -229,6 +232,7 @@ func (ctrl *WishesController) UpdateWishImage(ctx *gin.Context) {
 // @Failure 401 {object} apiModels.APIError
 // @Failure 500 {object} apiModels.APIError
 // @Router /lists/{list_id}/wishes/{wish_id}/reserve [post]
+// noinspection DuplicatedCode
 func (ctrl *WishesController) ReserveWish(ctx *gin.Context) {
 	userID, ok := middlewares.GetUserID(ctx)
 	if !ok {
@@ -271,6 +275,7 @@ func (ctrl *WishesController) ReserveWish(ctx *gin.Context) {
 // @Failure 401 {object} apiModels.APIError
 // @Failure 500 {object} apiModels.APIError
 // @Router /lists/{list_id}/wishes/{wish_id}/reserve [delete]
+// noinspection DuplicatedCode
 func (ctrl *WishesController) ReleaseWish(ctx *gin.Context) {
 	userID, ok := middlewares.GetUserID(ctx)
 	if !ok {
@@ -314,6 +319,7 @@ func (ctrl *WishesController) ReleaseWish(ctx *gin.Context) {
 // @Failure 403 {object} apiModels.APIError
 // @Failure 500 {object} apiModels.APIError
 // @Router /lists/{list_id}/wishes/{wish_id} [delete]
+// noinspection DuplicatedCode
 func (ctrl *WishesController) DeleteWish(ctx *gin.Context) {
 	userID, ok := middlewares.GetUserID(ctx)
 	if !ok {

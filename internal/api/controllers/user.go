@@ -390,6 +390,7 @@ func (ctrl *UsersController) SearchUsers(ctx *gin.Context) {
 // @Failure 401 {object} apiModels.APIError
 // @Failure 500 {object} apiModels.APIError
 // @Router /users/me [patch]
+// noinspection DuplicatedCode
 func (ctrl *UsersController) UpdateCurrentUser(ctx *gin.Context) {
 	userID, ok := middlewares.GetUserID(ctx)
 	if !ok {
@@ -530,6 +531,7 @@ func (ctrl *UsersController) DeleteAvatar(ctx *gin.Context) {
 // @Failure 401 {object} apiModels.APIError
 // @Failure 500 {object} apiModels.APIError
 // @Router /users/me/update-password [patch]
+// noinspection DuplicatedCode
 func (ctrl *UsersController) UpdateCurrentPassword(ctx *gin.Context) {
 	userID, ok := middlewares.GetUserID(ctx)
 	if !ok {

@@ -77,6 +77,7 @@ func issueNewToken(userID uuid.UUID, ttl time.Duration) *jwt.Token {
 	})
 }
 
+// noinspection DuplicatedCode
 func (svc *AuthServiceImpl) ValidateAccessToken(ctx context.Context, tokenString string) (uuid.UUID, error) {
 	claims, err := svc.validateToken(tokenString, svc.accessTokenSecret)
 	if err != nil {
@@ -95,6 +96,7 @@ func (svc *AuthServiceImpl) ValidateAccessToken(ctx context.Context, tokenString
 	return claims.UserID, nil
 }
 
+// noinspection DuplicatedCode
 func (svc *AuthServiceImpl) ValidateRefreshToken(ctx context.Context, tokenString string) (uuid.UUID, error) {
 	claims, err := svc.validateToken(tokenString, svc.refreshTokenSecret)
 	if err != nil {

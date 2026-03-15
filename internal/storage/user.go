@@ -85,6 +85,7 @@ func (us *UserStorageImpl) SearchUsersByUsername(ctx context.Context, query stri
 		limit = 5
 	}
 
+	//noinspection SqlRedundantOrderingDirection
 	rows, err := us.pool.Query(ctx, `SELECT id, avatar, name, username, email, email_verified, password, created_at, updated_at FROM users WHERE lower(username) LIKE $1 ORDER BY CASE WHEN lower(username) LIKE $2 THEN 0 ELSE 1 END, lower(username) ASC LIMIT $3`, "%"+search+"%", search+"%", limit)
 	if err != nil {
 		return nil, fmt.Errorf("failed to search users with query '%s': %w", search, err)
