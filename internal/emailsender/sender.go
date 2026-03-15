@@ -1,4 +1,4 @@
-package app
+package emailsender
 
 import (
 	"context"
@@ -18,12 +18,12 @@ import (
 	"wishlist/internal/services"
 )
 
-type Worker struct {
+type Sender struct {
 	consumer broker.Consumer
-	emailSvc *services.EmailServiceImpl
+	emailSvc services.EmailService
 }
 
-func LoadWorker() *Worker {
+func Load() *Sender {
 	config.LoadConfig()
 	logger.SetupLogger()
 
@@ -32,26 +32,26 @@ func LoadWorker() *Worker {
 		logger.Fatal(err)
 	}
 
-	return &Worker{
+	return &Sender{
 		consumer: consumer,
 		emailSvc: services.NewEmailService(),
 	}
 }
 
-func (w *Worker) Run() {
-	defer w.closeConsumer()
+func (s *Sender) Run() {
+	defer s.closeConsumer()
 
 	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
 	defer stop()
 
 	topic := events.EmailTopic()
-	logger.Info("Worker is listening to '%s' via %s.", topic, config.CurrentBrokerType())
+	logger.Info("Email sender is listening to '%s' via %s.", topic, config.CurrentBrokerType())
 
-	if err := w.consumer.Subscribe(ctx, topic, w.handleEmailEvent); err != nil {
-		logger.Fatalf("Worker stopped unexpectedly: %v", err)
+	if err := s.consumer.Subscribe(ctx, topic, s.handleEmailEvent); err != nil {
+		logger.Fatalf("Email sender stopped unexpectedly: %v", err)
 	}
 
-	logger.Info("Worker stopped.")
+	logger.Info("Email sender stopped.")
 }
 
 func newBrokerConsumer() (broker.Consumer, error) {
@@ -75,20 +75,20 @@ func newBrokerConsumer() (broker.Consumer, error) {
 			URL: viper.GetString(config.RabbitMQURL),
 		})
 	default:
-		return nil, fmt.Errorf("unsupported broker type for worker: %s", config.CurrentBrokerType())
+		return nil, fmt.Errorf("unsupported broker type for email sender: %s", config.CurrentBrokerType())
 	}
 }
 
-func (w *Worker) closeConsumer() {
-	if w.consumer == nil {
+func (s *Sender) closeConsumer() {
+	if s.consumer == nil {
 		return
 	}
-	if err := w.consumer.Close(); err != nil {
+	if err := s.consumer.Close(); err != nil {
 		logger.Error("Failed to close broker consumer: %v", err)
 	}
 }
 
-func (w *Worker) handleEmailEvent(ctx context.Context, msg []byte) error {
+func (s *Sender) handleEmailEvent(ctx context.Context, msg []byte) error {
 	var env events.Envelope
 	if err := json.Unmarshal(msg, &env); err != nil {
 		return fmt.Errorf("unmarshal event envelope: %w", err)
@@ -101,7 +101,7 @@ func (w *Worker) handleEmailEvent(ctx context.Context, msg []byte) error {
 			return fmt.Errorf("unmarshal verification payload: %w", err)
 		}
 
-		return w.emailSvc.SendEmailVerificationLetter(ctx, payload.Email, payload.Token)
+		return s.emailSvc.SendEmailVerificationLetter(ctx, payload.Email, payload.Token)
 
 	case events.TypePasswordReset:
 		var payload events.PasswordResetPayload
@@ -109,7 +109,7 @@ func (w *Worker) handleEmailEvent(ctx context.Context, msg []byte) error {
 			return fmt.Errorf("unmarshal password reset payload: %w", err)
 		}
 
-		return w.emailSvc.SendPasswordResetLetter(ctx, payload.Email, payload.Token)
+		return s.emailSvc.SendPasswordResetLetter(ctx, payload.Email, payload.Token)
 
 	default:
 		return fmt.Errorf("unsupported event type: %s", env.Type)
