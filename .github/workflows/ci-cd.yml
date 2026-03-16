@@ -1,0 +1,224 @@
+#name: CI/CD
+#
+#on:
+#  push:
+#    branches: [master]
+#  pull_request:
+#  workflow_dispatch:
+#
+#jobs:
+#  tests:
+#    runs-on: ubuntu-latest
+#    services:
+#      postgres:
+#        image: postgres:18-alpine
+#        env:
+#          POSTGRES_DB: wishlist
+#          POSTGRES_USER: postgres
+#          POSTGRES_PASSWORD: 4221
+#        ports:
+#          - 5432:5432
+#        options: >-
+#          --health-cmd "pg_isready -U postgres -d wishlist"
+#          --health-interval 5s
+#          --health-timeout 3s
+#          --health-retries 10
+#      redis:
+#        image: redis:8-alpine
+#        ports:
+#          - 6379:6379
+#        options: >-
+#          --health-cmd "redis-cli ping"
+#          --health-interval 5s
+#          --health-timeout 3s
+#          --health-retries 10
+#    steps:
+#      - name: Checkout
+#        uses: actions/checkout@v5
+#
+#      - name: Setup Go
+#        uses: actions/setup-go@v6
+#        with:
+#          go-version-file: go.mod
+#          cache: true
+#
+#      - name: Prepare config
+#        run: cp example_config.yaml config.yaml
+#
+#      - name: Start MinIO
+#        run: |
+#          set -e
+#          docker run -d \
+#            --name wishlist-minio \
+#            -p 9000:9000 \
+#            -p 9001:9001 \
+#            -e MINIO_ROOT_USER=minioadmin \
+#            -e MINIO_ROOT_PASSWORD=minioadmin \
+#            minio/minio:latest server /data --console-address ":9001"
+#
+#          for i in $(seq 1 30); do
+#            if curl -fsS http://localhost:9000/minio/health/ready > /dev/null; then
+#              exit 0
+#            fi
+#            sleep 1
+#          done
+#
+#          echo "minio did not start"
+#          docker logs wishlist-minio || true
+#          exit 1
+#
+#      - name: Unit tests
+#        run: go test -race -count=1 ./...
+#
+#      - name: Integration tests
+#        env:
+#          TEST_DB_HOST: localhost
+#          TEST_DB_PORT: 5432
+#          TEST_DB_USER: postgres
+#          TEST_DB_PASSWORD: 4221
+#          TEST_DB_NAME: wishlist
+#          TEST_DB_SSLMODE: disable
+#          TEST_REDIS_HOST: localhost
+#          TEST_REDIS_PORT: 6379
+#          TEST_REDIS_PASSWORD: 4221
+#          TEST_REDIS_DB: 0
+#          TEST_MINIO_ENDPOINT: localhost:9000
+#          TEST_MINIO_ACCESS_KEY: minioadmin
+#          TEST_MINIO_SECRET_KEY: minioadmin
+#          TEST_MINIO_USE_SSL: "false"
+#          TEST_MINIO_BUCKET: wishlist
+#        run: go test -count=1 -tags=integration ./...
+#
+#      - name: Start app
+#        env:
+#          APP_DATABASE_HOST: localhost
+#          APP_DATABASE_PORT: "5432"
+#          APP_DATABASE_USER: postgres
+#          APP_DATABASE_PASSWORD: 4221
+#          APP_DATABASE_DATABASE_NAME: wishlist
+#          APP_DATABASE_SSL_MODE: disable
+#          APP_REDIS_HOST: localhost
+#          APP_REDIS_PORT: "6379"
+#          APP_REDIS_PASSWORD: 4221
+#          APP_REDIS_DATABASE: "0"
+#          APP_MINIO_ENDPOINT: localhost:9000
+#          APP_MINIO_ACCESS_KEY_ID: minioadmin
+#          APP_MINIO_ACCESS_KEY_SECRET: minioadmin
+#          APP_MINIO_USE_SSL: "false"
+#          APP_MINIO_BUCKET_NAME: wishlist
+#        run: |
+#          set -e
+#          go run ./cmd/api > /tmp/app.log 2>&1 &
+#          for i in $(seq 1 30); do
+#            if curl -s http://localhost:8080/ > /dev/null; then
+#              exit 0
+#            fi
+#            sleep 1
+#          done
+#          echo "app did not start"
+#          tail -n 200 /tmp/app.log || true
+#          exit 1
+#
+#      - name: E2E tests
+#        run: E2E_BASE_URL=http://localhost:8080/api/v1 go test -v -count=1 -tags=e2e ./tests/e2e
+#
+#      - name: App logs (on failure)
+#        if: failure()
+#        run: |
+#          tail -n 200 /tmp/app.log || true
+#          docker logs wishlist-minio || true
+#
+#  deploy:
+#    needs: tests
+#    runs-on: ubuntu-latest
+#    if: github.event_name == 'push' && github.ref == 'refs/heads/master'
+#    steps:
+#      - name: Deploy API and Email Sender over SSH
+#        uses: appleboy/ssh-action@v1.0.3
+#        with:
+#          host: ${{ secrets.SSH_HOST }}
+#          username: ${{ secrets.SSH_USER }}
+#          key: ${{ secrets.SSH_KEY }}
+#          passphrase: ${{ secrets.SSH_KEY_PASSPHRASE }}
+#          port: ${{ secrets.SSH_PORT || 22 }}
+#          envs: DEPLOY_PATH,DEPLOY_BRANCH,DEPLOY_REPO_URL,DEPLOY_API_IMAGE,DEPLOY_SENDER_IMAGE,DEPLOY_API_CONTAINER_NAME,DEPLOY_SENDER_CONTAINER_NAME,DEPLOY_PORT,DEPLOY_CONFIG_PATH,DEPLOY_ENV_FILE,GOOSE_DSN
+#          script: |
+#            set -euo pipefail
+#            DEPLOY_PATH="${DEPLOY_PATH:-/opt/wishlist}"
+#            DEPLOY_BRANCH="${DEPLOY_BRANCH:-master}"
+#            REPO_URL="${DEPLOY_REPO_URL:-git@github.com:${{ github.repository }}.git}"
+#            API_IMAGE="${DEPLOY_API_IMAGE:-wishlist-api:latest}"
+#            SENDER_IMAGE="${DEPLOY_SENDER_IMAGE:-wishlist-email-sender:latest}"
+#            API_CONTAINER_NAME="${DEPLOY_API_CONTAINER_NAME:-wishlist-api}"
+#            SENDER_CONTAINER_NAME="${DEPLOY_SENDER_CONTAINER_NAME:-wishlist-email-sender}"
+#            HOST_PORT="${DEPLOY_PORT:-8080}"
+#            CONFIG_PATH="${DEPLOY_CONFIG_PATH:-$(dirname "${DEPLOY_PATH}")/config.yaml}"
+#            ENV_FILE="${DEPLOY_ENV_FILE:-}"
+#
+#            case "${DEPLOY_PATH}" in
+#              */build|*/build/*) ;;
+#              *)
+#                echo "DEPLOY_PATH must point to a disposable build directory, got: ${DEPLOY_PATH}"
+#                exit 1
+#                ;;
+#            esac
+#
+#            trap 'rm -rf "${DEPLOY_PATH}"' EXIT
+#            mkdir -p "$(dirname "${DEPLOY_PATH}")"
+#            rm -rf "${DEPLOY_PATH}"
+#            git clone --branch "${DEPLOY_BRANCH}" --single-branch "${REPO_URL}" "${DEPLOY_PATH}"
+#            cd "${DEPLOY_PATH}"
+#
+#            docker build \
+#              --build-arg MAIN_PATH=./cmd/api \
+#              --build-arg BIN_NAME=wishlist \
+#              -t "${API_IMAGE}" .
+#
+#            docker build \
+#              --build-arg MAIN_PATH=./cmd/email-sender \
+#              --build-arg BIN_NAME=wishlist \
+#              -t "${SENDER_IMAGE}" .
+#
+#            if [ ! -f "${CONFIG_PATH}" ]; then
+#              echo "deploy config not found: ${CONFIG_PATH}"
+#              exit 1
+#            fi
+#
+#            API_RUN_ARGS="-p ${HOST_PORT}:8080 -v ${CONFIG_PATH}:/app/config.yaml:ro"
+#            SENDER_RUN_ARGS="-v ${CONFIG_PATH}:/app/config.yaml:ro"
+#            if [ -n "${ENV_FILE}" ]; then
+#              if [ ! -f "${ENV_FILE}" ]; then
+#                echo "deploy env file not found: ${ENV_FILE}"
+#                exit 1
+#              fi
+#              API_RUN_ARGS="${API_RUN_ARGS} --env-file ${ENV_FILE}"
+#              SENDER_RUN_ARGS="${SENDER_RUN_ARGS} --env-file ${ENV_FILE}"
+#            fi
+#
+#            if [ -n "${GOOSE_DSN:-}" ]; then
+#              if [ -n "${ENV_FILE}" ]; then
+#                docker run --rm --env-file "${ENV_FILE}" "${API_IMAGE}" goose postgres "${GOOSE_DSN}" -dir migrations up
+#              else
+#                docker run --rm "${API_IMAGE}" goose postgres "${GOOSE_DSN}" -dir migrations up
+#              fi
+#            fi
+#
+#            docker stop "${API_CONTAINER_NAME}" 2>/dev/null || true
+#            docker rm "${API_CONTAINER_NAME}" 2>/dev/null || true
+#            docker stop "${SENDER_CONTAINER_NAME}" 2>/dev/null || true
+#            docker rm "${SENDER_CONTAINER_NAME}" 2>/dev/null || true
+#
+#            docker run -d --name "${API_CONTAINER_NAME}" --restart unless-stopped ${API_RUN_ARGS} "${API_IMAGE}"
+#            docker run -d --name "${SENDER_CONTAINER_NAME}" --restart unless-stopped ${SENDER_RUN_ARGS} "${SENDER_IMAGE}"
+#        env:
+#          DEPLOY_PATH: ${{ secrets.DEPLOY_PATH }}
+#          DEPLOY_BRANCH: ${{ secrets.DEPLOY_BRANCH }}
+#          DEPLOY_REPO_URL: ${{ secrets.DEPLOY_REPO_URL }}
+#          DEPLOY_API_IMAGE: ${{ secrets.DEPLOY_API_IMAGE }}
+#          DEPLOY_SENDER_IMAGE: ${{ secrets.DEPLOY_SENDER_IMAGE }}
+#          DEPLOY_API_CONTAINER_NAME: ${{ secrets.DEPLOY_API_CONTAINER_NAME }}
+#          DEPLOY_SENDER_CONTAINER_NAME: ${{ secrets.DEPLOY_SENDER_CONTAINER_NAME }}
+#          DEPLOY_PORT: ${{ secrets.DEPLOY_PORT }}
+#          DEPLOY_CONFIG_PATH: ${{ secrets.DEPLOY_CONFIG_PATH }}
+#          DEPLOY_ENV_FILE: ${{ secrets.DEPLOY_ENV_FILE }}
+#          GOOSE_DSN: ${{ secrets.GOOSE_DSN }}

@@ -13,7 +13,7 @@
 - [x] Dockerize
 - [x] Ask Claude to conjure some UI
 - [x] Add message broker for emails
-- [ ] Set up CI/CD
+- [~] Set up CI/CD
 - [ ] Deploy
 
 ---
