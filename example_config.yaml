@@ -49,3 +49,18 @@ app:
     user: "your@gmail.com" # Address with +tag (your+wishlist@gmail.com) can also be used, but first add it at https://mail.google.com/mail/u/0/#settings/accounts in section "Send mail as"
     password: "4221" # Google app password from https://myaccount.google.com/apppasswords, see https://support.google.com/mail/answer/185833?hl=en for more info
     from: "Wishlist <your@gmail.com>"
+  broker:
+    type: "none" # "none", "kafka" or "rabbitmq"
+    kafka:
+      brokers:
+        - "localhost:9092"
+      group_id: "wishlist-worker"
+      topic_prefix: "wishlist"
+      auth:
+        enabled: false
+        mechanism: "plain"
+        username: "wishlist"
+        password: "password"
+        tls: false
+    rabbitmq:
+      url: "amqp://username:password@localhost:5672/"

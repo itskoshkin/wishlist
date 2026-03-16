@@ -23,6 +23,11 @@ type EmailService interface {
 	SendEmailVerificationLetter(ctx context.Context, to, token string) error
 }
 
+type EmailSender interface {
+	SendPasswordReset(ctx context.Context, userID, to, token string) error
+	SendEmailVerification(ctx context.Context, userID, to, token string) error
+}
+
 type UserStorage interface {
 	CreateUser(ctx context.Context, user models.User) error
 	SetUserEmailAsVerified(ctx context.Context, id uuid.UUID) error
@@ -47,14 +52,14 @@ type Logger interface {
 }
 
 type UserServiceImpl struct {
-	email   EmailService
+	email   EmailSender
 	tokens  TokenStorage
 	storage UserStorage
 	s3      AvatarStorage
 	log     Logger //MARK: Unsure if it is a good idea, but definitely better than putting logger from controller
 }
 
-func NewUserService(es EmailService, us UserStorage, ts TokenStorage, ms AvatarStorage, l Logger) *UserServiceImpl {
+func NewUserService(es EmailSender, us UserStorage, ts TokenStorage, ms AvatarStorage, l Logger) *UserServiceImpl {
 	return &UserServiceImpl{email: es, tokens: ts, storage: us, s3: ms, log: l}
 }
 
@@ -99,7 +104,7 @@ func (svc *UserServiceImpl) Register(ctx context.Context, req models.RegisterUse
 			svc.log.Error("failed to save email verification token for user '%s': %v", user.ID, err)
 		}
 
-		if err = svc.email.SendEmailVerificationLetter(ctx, *req.Email, token); err != nil {
+		if err = svc.email.SendEmailVerification(ctx, user.ID.String(), *req.Email, token); err != nil {
 			svc.log.Error("failed to send verification email for user '%s': %v", user.ID, err)
 		}
 	}
@@ -289,7 +294,7 @@ func (svc *UserServiceImpl) RequestPasswordReset(ctx context.Context, email stri
 		return fmt.Errorf("failed to save password reset request: %w", err)
 	}
 
-	if err = svc.email.SendPasswordResetLetter(ctx, *user.Email, token); err != nil {
+	if err = svc.email.SendPasswordReset(ctx, user.ID.String(), *user.Email, token); err != nil {
 		return fmt.Errorf("failed to send password reset link: %w", err)
 	}
 

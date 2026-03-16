@@ -8,6 +8,7 @@ import (
 	"wishlist/internal/api/controllers"
 	"wishlist/internal/api/middlewares"
 	"wishlist/internal/config"
+	"wishlist/internal/events"
 	"wishlist/internal/logger"
 	"wishlist/internal/services"
 	"wishlist/internal/storage"
@@ -17,7 +18,8 @@ import (
 )
 
 type App struct {
-	API *api.API
+	API       *api.API
+	publisher *events.Publisher
 }
 
 func Load() *App {
@@ -41,6 +43,12 @@ func Load() *App {
 		logger.Fatal(err)
 	}
 
+	// Events publisher
+	publisher, err := events.NewEventPublisher()
+	if err != nil {
+		logger.Fatal(err)
+	}
+
 	// Storages
 	userStore := storage.NewUserStorage(db)
 	wishStore := storage.NewWishStorage(db)
@@ -50,8 +58,14 @@ func Load() *App {
 	// Services
 	authSvc := services.NewAuthService(tokenStore)
 	emailSvc := services.NewEmailService()
+	var emailSender services.EmailSender
+	if publisher == nil {
+		emailSender = services.NewSMTPEmailSender(emailSvc)
+	} else {
+		emailSender = events.NewEmailSender(publisher)
+	}
 	minioSvc := storage.NewMinioService(s3)
-	userSvc := services.NewUserService(emailSvc, userStore, tokenStore, minioSvc, logger.GlobalLogger{})
+	userSvc := services.NewUserService(emailSender, userStore, tokenStore, minioSvc, logger.GlobalLogger{})
 	listSvc := services.NewListService(listStore, wishStore)
 	wishSvc := services.NewWishService(wishStore, listStore, minioSvc)
 
@@ -65,11 +79,23 @@ func Load() *App {
 	listCtrl := controllers.NewListsController(e, mw, listSvc)
 	wishCtrl := controllers.NewWishesController(e, mw, wishSvc)
 
-	return &App{API: api.NewAPI(e, webCtrl, userCtrl, listCtrl, wishCtrl)}
+	return &App{
+		API:       api.NewAPI(e, webCtrl, userCtrl, listCtrl, wishCtrl),
+		publisher: publisher,
+	}
 }
 
 func (a *App) Run() {
+	defer a.closeEventPublisher()
 	a.API.RegisterMiddlewares()
 	a.API.RegisterRoutes()
 	a.API.Run()
+}
+
+func (a *App) closeEventPublisher() {
+	if a.publisher != nil {
+		if err := a.publisher.Close(); err != nil {
+			logger.Error("Failed to close broker producer: %v", err)
+		}
+	}
 }

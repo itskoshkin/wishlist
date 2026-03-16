@@ -27,14 +27,14 @@ type userEmailServiceMock struct {
 	resetErr   error
 }
 
-func (m *userEmailServiceMock) SendPasswordResetLetter(ctx context.Context, to, token string) error {
+func (m *userEmailServiceMock) SendPasswordReset(ctx context.Context, userID, to, token string) error {
 	m.resetTo = to
 	m.resetToken = token
 	m.resetCalls++
 	return m.resetErr
 }
 
-func (m *userEmailServiceMock) SendEmailVerificationLetter(ctx context.Context, to, token string) error {
+func (m *userEmailServiceMock) SendEmailVerification(ctx context.Context, userID, to, token string) error {
 	m.verificationTo = to
 	m.verificationToken = token
 	m.verificationCalls++
