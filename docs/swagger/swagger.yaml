@@ -1,0 +1,1290 @@
+definitions:
+  apiModels.APIError:
+    properties:
+      code:
+        type: integer
+      details:
+        type: string
+      message:
+        type: string
+    type: object
+  apiModels.APIResponse:
+    properties:
+      message:
+        type: string
+    type: object
+  models.AuthResponse:
+    properties:
+      access_token:
+        type: string
+      refresh_token:
+        type: string
+      user:
+        $ref: '#/definitions/models.UserResponse'
+    type: object
+  models.AuthTokensResponse:
+    properties:
+      access_token:
+        type: string
+      refresh_token:
+        type: string
+    type: object
+  models.ChangePasswordRequest:
+    properties:
+      current_password:
+        example: P4s5w0rd
+        type: string
+      new_password:
+        example: Str0ngerP4s5w0rd
+        minLength: 8
+        type: string
+    required:
+    - current_password
+    - new_password
+    type: object
+  models.CreateListRequest:
+    properties:
+      notes:
+        type: string
+      title:
+        type: string
+    required:
+    - title
+    type: object
+  models.CreateWishRequest:
+    properties:
+      currency:
+        type: string
+      image:
+        type: string
+      link:
+        type: string
+      notes:
+        type: string
+      price:
+        type: integer
+      title:
+        type: string
+    required:
+    - title
+    type: object
+  models.DeleteAccountRequest:
+    properties:
+      password:
+        example: P4s5w0rd
+        type: string
+    required:
+    - password
+    type: object
+  models.ForgotPasswordRequest:
+    properties:
+      email:
+        example: alice412@email.com
+        type: string
+    required:
+    - email
+    type: object
+  models.ListResponse:
+    properties:
+      created_at:
+        type: string
+      id:
+        type: string
+      image:
+        type: string
+      is_public:
+        type: boolean
+      notes:
+        type: string
+      slug:
+        type: string
+      title:
+        type: string
+      updated_at:
+        type: string
+      user_id:
+        type: string
+      wishes:
+        items:
+          $ref: '#/definitions/models.WishResponse'
+        type: array
+      wishes_count:
+        type: integer
+    type: object
+  models.LogInUserRequest:
+    properties:
+      password:
+        example: P4s5w0rd
+        type: string
+      username:
+        example: user421
+        type: string
+    required:
+    - password
+    - username
+    type: object
+  models.RefreshTokenRequest:
+    properties:
+      refresh_token:
+        example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoiMDE5Y2QzNDktZDE3Ni03NTYyLWIwM2ItMWRiMjIyM2I5YTAxIiwiaXNzIjoid2lzaGxpc3QuaXRza29zaGtpbi5ydSIsInN1YiI6IjAxOWNkMzQ5LWQxNzYtNzU2Mi1iMDNiLTFkYjIyMjNiOWEwMSIsImF1ZCI6WyJ3aXNobGlzdC5pdHNrb3Noa2luLnJ1Il0sImV4cCI6MTc3MzY3NjgzMywibmJmIjoxNzczMDcyMDMzLCJpYXQiOjE3NzMwNzIwMzMsImp0aSI6IjBiZDU4YWVkLWE1YjYtNDRjNi1iOTdkLWFhYjc5ZTNlZGMxNCJ9._WVHH8QfmA4qbzIyKJKJa6h2uM2jeoRtg8PLJFKSau4
+        type: string
+    required:
+    - refresh_token
+    type: object
+  models.RegisterUserRequest:
+    properties:
+      email:
+        example: alice412@email.com
+        type: string
+      name:
+        example: Alice
+        type: string
+      password:
+        example: P4s5w0rd
+        minLength: 8
+        type: string
+      username:
+        example: user421
+        type: string
+    required:
+    - name
+    - password
+    - username
+    type: object
+  models.SetNewPasswordRequest:
+    properties:
+      new_password:
+        example: Str0ngerP4s5w0rd
+        minLength: 8
+        type: string
+      token:
+        example: 3b5b0860ed1be5c0fe6b18db6615bd05046b09677aa514a6e46c232cbff1bf7a
+        type: string
+    required:
+    - new_password
+    - token
+    type: object
+  models.UpdateListRequest:
+    properties:
+      image:
+        type: string
+      is_public:
+        type: boolean
+      notes:
+        type: string
+      title:
+        type: string
+    type: object
+  models.UpdateUserRequest:
+    properties:
+      email:
+        example: alice412+wishlist@email.com
+        type: string
+      name:
+        example: Alice M.
+        type: string
+      username:
+        example: alice421
+        type: string
+    type: object
+  models.UpdateWishRequest:
+    properties:
+      currency:
+        type: string
+      image:
+        type: string
+      link:
+        type: string
+      notes:
+        type: string
+      price:
+        type: integer
+      title:
+        type: string
+    type: object
+  models.UserResponse:
+    properties:
+      avatar:
+        example: "null"
+        type: string
+      created_at:
+        example: "2026-03-08T18:00:00.000000+03:00"
+        type: string
+      email:
+        example: alice412@email.com
+        type: string
+      email_verified:
+        example: true
+        type: boolean
+      id:
+        example: 019cd349-d176-7562-b03b-1db2223b9a01
+        type: string
+      name:
+        example: Alice
+        type: string
+      updated_at:
+        example: "2026-03-08T18:03:00.000000+03:00"
+        type: string
+      username:
+        example: alice421
+        type: string
+    type: object
+  models.VerifyEmailRequest:
+    properties:
+      token:
+        example: befe235a381306c34ac2e235a565e8d47febd88df9c100fe2cfeab5f7654db75
+        type: string
+    required:
+    - token
+    type: object
+  models.WishResponse:
+    properties:
+      created_at:
+        type: string
+      currency:
+        type: string
+      id:
+        type: string
+      image:
+        type: string
+      link:
+        type: string
+      list_id:
+        type: string
+      notes:
+        type: string
+      price:
+        type: integer
+      reserved:
+        type: boolean
+      reserved_by:
+        type: string
+      title:
+        type: string
+      updated_at:
+        type: string
+    type: object
+info:
+  contact: {}
+  description: API for managing wishlists
+  title: Wishlist API
+  version: "1.0"
+paths:
+  /auth/forgot-password:
+    post:
+      consumes:
+      - application/json
+      description: Send password reset link if account exists
+      parameters:
+      - description: Email
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/models.ForgotPasswordRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/apiModels.APIResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/apiModels.APIError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/apiModels.APIError'
+      summary: Request password reset
+      tags:
+      - auth
+  /auth/login:
+    post:
+      consumes:
+      - application/json
+      description: Login with username and password
+      parameters:
+      - description: Credentials
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/models.LogInUserRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.AuthResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/apiModels.APIError'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/apiModels.APIError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/apiModels.APIError'
+      summary: Login user
+      tags:
+      - auth
+  /auth/logout:
+    post:
+      consumes:
+      - application/json
+      description: Revoke access and refresh tokens
+      parameters:
+      - description: Refresh token
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/models.RefreshTokenRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/apiModels.APIResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/apiModels.APIError'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/apiModels.APIError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/apiModels.APIError'
+      security:
+      - BearerAuth: []
+      summary: Logout user
+      tags:
+      - auth
+  /auth/refresh:
+    post:
+      consumes:
+      - application/json
+      description: Get new access and refresh tokens
+      parameters:
+      - description: Refresh token
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/models.RefreshTokenRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.AuthTokensResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/apiModels.APIError'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/apiModels.APIError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/apiModels.APIError'
+      summary: Refresh tokens
+      tags:
+      - auth
+  /auth/register:
+    post:
+      consumes:
+      - application/json
+      description: Register a new account and return auth tokens; if email is provided,
+        verification flow is also initiated
+      parameters:
+      - description: Registration payload
+        in: body
+        name: RegisterRequest
+        required: true
+        schema:
+          $ref: '#/definitions/models.RegisterUserRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/models.AuthResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/apiModels.APIError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/apiModels.APIError'
+      summary: Init user registration
+      tags:
+      - auth
+  /auth/set-new-password:
+    post:
+      consumes:
+      - application/json
+      description: Set new password by reset token
+      parameters:
+      - description: Token and new password
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/models.SetNewPasswordRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/apiModels.APIResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/apiModels.APIError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/apiModels.APIError'
+      summary: Set new password
+      tags:
+      - auth
+  /auth/verify-email:
+    post:
+      consumes:
+      - application/json
+      description: Verify user email by token
+      parameters:
+      - description: Verification token
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/models.VerifyEmailRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/apiModels.APIResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/apiModels.APIError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/apiModels.APIError'
+      summary: Verify email
+      tags:
+      - auth
+  /lists:
+    get:
+      description: Get all wishlists of current user
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/models.ListResponse'
+            type: array
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/apiModels.APIError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/apiModels.APIError'
+      security:
+      - BearerAuth: []
+      summary: Get current user wishlists
+      tags:
+      - lists
+    post:
+      consumes:
+      - application/json
+      description: Create a new wishlist for current user
+      parameters:
+      - description: Wishlist data
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/models.CreateListRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/models.ListResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/apiModels.APIError'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/apiModels.APIError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/apiModels.APIError'
+      security:
+      - BearerAuth: []
+      summary: Create wishlist
+      tags:
+      - lists
+  /lists/{list_id}:
+    delete:
+      description: Delete wishlist by ID
+      parameters:
+      - description: List ID (UUID)
+        in: path
+        name: list_id
+        required: true
+        type: string
+      responses:
+        "204":
+          description: No Content
+          schema:
+            type: string
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/apiModels.APIError'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/apiModels.APIError'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/apiModels.APIError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/apiModels.APIError'
+      security:
+      - BearerAuth: []
+      summary: Delete wishlist
+      tags:
+      - lists
+    get:
+      description: Get wishlist with wishes by list ID
+      parameters:
+      - description: List ID (UUID)
+        in: path
+        name: list_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.ListResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/apiModels.APIError'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/apiModels.APIError'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/apiModels.APIError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/apiModels.APIError'
+      security:
+      - BearerAuth: []
+      summary: Get wishlist by ID
+      tags:
+      - lists
+    patch:
+      consumes:
+      - application/json
+      description: Update wishlist fields
+      parameters:
+      - description: List ID (UUID)
+        in: path
+        name: list_id
+        required: true
+        type: string
+      - description: Update payload
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/models.UpdateListRequest'
+      responses:
+        "204":
+          description: No Content
+          schema:
+            type: string
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/apiModels.APIError'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/apiModels.APIError'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/apiModels.APIError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/apiModels.APIError'
+      security:
+      - BearerAuth: []
+      summary: Update wishlist
+      tags:
+      - lists
+  /lists/{list_id}/rotate-share-link:
+    post:
+      description: Generate new shared token for wishlist
+      parameters:
+      - description: List ID (UUID)
+        in: path
+        name: list_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/apiModels.APIError'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/apiModels.APIError'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/apiModels.APIError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/apiModels.APIError'
+      security:
+      - BearerAuth: []
+      summary: Rotate shared link
+      tags:
+      - lists
+  /lists/{list_id}/wishes:
+    post:
+      consumes:
+      - application/json
+      description: Create wish in wishlist
+      parameters:
+      - description: List ID (UUID)
+        in: path
+        name: list_id
+        required: true
+        type: string
+      - description: Wish data
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/models.CreateWishRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/models.WishResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/apiModels.APIError'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/apiModels.APIError'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/apiModels.APIError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/apiModels.APIError'
+      security:
+      - BearerAuth: []
+      summary: Create wish
+      tags:
+      - wishes
+  /lists/{list_id}/wishes/{wish_id}:
+    delete:
+      description: Delete wish from wishlist
+      parameters:
+      - description: List ID (UUID)
+        in: path
+        name: list_id
+        required: true
+        type: string
+      - description: Wish ID (UUID)
+        in: path
+        name: wish_id
+        required: true
+        type: string
+      responses:
+        "204":
+          description: No Content
+          schema:
+            type: string
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/apiModels.APIError'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/apiModels.APIError'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/apiModels.APIError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/apiModels.APIError'
+      security:
+      - BearerAuth: []
+      summary: Delete wish
+      tags:
+      - wishes
+    patch:
+      consumes:
+      - application/json
+      description: Update wish fields
+      parameters:
+      - description: List ID (UUID)
+        in: path
+        name: list_id
+        required: true
+        type: string
+      - description: Wish ID (UUID)
+        in: path
+        name: wish_id
+        required: true
+        type: string
+      - description: Update payload
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/models.UpdateWishRequest'
+      responses:
+        "204":
+          description: No Content
+          schema:
+            type: string
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/apiModels.APIError'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/apiModels.APIError'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/apiModels.APIError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/apiModels.APIError'
+      security:
+      - BearerAuth: []
+      summary: Update wish
+      tags:
+      - wishes
+  /lists/{list_id}/wishes/{wish_id}/image:
+    put:
+      consumes:
+      - multipart/form-data
+      description: Upload image for wish
+      parameters:
+      - description: List ID (UUID)
+        in: path
+        name: list_id
+        required: true
+        type: string
+      - description: Wish ID (UUID)
+        in: path
+        name: wish_id
+        required: true
+        type: string
+      - description: Image file
+        in: formData
+        name: image
+        required: true
+        type: file
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.WishResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/apiModels.APIError'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/apiModels.APIError'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/apiModels.APIError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/apiModels.APIError'
+      security:
+      - BearerAuth: []
+      summary: Update wish image
+      tags:
+      - wishes
+  /lists/{list_id}/wishes/{wish_id}/reserve:
+    delete:
+      description: Release wish reservation by current user
+      parameters:
+      - description: List ID (UUID)
+        in: path
+        name: list_id
+        required: true
+        type: string
+      - description: Wish ID (UUID)
+        in: path
+        name: wish_id
+        required: true
+        type: string
+      responses:
+        "204":
+          description: No Content
+          schema:
+            type: string
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/apiModels.APIError'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/apiModels.APIError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/apiModels.APIError'
+      security:
+      - BearerAuth: []
+      summary: Release wish reservation
+      tags:
+      - wishes
+    post:
+      description: Reserve wish for current user
+      parameters:
+      - description: List ID (UUID)
+        in: path
+        name: list_id
+        required: true
+        type: string
+      - description: Wish ID (UUID)
+        in: path
+        name: wish_id
+        required: true
+        type: string
+      responses:
+        "204":
+          description: No Content
+          schema:
+            type: string
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/apiModels.APIError'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/apiModels.APIError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/apiModels.APIError'
+      security:
+      - BearerAuth: []
+      summary: Reserve wish
+      tags:
+      - wishes
+  /lists/shared/{slug}:
+    get:
+      description: Get wishlist with wishes by shared slug
+      parameters:
+      - description: Shared slug (32 chars)
+        in: path
+        name: slug
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.ListResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/apiModels.APIError'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/apiModels.APIError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/apiModels.APIError'
+      summary: Get wishlist by shared link
+      tags:
+      - lists
+  /users/{user_id}:
+    get:
+      description: Get user public profile by ID
+      parameters:
+      - description: User ID (UUID)
+        in: path
+        name: user_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.UserResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/apiModels.APIError'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/apiModels.APIError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/apiModels.APIError'
+      security:
+      - BearerAuth: []
+      summary: Get user by ID
+      tags:
+      - users
+  /users/{user_id}/lists:
+    get:
+      description: Get public wishlists of selected user
+      parameters:
+      - description: User ID (UUID)
+        in: path
+        name: user_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/models.ListResponse'
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/apiModels.APIError'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/apiModels.APIError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/apiModels.APIError'
+      security:
+      - BearerAuth: []
+      summary: Get public wishlists by user ID
+      tags:
+      - lists
+  /users/by-username/{username}:
+    get:
+      description: Get user public profile by username
+      parameters:
+      - description: Username
+        in: path
+        name: username
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.UserResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/apiModels.APIError'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/apiModels.APIError'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/apiModels.APIError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/apiModels.APIError'
+      security:
+      - BearerAuth: []
+      summary: Get user by username
+      tags:
+      - users
+  /users/me:
+    delete:
+      consumes:
+      - application/json
+      description: Delete current user account
+      parameters:
+      - description: Current password
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/models.DeleteAccountRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/apiModels.APIResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/apiModels.APIError'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/apiModels.APIError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/apiModels.APIError'
+      security:
+      - BearerAuth: []
+      summary: Delete current user
+      tags:
+      - users
+    get:
+      description: Get current authenticated user profile
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.UserResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/apiModels.APIError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/apiModels.APIError'
+      security:
+      - BearerAuth: []
+      summary: Get current user
+      tags:
+      - users
+    patch:
+      consumes:
+      - application/json
+      description: Update current authenticated user fields
+      parameters:
+      - description: Update payload
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/models.UpdateUserRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.UserResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/apiModels.APIError'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/apiModels.APIError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/apiModels.APIError'
+      security:
+      - BearerAuth: []
+      summary: Update current user
+      tags:
+      - users
+  /users/me/avatar:
+    delete:
+      description: Delete current user avatar
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/apiModels.APIResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/apiModels.APIError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/apiModels.APIError'
+      security:
+      - BearerAuth: []
+      summary: Delete user avatar
+      tags:
+      - users
+    put:
+      consumes:
+      - multipart/form-data
+      description: Upload new avatar for current user
+      parameters:
+      - description: Avatar file
+        in: formData
+        name: avatar
+        required: true
+        type: file
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.UserResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/apiModels.APIError'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/apiModels.APIError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/apiModels.APIError'
+      security:
+      - BearerAuth: []
+      summary: Update user avatar
+      tags:
+      - users
+  /users/me/update-password:
+    patch:
+      consumes:
+      - application/json
+      description: Change password for current authenticated user
+      parameters:
+      - description: Current and new password
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/models.ChangePasswordRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/apiModels.APIResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/apiModels.APIError'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/apiModels.APIError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/apiModels.APIError'
+      security:
+      - BearerAuth: []
+      summary: Change current password
+      tags:
+      - users
+securityDefinitions:
+  BearerAuth:
+    description: Enter token as "Bearer <access_token>"
+    in: header
+    name: Authorization
+    type: apiKey
+swagger: "2.0"

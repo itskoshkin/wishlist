@@ -16,8 +16,8 @@ app:
     auth:
       jwt_issuer: "your-app-name"
       jwt_audience: "your-domain.com"
-      access_token_secret: "your-super-secret-access-key"
-      refresh_token_secret: "your-super-secret-refresh-key"
+      access_token_secret: "your-super-secret-access-key" # use `openssl rand -hex 32`
+      refresh_token_secret: "your-super-secret-refresh-key" # use `openssl rand -hex 32`
       access_token_ttl: "24h"
       refresh_token_ttl: "168h" # 7 days
       pwd_reset_token_ttl: "1h"
